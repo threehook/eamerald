@@ -31,6 +31,11 @@ SYFT_VER           := 1.13.0
 
 RELEASE_TAG        := $$(${EXT_BIN_DIR}/svu current)
 
+K8S_NAMESPACE      := topaz
+K8S_RELEASE        := topaz
+K8S_CHART          := k8s/topaz
+K8S_DEV_IMAGE      := topaz-plus:dev
+
 .DEFAULT_GOAL      := build
 
 export TESTCONTAINERS_RYUK_DISABLED=$(shell docker context inspect --format '{{.Endpoints.docker.Host}}' 2>/dev/null | grep -q ".colima" && echo "true" || echo "false")
@@ -81,6 +86,37 @@ docker-build-test:
   --build-arg DESCRIPTION=${DESCRIPTION} \
   --build-arg LICENSE=${LICENSE} \
   .
+
+.PHONY: k8s-build
+k8s-build:
+	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
+	@docker build -f k8s/Dockerfile.dev -t ${K8S_DEV_IMAGE} .
+
+.PHONY: k8s-install
+k8s-install:
+	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
+	@helm upgrade --install ${K8S_RELEASE} ${K8S_CHART} -n ${K8S_NAMESPACE} --create-namespace
+
+.PHONY: k8s-deploy
+k8s-deploy: k8s-build k8s-install
+	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
+	@kubectl -n ${K8S_NAMESPACE} rollout restart deployment/${K8S_RELEASE}
+	@kubectl -n ${K8S_NAMESPACE} rollout status deployment/${K8S_RELEASE}
+
+.PHONY: k8s-uninstall
+k8s-uninstall:
+	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
+	@helm uninstall ${K8S_RELEASE} -n ${K8S_NAMESPACE}
+
+.PHONY: k8s-status
+k8s-status:
+	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
+	@kubectl -n ${K8S_NAMESPACE} get pods,svc
+
+.PHONY: k8s-logs
+k8s-logs:
+	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
+	@kubectl -n ${K8S_NAMESPACE} logs -f deployment/${K8S_RELEASE}
 
 PHONY: go-mod-tidy
 go-mod-tidy:
