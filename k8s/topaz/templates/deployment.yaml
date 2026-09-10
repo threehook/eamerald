@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    {{- include "topaz.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  # topazd's embedded directory database is a single-writer file store (BoltDB):
+  # a RollingUpdate would start the new Pod before the old one releases the
+  # file lock on the shared PVC, and the new Pod crash-loops on open timeout.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "topaz.labels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "topaz.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: topazd
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["./topazd"]
+          args: ["run", "-c", "/config/config.yaml"]
+          env:
+            - name: TOPAZ_RUNNING_IN_CONTAINER
+              value: "true"
+            - name: TOPAZ_DB_DIR
+              value: /db
+            - name: TOPAZ_CERTS_DIR
+              value: /certs
+            - name: TOPAZ_DECISIONS_DIR
+              value: /decisions
+          ports:
+            - name: health
+              containerPort: {{ .Values.service.ports.health }}
+            - name: metrics
+              containerPort: {{ .Values.service.ports.metrics }}
+            - name: dir-grpc
+              containerPort: {{ .Values.service.ports.directoryGRPC }}
+            - name: dir-gateway
+              containerPort: {{ .Values.service.ports.directoryGateway }}
+            - name: console-grpc
+              containerPort: {{ .Values.service.ports.consoleGRPC }}
+            - name: console-gateway
+              containerPort: {{ .Values.service.ports.consoleGateway }}
+            - name: authz-grpc
+              containerPort: {{ .Values.service.ports.authorizerGRPC }}
+            - name: authz-gateway
+              containerPort: {{ .Values.service.ports.authorizerGateway }}
+          # api.health is a plain (non-TLS) gRPC health service in this config,
+          # so Kubernetes' built-in gRPC probe talks to it directly.
+          readinessProbe:
+            grpc:
+              port: {{ .Values.service.ports.health }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            grpc:
+              port: {{ .Values.service.ports.health }}
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: certs
+              mountPath: /certs
+            - name: db
+              mountPath: /db
+            - name: decisions
+              mountPath: /decisions
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ .Release.Name }}-config
+        - name: decisions
+          emptyDir: {}
+        {{- if .Values.persistence.enabled }}
+        - name: certs
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-certs
+        - name: db
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-db
+        {{- else }}
+        - name: certs
+          emptyDir: {}
+        - name: db
+          emptyDir: {}
+        {{- end }}

@@ -16,9 +16,9 @@ type templateParams struct {
 	RegistryTag       string //
 }
 
-const LocalImageTemplate string = templatePreamble + opaLocalPolicyImage + topazFileDecisionLoggerPlugin + asertoEdgePlugin
+const LocalImageTemplate string = templatePreamble + opaLocalPolicyImage + topazFileDecisionLoggerPlugin + asertoEdgePlugin + gitPolicySourcePlugin
 
-const RemoteImageTemplate string = templatePreamble + opaRemotePolicyImage + topazFileDecisionLoggerPlugin + asertoEdgePlugin
+const RemoteImageTemplate string = templatePreamble + opaRemotePolicyImage + topazFileDecisionLoggerPlugin + asertoEdgePlugin + gitPolicySourcePlugin
 
 const templatePreamble string = `# yaml-language-server: $schema=https://topaz.sh/schema/config.json
 ---
@@ -408,4 +408,24 @@ const asertoEdgePlugin string = `
         no_tls: false               # disable TLS and use a plaintext connection.
         no_proxy: false             # bypasses any configured HTTP proxy.
         headers:                    # additional headers to include in requests to the service.
+`
+
+const gitPolicySourcePlugin string = `
+      # git policy source plugin configuration
+      git:
+        enabled: false
+        repo: ""                        # git remote URL, e.g. "https://github.com/org/repo.git" or "git@github.com:org/repo.git".
+        ref: "refs/heads/main"          # git reference to track: branch, tag, or full ref name.
+        path: ""                        # subdirectory within the repo containing the policy bundle; empty means repo root.
+        cache_dir: ""                   # local directory used to clone/checkout the repo; auto-derived under ~/.policy/git when empty.
+        poll_interval_seconds: 60       # how often to fetch and check for updates.
+        insecure_skip_tls_verify: false # skip TLS certificate verification for HTTPS remotes.
+        auth:
+          username: ""                  # basic-auth / PAT username for HTTPS remotes.
+          token: ""                     # PAT / password for HTTPS remotes.
+          ssh_key_path: ""              # path to a private key file, for SSH remotes.
+          ssh_key_passphrase: ""        # passphrase for the private key, if any.
+          known_hosts_path: ""          # optional known_hosts file used to verify the SSH host key.
+        skip_verification: true         # skip bundle signature verification.
+        verification_config:            # bundle signature verification config; see OPA docs for bundle signing.
 `

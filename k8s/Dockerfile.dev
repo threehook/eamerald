@@ -1,0 +1,39 @@
+# Local dev image: builds topazd straight from source with `go build`.
+#
+# The repo's own ./Dockerfile expects prebuilt per-platform binaries (from a
+# goreleaser release/snapshot run) and isn't a source build. This one is for
+# quickly testing local changes in Docker Desktop's Kubernetes, which shares
+# the local Docker daemon, so no registry push is needed:
+#
+#   docker build -f k8s/Dockerfile.dev -t topaz-plus:dev .
+
+FROM golang:1.27 AS builder
+
+WORKDIR /src
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/topazd ./topazd
+
+FROM alpine
+
+RUN apk add --no-cache bash tzdata ca-certificates
+
+RUN mkdir /config && \
+    mkdir /certs && \
+    mkdir /db && \
+    mkdir /decisions
+
+VOLUME ["/config", "/certs", "/db", "/decisions"]
+
+ENV TOPAZ_RUNNING_IN_CONTAINER=true
+
+WORKDIR /app
+
+COPY --from=builder /out/topazd /app/topazd
+
+ENTRYPOINT ["./topazd"]
+CMD ["run", "-c", "/config/config.yaml"]

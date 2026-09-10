@@ -1,0 +1,221 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-config
+  labels:
+    {{- include "topaz.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    # yaml-language-server: $schema=https://topaz.sh/schema/config.json
+    ---
+    version: 2
+
+    logging:
+      prod: false
+      log_level: {{ .Values.logging.level }}
+
+    directory:
+      db_path: ${TOPAZ_DB_DIR}/directory.db
+      request_timeout: 5s
+      seed_metadata: false
+
+    # remote directory is used to resolve the identity for the authorizer.
+    remote_directory:
+      address: "0.0.0.0:{{ .Values.service.ports.directoryGRPC }}"
+      insecure: true
+
+    jwt:
+      acceptable_time_skew_seconds: 5
+
+    api:
+      health:
+        listen_address: "0.0.0.0:{{ .Values.service.ports.health }}"
+      metrics:
+        listen_address: "0.0.0.0:{{ .Values.service.ports.metrics }}"
+        zpages: true
+      services:
+        console:
+          gateway:
+            listen_address: "0.0.0.0:{{ .Values.service.ports.consoleGateway }}"
+            allowed_origins:
+            - http://localhost
+            - http://localhost:*
+            - https://localhost
+            - https://localhost:*
+            certs:
+              tls_key_path: "${TOPAZ_CERTS_DIR}/gateway.key"
+              tls_cert_path: "${TOPAZ_CERTS_DIR}/gateway.crt"
+              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/gateway-ca.crt"
+          grpc:
+            listen_address: "0.0.0.0:{{ .Values.service.ports.consoleGRPC }}"
+            certs:
+              tls_key_path: "${TOPAZ_CERTS_DIR}/grpc.key"
+              tls_cert_path: "${TOPAZ_CERTS_DIR}/grpc.crt"
+              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/grpc-ca.crt"
+        reader:
+          grpc:
+            listen_address: "0.0.0.0:{{ .Values.service.ports.directoryGRPC }}"
+            certs:
+              tls_key_path: "${TOPAZ_CERTS_DIR}/grpc.key"
+              tls_cert_path: "${TOPAZ_CERTS_DIR}/grpc.crt"
+              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/grpc-ca.crt"
+          gateway:
+            listen_address: "0.0.0.0:{{ .Values.service.ports.directoryGateway }}"
+            allowed_origins:
+            - http://localhost
+            - http://localhost:*
+            - https://localhost
+            - https://localhost:*
+            certs:
+              tls_key_path: "${TOPAZ_CERTS_DIR}/gateway.key"
+              tls_cert_path: "${TOPAZ_CERTS_DIR}/gateway.crt"
+              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/gateway-ca.crt"
+            http: false
+            read_timeout: 2s
+            read_header_timeout: 2s
+            write_timeout: 2s
+            idle_timeout: 30s
+        writer:
+          grpc:
+            listen_address: "0.0.0.0:{{ .Values.service.ports.directoryGRPC }}"
+            certs:
+              tls_key_path: "${TOPAZ_CERTS_DIR}/grpc.key"
+              tls_cert_path: "${TOPAZ_CERTS_DIR}/grpc.crt"
+              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/grpc-ca.crt"
+          gateway:
+            listen_address: "0.0.0.0:{{ .Values.service.ports.directoryGateway }}"
+            allowed_origins:
+            - http://localhost
+            - http://localhost:*
+            - https://localhost
+            - https://localhost:*
+            certs:
+              tls_key_path: "${TOPAZ_CERTS_DIR}/gateway.key"
+              tls_cert_path: "${TOPAZ_CERTS_DIR}/gateway.crt"
+              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/gateway-ca.crt"
+            http: false
+            read_timeout: 2s
+            read_header_timeout: 2s
+            write_timeout: 2s
+            idle_timeout: 30s
+        model:
+          grpc:
+            listen_address: "0.0.0.0:{{ .Values.service.ports.directoryGRPC }}"
+            certs:
+              tls_key_path: "${TOPAZ_CERTS_DIR}/grpc.key"
+              tls_cert_path: "${TOPAZ_CERTS_DIR}/grpc.crt"
+              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/grpc-ca.crt"
+          gateway:
+            listen_address: "0.0.0.0:{{ .Values.service.ports.directoryGateway }}"
+            allowed_origins:
+            - http://localhost
+            - http://localhost:*
+            - https://localhost
+            - https://localhost:*
+            certs:
+              tls_key_path: "${TOPAZ_CERTS_DIR}/gateway.key"
+              tls_cert_path: "${TOPAZ_CERTS_DIR}/gateway.crt"
+              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/gateway-ca.crt"
+            http: false
+            read_timeout: 2s
+            read_header_timeout: 2s
+            write_timeout: 2s
+            idle_timeout: 30s
+        exporter:
+          grpc:
+            listen_address: "0.0.0.0:{{ .Values.service.ports.directoryGRPC }}"
+            certs:
+              tls_key_path: "${TOPAZ_CERTS_DIR}/grpc.key"
+              tls_cert_path: "${TOPAZ_CERTS_DIR}/grpc.crt"
+              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/grpc-ca.crt"
+          gateway:
+            listen_address: "0.0.0.0:{{ .Values.service.ports.directoryGateway }}"
+            allowed_origins:
+            - http://localhost
+            - http://localhost:*
+            - https://localhost
+            - https://localhost:*
+            certs:
+              tls_key_path: "${TOPAZ_CERTS_DIR}/gateway.key"
+              tls_cert_path: "${TOPAZ_CERTS_DIR}/gateway.crt"
+              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/gateway-ca.crt"
+            http: false
+            read_timeout: 2s
+            read_header_timeout: 2s
+            write_timeout: 2s
+            idle_timeout: 30s
+        importer:
+          grpc:
+            listen_address: "0.0.0.0:{{ .Values.service.ports.directoryGRPC }}"
+            certs:
+              tls_key_path: "${TOPAZ_CERTS_DIR}/grpc.key"
+              tls_cert_path: "${TOPAZ_CERTS_DIR}/grpc.crt"
+              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/grpc-ca.crt"
+          gateway:
+            listen_address: "0.0.0.0:{{ .Values.service.ports.directoryGateway }}"
+            allowed_origins:
+            - http://localhost
+            - http://localhost:*
+            - https://localhost
+            - https://localhost:*
+            certs:
+              tls_key_path: "${TOPAZ_CERTS_DIR}/gateway.key"
+              tls_cert_path: "${TOPAZ_CERTS_DIR}/gateway.crt"
+              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/gateway-ca.crt"
+            http: false
+            read_timeout: 2s
+            read_header_timeout: 2s
+            write_timeout: 2s
+            idle_timeout: 30s
+
+        authorizer:
+          needs:
+            - reader
+          grpc:
+            connection_timeout_seconds: 2
+            listen_address: "0.0.0.0:{{ .Values.service.ports.authorizerGRPC }}"
+            certs:
+              tls_key_path: "${TOPAZ_CERTS_DIR}/grpc.key"
+              tls_cert_path: "${TOPAZ_CERTS_DIR}/grpc.crt"
+              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/grpc-ca.crt"
+          gateway:
+            listen_address: "0.0.0.0:{{ .Values.service.ports.authorizerGateway }}"
+            allowed_origins:
+            - http://localhost
+            - http://localhost:*
+            - https://localhost
+            - https://localhost:*
+            certs:
+              tls_key_path: "${TOPAZ_CERTS_DIR}/gateway.key"
+              tls_cert_path: "${TOPAZ_CERTS_DIR}/gateway.crt"
+              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/gateway-ca.crt"
+            http: false
+            read_timeout: 2s
+            read_header_timeout: 2s
+            write_timeout: 2s
+            idle_timeout: 30s
+
+    opa:
+      instance_id: "-"
+      graceful_shutdown_period_seconds: 2
+      local_bundles:
+        paths: []
+        skip_verification: true
+      config:
+        services:
+          ghcr:
+            url: https://{{ .Values.policyBundle.registry }}
+            type: "oci"
+            response_header_timeout_seconds: 15
+        bundles:
+          todo:
+            service: ghcr
+            resource: "{{ .Values.policyBundle.resource }}"
+            persist: false
+            config:
+              polling:
+                min_delay_seconds: 60
+                max_delay_seconds: 120
+        decision_logs:
+          console: false
+        plugins:
