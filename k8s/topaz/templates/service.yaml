@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    {{- include "topaz.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    {{- include "topaz.labels" . | nindent 4 }}
+  ports:
+    - name: health
+      port: {{ .Values.service.ports.health }}
+      targetPort: health
+    - name: metrics
+      port: {{ .Values.service.ports.metrics }}
+      targetPort: metrics
+    - name: dir-grpc
+      port: {{ .Values.service.ports.directoryGRPC }}
+      targetPort: dir-grpc
+    - name: dir-gateway
+      port: {{ .Values.service.ports.directoryGateway }}
+      targetPort: dir-gateway
+    - name: console-grpc
+      port: {{ .Values.service.ports.consoleGRPC }}
+      targetPort: console-grpc
+    - name: console-gateway
+      port: {{ .Values.service.ports.consoleGateway }}
+      targetPort: console-gateway
+    - name: authz-grpc
+      port: {{ .Values.service.ports.authorizerGRPC }}
+      targetPort: authz-grpc
+    - name: authz-gateway
+      port: {{ .Values.service.ports.authorizerGateway }}
+      targetPort: authz-gateway

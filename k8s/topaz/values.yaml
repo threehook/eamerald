@@ -1,0 +1,54 @@
+# Default values for the topaz chart.
+
+image:
+  # For a local build loaded straight into Docker Desktop's Kubernetes (shares
+  # the local Docker daemon, no registry/push needed), build with:
+  #   docker build -f k8s/Dockerfile.dev -t topaz-plus:dev .
+  # To use a published image instead (e.g. the upstream ghcr.io/aserto-dev/topaz,
+  # or ghcr.io/threehook/topaz-plus once you publish your own), override
+  # repository/tag and set pullPolicy to IfNotPresent or Always.
+  repository: topaz-plus
+  tag: dev
+  pullPolicy: IfNotPresent
+
+# topazd's directory service uses an embedded, single-writer BoltDB file, so
+# this chart is not meant to be scaled beyond one replica.
+replicaCount: 1
+
+service:
+  # Docker Desktop's Kubernetes maps LoadBalancer services to localhost
+  # automatically, so this "just works" without port-forwarding. Set to
+  # ClusterIP on clusters without that (use `kubectl port-forward` instead).
+  type: LoadBalancer
+  ports:
+    health: 9494
+    metrics: 9696
+    directoryGRPC: 9292
+    directoryGateway: 9393
+    consoleGRPC: 8081
+    consoleGateway: 8080
+    authorizerGRPC: 8282
+    authorizerGateway: 8383
+
+# Persistent storage for the directory database and generated TLS certs, so
+# they survive Pod restarts. Uses the cluster's default StorageClass (Docker
+# Desktop provides "hostpath" out of the box) unless storageClassName is set.
+persistence:
+  enabled: true
+  storageClassName: ""
+  db:
+    size: 1Gi
+  certs:
+    size: 64Mi
+
+logging:
+  level: info
+
+# Default policy bundle: the same public "todo" example bundle used in
+# docs/deployments/docker-compose/config/local.yaml, pulled from an OCI
+# registry at runtime rather than baked into the image.
+policyBundle:
+  registry: ghcr.io
+  resource: "ghcr.io/aserto-policies/policy-todo:3.0.0"
+
+resources: {}
