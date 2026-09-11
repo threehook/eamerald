@@ -4,6 +4,7 @@ package entra
 import (
 	"context"
 	"testing"
+	"time"
 
 	common "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsw "github.com/aserto-dev/go-directory/aserto/directory/writer/v3"
@@ -310,6 +311,82 @@ func TestSync(t *testing.T) {
 		err := p.sync(t.Context())
 		require.ErrorContains(t, err, "u2")
 	})
+}
+
+// blockingGraphLister.listGroups blocks until unblock is closed, so tests can
+// prove Start returns before a slow/stuck sync completes.
+type blockingGraphLister struct {
+	unblock chan struct{}
+}
+
+var _ graphLister = (*blockingGraphLister)(nil)
+
+func (b *blockingGraphLister) listGroups(ctx context.Context) ([]*models.Group, error) {
+	select {
+	case <-b.unblock:
+	case <-ctx.Done():
+	}
+
+	return nil, ctx.Err()
+}
+
+func (b *blockingGraphLister) listUsers(_ context.Context) ([]*models.User, error) {
+	return nil, nil
+}
+
+// TestStartReportsOKWithoutSyncing covers the startup deadlock: the OPA
+// runtime only becomes ready once every plugin reports StateOK, and the
+// directory services the sync writes to only start serving after that. Start
+// must therefore both return and report StateOK without waiting on a sync.
+func TestStartReportsOKWithoutSyncing(t *testing.T) {
+	logger := zerolog.Nop()
+	mgr, err := plugins.New([]byte("{}"), "test", inmem.New())
+	require.NoError(t, err)
+
+	unblock := make(chan struct{})
+
+	t.Cleanup(func() { close(unblock) })
+
+	p := newEntraPlugin(&logger, &Config{PollIntervalSeconds: 3600}, mgr, &fakeWriter{})
+	p.newClient = newClientFunc(&blockingGraphLister{unblock: unblock}, nil)
+
+	done := make(chan error, 1)
+	go func() { done <- p.Start(t.Context()) }()
+
+	select {
+	case err := <-done:
+		require.NoError(t, err)
+	case <-time.After(time.Second):
+		t.Fatal("Start blocked on sync instead of returning immediately")
+	}
+
+	require.Equal(t, plugins.StateOK, mgr.PluginStatus()[PluginName].State,
+		"Start must report StateOK without waiting for a sync, otherwise the runtime never becomes ready")
+
+	p.Stop(t.Context())
+
+	require.Equal(t, plugins.StateNotReady, mgr.PluginStatus()[PluginName].State)
+}
+
+// TestRunSyncDoesNotReportStateErr guards the runtime's post-start plugin
+// status check: a failing sync must not leave the plugin in StateErr, which
+// would fail the boot over a transient Graph or directory error.
+func TestRunSyncDoesNotReportStateErr(t *testing.T) {
+	logger := zerolog.Nop()
+	mgr, err := plugins.New([]byte("{}"), "test", inmem.New())
+	require.NoError(t, err)
+
+	p := newEntraPlugin(&logger, &Config{}, mgr, &fakeWriter{err: errors.New("boom")})
+	p.newClient = newClientFunc(&fakeGraphLister{users: []*models.User{testUser("u1", "", "", "")}}, nil)
+
+	require.NoError(t, p.Start(t.Context()))
+
+	// stop the scheduler, so its initial sync cannot race the one below.
+	p.cancel()
+
+	p.runSync()
+
+	require.Equal(t, plugins.StateOK, mgr.PluginStatus()[PluginName].State)
 }
 
 func TestConfigDefaults(t *testing.T) {

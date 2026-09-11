@@ -9,6 +9,8 @@ ATTN_COLOR         := \033[33;01m
 REGISTRY           := ghcr.io
 ORG                := aserto-dev
 REPO               := topaz
+IMAGE_ORG          := threehook
+IMAGE_REPO         := topaz-plus
 DESCRIPTION        := "Topaz Authorization Service"
 LICENSE            := Apache-2.0
 
@@ -76,13 +78,13 @@ docker-build-test:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
 	@docker buildx build \
   --platform=linux/${GOARCH} \
-  --tag ${REGISTRY}/${ORG}/${REPO}:0.0.0-test-$$(git rev-parse --short HEAD)-$(GOARCH) \
+  --tag ${REGISTRY}/${IMAGE_ORG}/${IMAGE_REPO}:0.0.0-test-$$(git rev-parse --short HEAD)-$(GOARCH) \
 	--progress=plain \
   --build-arg BUILD_DATE=$$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
-	--build-arg TITLE=${REPO} \
+	--build-arg TITLE=${IMAGE_REPO} \
   --build-arg VCS_REF=$$(git rev-parse HEAD) \
   --build-arg VERSION=$$(svu current) \
-  --build-arg REPO_URL="https://github.com/${ORG}/${REPO}" \
+  --build-arg REPO_URL="https://github.com/${IMAGE_ORG}/${IMAGE_REPO}" \
   --build-arg DESCRIPTION=${DESCRIPTION} \
   --build-arg LICENSE=${LICENSE} \
   .
@@ -97,10 +99,21 @@ k8s-install:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
 	@helm upgrade --install ${K8S_RELEASE} ${K8S_CHART} -n ${K8S_NAMESPACE} --create-namespace
 
+# k8s-deploy is the recommended way to iterate: it builds under a fresh,
+# unique tag every run and passes it explicitly to Helm, rather than reusing
+# ${K8S_DEV_IMAGE}'s static "dev" tag (what k8s-build/k8s-install use standalone).
+# Docker Desktop's Kubernetes caches images by tag separately from the Docker
+# CLI's daemon-visible store; with imagePullPolicy: IfNotPresent (required
+# for a registry-less local image), a static tag means a rebuild can silently
+# never reach the running Pod. A unique tag sidesteps that by construction.
 .PHONY: k8s-deploy
-k8s-deploy: k8s-build k8s-install
+k8s-deploy:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
-	@kubectl -n ${K8S_NAMESPACE} rollout restart deployment/${K8S_RELEASE}
+	@TAG=dev-$$(git rev-parse --short HEAD)-$$(date +%s); \
+	echo "building topaz-plus:$$TAG"; \
+	docker build -f k8s/Dockerfile.dev -t topaz-plus:$$TAG . && \
+	helm upgrade --install ${K8S_RELEASE} ${K8S_CHART} -n ${K8S_NAMESPACE} --create-namespace --reuse-values --set image.tag=$$TAG && \
+	kubectl -n ${K8S_NAMESPACE} rollout restart deployment/${K8S_RELEASE}
 	@kubectl -n ${K8S_NAMESPACE} rollout status deployment/${K8S_RELEASE}
 
 .PHONY: k8s-uninstall
@@ -162,7 +175,7 @@ test: gover test-snapshot
 .PHONY: test-snapshot
 test-snapshot:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
-	@docker image rm ${REGISTRY}/${ORG}/${REPO}:0.0.0-test-$$(git rev-parse --short HEAD)-$$(uname -m) || true
+	@docker image rm ${REGISTRY}/${IMAGE_ORG}/${IMAGE_REPO}:0.0.0-test-$$(git rev-parse --short HEAD)-$$(uname -m) || true
 	@${EXT_BIN_DIR}/goreleaser release --config .goreleaser-test.yml --clean --snapshot --skip archive,homebrew,sbom
 
 .PHONE: container-tag

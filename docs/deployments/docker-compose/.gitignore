@@ -2,3 +2,4 @@ certs/
 db/
 data/*
 !data/.gitkeep
+.env

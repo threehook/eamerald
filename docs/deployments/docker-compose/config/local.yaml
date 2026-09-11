@@ -217,3 +217,14 @@ opa:
           polling:
             min_delay_seconds: 60
             max_delay_seconds: 120
+    plugins:
+      # microsoft entra id (azure ad) directory sync plugin configuration
+      entra:
+        enabled: true
+        tenant_id: "${ENTRA_TENANT_ID}"
+        client_id: "${ENTRA_CLIENT_ID}"
+        client_secret: "${ENTRA_CLIENT_SECRET}"
+        poll_interval_seconds: 300      # how often to sync users and groups.
+        user_object_type: "user"        # directory object type synced users are written as.
+        group_object_type: "group"      # directory object type synced groups are written as.
+        member_relation: "member"       # directory relation name used for group membership.

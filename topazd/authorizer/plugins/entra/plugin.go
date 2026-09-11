@@ -21,6 +21,10 @@ const (
 	defaultMemberRelation  string = "member"
 
 	graphFieldMail string = "mail"
+
+	// startupDelay defers the initial sync, giving the directory services
+	// time to start serving.
+	startupDelay time.Duration = time.Second
 )
 
 type Config struct {
@@ -73,15 +77,17 @@ func newEntraPlugin(logger *zerolog.Logger, cfg *Config, manager *plugins.Manage
 	}
 }
 
+// Start must report StateOK and must not block on sync. The OPA runtime only
+// becomes ready once every registered plugin reports StateOK, and topaz's own
+// reader/writer gRPC services only start serving after the runtime is ready.
+// Waiting for a successful sync before reporting OK therefore deadlocks: the
+// sync cannot reach the writer, and the writer cannot start until the sync
+// reports OK. This matches the pattern the edge plugin
+// (topazd/authorizer/plugins/edge) already uses.
 func (p *Plugin) Start(ctx context.Context) error {
 	p.logger.Info().Str("id", p.manager.ID).Str("tenant_id", p.config.TenantID).Msg("EntraPlugin.Start")
 
-	if err := p.sync(ctx); err != nil {
-		p.logger.Error().Err(err).Msg("initial entra sync failed")
-		p.manager.UpdatePluginStatus(PluginName, &plugins.Status{State: plugins.StateErr, Message: err.Error()})
-	} else {
-		p.manager.UpdatePluginStatus(PluginName, &plugins.Status{State: plugins.StateOK})
-	}
+	p.manager.UpdatePluginStatus(PluginName, &plugins.Status{State: plugins.StateOK})
 
 	go p.scheduler()
 
@@ -108,6 +114,14 @@ func (p *Plugin) Reconfigure(ctx context.Context, config any) {
 }
 
 func (p *Plugin) scheduler() {
+	select {
+	case <-p.ctx.Done():
+		return
+	case <-time.After(startupDelay):
+	}
+
+	p.runSync()
+
 	current := pollInterval(p.config)
 	ticker := time.NewTicker(time.Duration(current) * time.Second)
 
@@ -123,15 +137,17 @@ func (p *Plugin) scheduler() {
 				ticker.Reset(time.Duration(current) * time.Second)
 			}
 
-			if err := p.sync(p.ctx); err != nil {
-				p.logger.Error().Err(err).Msg("entra sync failed")
-				p.manager.UpdatePluginStatus(PluginName, &plugins.Status{State: plugins.StateErr, Message: err.Error()})
-
-				continue
-			}
-
-			p.manager.UpdatePluginStatus(PluginName, &plugins.Status{State: plugins.StateOK})
+			p.runSync()
 		}
+	}
+}
+
+// runSync logs sync failures without reporting them as plugin status: a
+// StateErr here would trip the runtime's post-start plugin status check and
+// fail the boot over a transient Graph or directory error.
+func (p *Plugin) runSync() {
+	if err := p.sync(p.ctx); err != nil {
+		p.logger.Error().Err(err).Msg("entra sync failed")
 	}
 }
 

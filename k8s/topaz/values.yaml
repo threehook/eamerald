@@ -1,12 +1,25 @@
 # Default values for the topaz chart.
 
 image:
-  # For a local build loaded straight into Docker Desktop's Kubernetes (shares
-  # the local Docker daemon, no registry/push needed), build with:
-  #   docker build -f k8s/Dockerfile.dev -t topaz-plus:dev .
-  # To use a published image instead (e.g. the upstream ghcr.io/aserto-dev/topaz,
-  # or ghcr.io/threehook/topaz-plus once you publish your own), override
-  # repository/tag and set pullPolicy to IfNotPresent or Always.
+  # For local iteration on Docker Desktop's Kubernetes, prefer `make k8s-deploy`
+  # over building this "dev" tag by hand: Docker Desktop's Kubernetes caches
+  # images by tag *separately* from the Docker CLI's daemon-visible store, so
+  # with pullPolicy: IfNotPresent (needed here since this image is never
+  # pushed to a registry), rebuilding under this same static tag can silently
+  # never reach the running Pod - it just keeps the old image indefinitely,
+  # with no error. `make k8s-deploy` avoids this by building under a fresh,
+  # unique tag every run and passing it to Helm explicitly. This "dev" tag/
+  # `make k8s-build` still exist for quick manual builds, just don't expect a
+  # `kubectl delete pod` alone to pick up a rebuild under this same tag.
+  #
+  # To use a published image instead (e.g. ghcr.io/threehook/topaz-plus once
+  # you publish one), override repository/tag. If that tag is ever reused/
+  # overwritten in the registry (e.g. `:latest`), set pullPolicy: Always, or
+  # you'll hit the exact same staleness problem against a real registry.
+  # Preferring a unique, never-reused tag per image (a git SHA, a semver) for
+  # published images too sidesteps this more robustly than relying on
+  # pullPolicy: Always, and remains compatible with IfNotPresent's more
+  # efficient (no registry round trip) local-cache behavior.
   repository: topaz-plus
   tag: dev
   pullPolicy: IfNotPresent
@@ -50,5 +63,21 @@ logging:
 policyBundle:
   registry: ghcr.io
   resource: "ghcr.io/aserto-policies/policy-todo:3.0.0"
+
+
+# microsoft entra id (azure ad) directory sync plugin. The client secret is
+# never set here: create it yourself as a Kubernetes Secret first, e.g.
+#   kubectl create secret generic entra-credentials \
+#     --from-literal=client_secret=<your-client-secret>
+# then set existingSecretName below to that Secret's name.
+entra:
+  enabled: false
+  tenantId: ""
+  clientId: ""
+  existingSecretName: ""
+  pollIntervalSeconds: 300
+  userObjectType: "user"
+  groupObjectType: "group"
+  memberRelation: "member"
 
 resources: {}

@@ -34,6 +34,17 @@ spec:
               value: /certs
             - name: TOPAZ_DECISIONS_DIR
               value: /decisions
+          {{- if .Values.entra.enabled }}
+            - name: ENTRA_TENANT_ID
+              value: {{ .Values.entra.tenantId | quote }}
+            - name: ENTRA_CLIENT_ID
+              value: {{ .Values.entra.clientId | quote }}
+            - name: ENTRA_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "entra.existingSecretName is required when entra.enabled is true" .Values.entra.existingSecretName }}
+                  key: client_secret
+          {{- end }}
           ports:
             - name: health
               containerPort: {{ .Values.service.ports.health }}

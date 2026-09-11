@@ -258,6 +258,58 @@ func TestSync(t *testing.T) {
 	})
 }
 
+// TestStart covers the startup contract: the OPA runtime only becomes ready
+// once every plugin reports StateOK, so a failed initial sync must fail the
+// boot outright rather than leave the plugin in a non-OK state, which would
+// hang startup permanently.
+func TestStart(t *testing.T) {
+	remoteDir := t.TempDir()
+	repo, err := gogit.PlainInit(remoteDir, false)
+	require.NoError(t, err)
+
+	commitFile(t, repo, remoteDir, "policy.rego", "package test\n\ndefault allow = false\n")
+
+	head, err := repo.Head()
+	require.NoError(t, err)
+
+	logger := zerolog.Nop()
+
+	newPlugin := func(t *testing.T, repoPath string) (*Plugin, *plugins.Manager) {
+		t.Helper()
+
+		mgr, err := plugins.New([]byte("{}"), "test", inmem.New())
+		require.NoError(t, err)
+
+		p := newGitPlugin(&logger, &Config{
+			Repo:                repoPath,
+			Ref:                 head.Name().String(),
+			CacheDir:            t.TempDir(),
+			SkipVerification:    true,
+			PollIntervalSeconds: 3600,
+		}, mgr)
+
+		t.Cleanup(p.cancel)
+
+		// as the runtime does, seeding the plugin's status to StateNotReady.
+		mgr.Register(PluginName, p)
+
+		return p, mgr
+	}
+
+	p, mgr := newPlugin(t, remoteDir)
+
+	require.NoError(t, p.Start(t.Context()))
+	require.Equal(t, plugins.StateOK, mgr.PluginStatus()[PluginName].State)
+
+	t.Run("a failed initial sync fails the boot instead of reporting a non-OK state", func(t *testing.T) {
+		p, mgr := newPlugin(t, filepath.Join(t.TempDir(), "does-not-exist.git"))
+
+		require.ErrorContains(t, p.Start(t.Context()), "initial git sync failed")
+		require.Equal(t, plugins.StateNotReady, mgr.PluginStatus()[PluginName].State,
+			"Start must surface the failure as an error; reporting a state here would hang startup, as nothing retries before the runtime is ready")
+	})
+}
+
 func TestReconfigure(t *testing.T) {
 	logger := zerolog.Nop()
 	mgr, err := plugins.New([]byte("{}"), "test", inmem.New())

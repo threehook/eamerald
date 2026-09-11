@@ -82,15 +82,20 @@ func newGitPlugin(logger *zerolog.Logger, cfg *Config, manager *plugins.Manager)
 	}
 }
 
+// Start syncs synchronously, so the policy bundle is loaded before the
+// authorizer starts serving, and fails the boot when it cannot be loaded.
+// Reporting StateErr instead would hang startup permanently: the OPA runtime
+// only becomes ready once every registered plugin reports StateOK, topaz's
+// own services only start serving after the runtime is ready, and nothing
+// retries the sync before that gate opens.
 func (p *Plugin) Start(ctx context.Context) error {
 	p.logger.Info().Str("id", p.manager.ID).Str("repo", p.config.Repo).Str("ref", p.config.Ref).Msg("GitPlugin.Start")
 
 	if err := p.sync(ctx); err != nil {
-		p.logger.Error().Err(err).Msg("initial git sync failed")
-		p.manager.UpdatePluginStatus(PluginName, &plugins.Status{State: plugins.StateErr, Message: err.Error()})
-	} else {
-		p.manager.UpdatePluginStatus(PluginName, &plugins.Status{State: plugins.StateOK})
+		return errors.Wrap(err, "initial git sync failed")
 	}
+
+	p.manager.UpdatePluginStatus(PluginName, &plugins.Status{State: plugins.StateOK})
 
 	go p.scheduler()
 

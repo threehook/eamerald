@@ -7,6 +7,8 @@ env:
   - REGISTRY=ghcr.io
   - ORG=aserto-dev
   - REPO=topaz
+  - IMAGE_ORG=threehook
+  - IMAGE_REPO=topaz-plus
   - DESCRIPTION="Topaz Authorization Service"
   - LICENSE=Apache-2.0
 
@@ -94,7 +96,7 @@ dockers_v2:
       - topaz-backup
 
     images:
-      - "{{ .Env.REGISTRY }}/{{ .Env.ORG }}/{{ .Env.REPO }}"
+      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_ORG }}/{{ .Env.IMAGE_REPO }}"
 
     tags:
       - "{{ .Version }}"
@@ -104,7 +106,7 @@ dockers_v2:
       "org.opencontainers.image.name": "{{.ProjectName}}"
       "org.opencontainers.image.revision": "{{.FullCommit}}"
       "org.opencontainers.image.version": "{{.Version}}"
-      "org.opencontainers.image.source": "https://github.com/{{ .Env.ORG }}/{{ .Env.REPO }}"
+      "org.opencontainers.image.source": "https://github.com/{{ .Env.IMAGE_ORG }}/{{ .Env.IMAGE_REPO }}"
       "org.opencontainers.image.description": "{{ .Env.DESCRIPTION }}"
       "org.opencontainers.image.licenses": "{{ .Env.LICENSE }}"
 

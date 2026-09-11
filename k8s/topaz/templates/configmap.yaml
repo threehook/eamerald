@@ -219,3 +219,15 @@ data:
         decision_logs:
           console: false
         plugins:
+        {{- if .Values.entra.enabled }}
+          # microsoft entra id (azure ad) directory sync plugin configuration
+          entra:
+            enabled: true
+            tenant_id: "${ENTRA_TENANT_ID}"
+            client_id: "${ENTRA_CLIENT_ID}"
+            client_secret: "${ENTRA_CLIENT_SECRET}"
+            poll_interval_seconds: {{ .Values.entra.pollIntervalSeconds }}
+            user_object_type: "{{ .Values.entra.userObjectType }}"
+            group_object_type: "{{ .Values.entra.groupObjectType }}"
+            member_relation: "{{ .Values.entra.memberRelation }}"
+        {{- end }}
