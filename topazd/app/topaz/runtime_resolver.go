@@ -11,6 +11,7 @@ import (
 	"github.com/aserto-dev/topaz/topazd/authorizer/builtins/az"
 	"github.com/aserto-dev/topaz/topazd/authorizer/builtins/ds"
 	"github.com/aserto-dev/topaz/topazd/authorizer/plugins/edge"
+	"github.com/aserto-dev/topaz/topazd/authorizer/plugins/entra"
 	"github.com/aserto-dev/topaz/topazd/authorizer/plugins/git"
 	"github.com/aserto-dev/topaz/topazd/authorizer/plugins/topaz_file_decision_logger"
 	"github.com/aserto-dev/topaz/topazd/authorizer/resolvers"
@@ -61,6 +62,7 @@ func NewRuntimeResolver(
 		runtime.WithPlugin(topaz_file_decision_logger.PluginName, topaz_file_decision_logger.NewFactory(logger.WithContext(ctx))),
 		runtime.WithPlugin(edge.PluginName, edge.NewPluginFactory(ctx, cfg, logger)),
 		runtime.WithPlugin(git.PluginName, git.NewPluginFactory(ctx, logger)),
+		runtime.WithPlugin(entra.PluginName, entra.NewPluginFactory(ctx, logger, dsConn)),
 
 		runtime.WithRegoVersion(ast.RegoV0),
 	)

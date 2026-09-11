@@ -16,9 +16,11 @@ type templateParams struct {
 	RegistryTag       string //
 }
 
-const LocalImageTemplate string = templatePreamble + opaLocalPolicyImage + topazFileDecisionLoggerPlugin + asertoEdgePlugin + gitPolicySourcePlugin
+const LocalImageTemplate string = templatePreamble + opaLocalPolicyImage + topazFileDecisionLoggerPlugin +
+	asertoEdgePlugin + gitPolicySourcePlugin + entraDirectorySyncPlugin
 
-const RemoteImageTemplate string = templatePreamble + opaRemotePolicyImage + topazFileDecisionLoggerPlugin + asertoEdgePlugin + gitPolicySourcePlugin
+const RemoteImageTemplate string = templatePreamble + opaRemotePolicyImage + topazFileDecisionLoggerPlugin +
+	asertoEdgePlugin + gitPolicySourcePlugin + entraDirectorySyncPlugin
 
 const templatePreamble string = `# yaml-language-server: $schema=https://topaz.sh/schema/config.json
 ---
@@ -428,4 +430,17 @@ const gitPolicySourcePlugin string = `
           known_hosts_path: ""          # optional known_hosts file used to verify the SSH host key.
         skip_verification: true         # skip bundle signature verification.
         verification_config:            # bundle signature verification config; see OPA docs for bundle signing.
+`
+
+const entraDirectorySyncPlugin string = `
+      # microsoft entra id (azure ad) directory sync plugin configuration
+      entra:
+        enabled: false
+        tenant_id: ""                   # entra id tenant ID.
+        client_id: ""                   # app registration (client) ID; needs admin-consented User.Read.All / Group.Read.All perms.
+        client_secret: ""               # app registration client secret.
+        poll_interval_seconds: 300      # how often to sync users and groups.
+        user_object_type: "user"        # directory object type synced users are written as.
+        group_object_type: "group"      # directory object type synced groups are written as.
+        member_relation: "member"       # directory relation name used for group membership.
 `

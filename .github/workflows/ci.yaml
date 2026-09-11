@@ -89,6 +89,11 @@ jobs:
           .ext/bin/gotestsum --format short-verbose -- $(go list ./... | grep -v topazd/tests) \
             -count=1 -timeout 120s -parallel=1 -v -coverprofile=cover.out -coverpkg=./...
       -
+        name: Integration Tests
+        run: |
+          .ext/bin/gotestsum --format short-verbose -- $(go list -tags=integration ./... | grep -v topazd/tests) \
+            -tags=integration -count=1 -timeout 120s -parallel=1 -v -coverprofile=cover-integration.out -coverpkg=./...
+      -
         name: Tests topazd
         run: |
           .ext/bin/gotestsum --format short-verbose -- $(go list ./topazd/tests/... | grep -v tests/template) \
