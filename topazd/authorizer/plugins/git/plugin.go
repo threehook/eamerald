@@ -23,6 +23,9 @@ import (
 	"github.com/open-policy-agent/opa/v1/storage"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+
+	"github.com/aserto-dev/topaz/topazd/app"
+	"google.golang.org/grpc/health/grpc_health_v1"
 )
 
 const (
@@ -82,20 +85,25 @@ func newGitPlugin(logger *zerolog.Logger, cfg *Config, manager *plugins.Manager)
 	}
 }
 
-// Start syncs synchronously, so the policy bundle is loaded before the
-// authorizer starts serving, and fails the boot when it cannot be loaded.
-// Reporting StateErr instead would hang startup permanently: the OPA runtime
-// only becomes ready once every registered plugin reports StateOK, topaz's
-// own services only start serving after the runtime is ready, and nothing
-// retries the sync before that gate opens.
+// Start reports StateOK and launches the scheduler unconditionally, even
+// when the initial sync fails (e.g. an empty or unreachable repo): failing
+// Start() would crash the whole process, since the OPA runtime only becomes
+// ready once every registered plugin reports StateOK. Retrying in the
+// background instead lets topaz come up and keep running with the "git"
+// health service left at NOT_SERVING — so a k8s readiness probe pointed at
+// it reports the pod not-ready without ever restarting it, and it recovers
+// on its own once a poll cycle succeeds. Mirrors the "sync" service pattern
+// already used by the edge plugin (see app.SetServiceStatus call sites).
 func (p *Plugin) Start(ctx context.Context) error {
 	p.logger.Info().Str("id", p.manager.ID).Str("repo", p.config.Repo).Str("ref", p.config.Ref).Msg("GitPlugin.Start")
 
-	if err := p.sync(ctx); err != nil {
-		return errors.Wrap(err, "initial git sync failed")
-	}
-
 	p.manager.UpdatePluginStatus(PluginName, &plugins.Status{State: plugins.StateOK})
+
+	if err := p.sync(ctx); err != nil {
+		p.logger.Error().Err(err).Msg("initial git sync failed, will keep retrying in the background")
+	} else {
+		app.SetServiceStatus(p.logger, PluginName, grpc_health_v1.HealthCheckResponse_SERVING)
+	}
 
 	go p.scheduler()
 
@@ -141,11 +149,13 @@ func (p *Plugin) scheduler() {
 			if err := p.sync(p.ctx); err != nil {
 				p.logger.Error().Err(err).Msg("git sync failed")
 				p.manager.UpdatePluginStatus(PluginName, &plugins.Status{State: plugins.StateErr, Message: err.Error()})
+				app.SetServiceStatus(p.logger, PluginName, grpc_health_v1.HealthCheckResponse_NOT_SERVING)
 
 				continue
 			}
 
 			p.manager.UpdatePluginStatus(PluginName, &plugins.Status{State: plugins.StateOK})
+			app.SetServiceStatus(p.logger, PluginName, grpc_health_v1.HealthCheckResponse_SERVING)
 		}
 	}
 }

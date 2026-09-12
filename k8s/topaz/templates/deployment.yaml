@@ -64,9 +64,19 @@ spec:
               containerPort: {{ .Values.service.ports.authorizerGateway }}
           # api.health is a plain (non-TLS) gRPC health service in this config,
           # so Kubernetes' built-in gRPC probe talks to it directly.
+          # When git is the policy source, readiness is pinned to its "git"
+          # named health check (NOT_SERVING until the first successful sync,
+          # self-heals to SERVING once one lands) so the pod is excluded from
+          # the Service until a policy bundle is actually loaded, without
+          # ever being restarted for it. Liveness intentionally stays on the
+          # default health check regardless, so an unsynced repo never
+          # causes a restart loop.
           readinessProbe:
             grpc:
               port: {{ .Values.service.ports.health }}
+              {{- if .Values.git.enabled }}
+              service: "git"
+              {{- end }}
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:

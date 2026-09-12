@@ -79,16 +79,9 @@ func (e *Topaz) Start() error {
 
 	// Add registered services to the health service
 	if e.Manager.HealthServer != nil {
-		healthCheck = e.Manager.HealthServer.Server
-
 		for serviceName := range e.Configuration.APIConfig.Services {
 			e.Manager.HealthServer.SetServiceStatus(serviceName, grpc_health_v1.HealthCheckResponse_SERVING)
 		}
-
-		// register phony sync service with status NOT_SERVING
-		service, servingStatus := "sync", grpc_health_v1.HealthCheckResponse_NOT_SERVING
-		e.Manager.HealthServer.Server.SetServingStatus(service, servingStatus)
-		e.Logger.Info().Str("component", "edge.plugin").Str("service", service).Str("status", servingStatus.String()).Msg("health")
 	}
 
 	return nil
@@ -223,6 +216,22 @@ func (e *Topaz) setupHealthAndMetrics() ([]grpc.ServerOption, error) {
 		err := e.Manager.SetupHealthServer(e.Configuration.APIConfig.Health.ListenAddress, &e.Configuration.APIConfig.Health.Certificates)
 		if err != nil {
 			return nil, err
+		}
+
+		// healthCheck must be assigned, and the phony sync/git services
+		// registered, before any OPA plugin starts (NewRuntimeResolver runs
+		// after ConfigServices but before Start): a plugin whose initial
+		// sync completes synchronously — as the git plugin's does — calls
+		// SetServiceStatus during its own Start(), and that call is a no-op
+		// if healthCheck is still nil, or gets clobbered if the NOT_SERVING
+		// default is registered afterward in Start(). Registering here,
+		// before plugins run, avoids both.
+		healthCheck = e.Manager.HealthServer.Server
+
+		for _, phonyService := range []string{"sync", "git"} {
+			e.Manager.HealthServer.Server.SetServingStatus(phonyService, grpc_health_v1.HealthCheckResponse_NOT_SERVING)
+			e.Logger.Info().Str("service", phonyService).
+				Str("status", grpc_health_v1.HealthCheckResponse_NOT_SERVING.String()).Msg("health")
 		}
 	}
 

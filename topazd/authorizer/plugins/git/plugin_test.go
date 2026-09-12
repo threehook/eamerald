@@ -259,9 +259,11 @@ func TestSync(t *testing.T) {
 }
 
 // TestStart covers the startup contract: the OPA runtime only becomes ready
-// once every plugin reports StateOK, so a failed initial sync must fail the
-// boot outright rather than leave the plugin in a non-OK state, which would
-// hang startup permanently.
+// once every plugin reports StateOK, so Start must always report StateOK
+// immediately and retry a failed initial sync in the background instead of
+// failing the boot — failing here would crash the whole process, since the
+// gRPC health check (not the OPA plugin manager) is what a k8s readiness
+// probe uses to hold traffic back until a sync actually succeeds.
 func TestStart(t *testing.T) {
 	remoteDir := t.TempDir()
 	repo, err := gogit.PlainInit(remoteDir, false)
@@ -301,12 +303,13 @@ func TestStart(t *testing.T) {
 	require.NoError(t, p.Start(t.Context()))
 	require.Equal(t, plugins.StateOK, mgr.PluginStatus()[PluginName].State)
 
-	t.Run("a failed initial sync fails the boot instead of reporting a non-OK state", func(t *testing.T) {
+	t.Run("a failed initial sync does not fail the boot", func(t *testing.T) {
 		p, mgr := newPlugin(t, filepath.Join(t.TempDir(), "does-not-exist.git"))
 
-		require.ErrorContains(t, p.Start(t.Context()), "initial git sync failed")
-		require.Equal(t, plugins.StateNotReady, mgr.PluginStatus()[PluginName].State,
-			"Start must surface the failure as an error; reporting a state here would hang startup, as nothing retries before the runtime is ready")
+		require.NoError(t, p.Start(t.Context()))
+		require.Equal(t, plugins.StateOK, mgr.PluginStatus()[PluginName].State,
+			"Start must report StateOK regardless, so the runtime boots; "+
+				"the failed sync is retried in the background and surfaced via the gRPC health check instead")
 	})
 }
 
