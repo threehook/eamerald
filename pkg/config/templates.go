@@ -17,10 +17,10 @@ type templateParams struct {
 }
 
 const LocalImageTemplate string = templatePreamble + opaLocalPolicyImage + topazFileDecisionLoggerPlugin +
-	asertoEdgePlugin + gitPolicySourcePlugin + entraDirectorySyncPlugin
+	adlDecisionLoggerPlugin + asertoEdgePlugin + gitPolicySourcePlugin + entraDirectorySyncPlugin
 
 const RemoteImageTemplate string = templatePreamble + opaRemotePolicyImage + topazFileDecisionLoggerPlugin +
-	asertoEdgePlugin + gitPolicySourcePlugin + entraDirectorySyncPlugin
+	adlDecisionLoggerPlugin + asertoEdgePlugin + gitPolicySourcePlugin + entraDirectorySyncPlugin
 
 const templatePreamble string = `# yaml-language-server: $schema=https://topaz.sh/schema/config.json
 ---
@@ -393,6 +393,12 @@ const topazFileDecisionLoggerPlugin string = `
           registry_image: '{{ .RegistryImage }}'
           registry_tag: '{{ .RegistryTag }}'
           digest: ''
+`
+
+const adlDecisionLoggerPlugin string = `
+      # logius adl level 1 decision logger plugin configuration
+      adl_decision_logger:
+        enabled: false
 `
 
 const asertoEdgePlugin string = `

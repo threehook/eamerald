@@ -80,4 +80,10 @@ entra:
   groupObjectType: "group"
   memberRelation: "member"
 
+# logius adl level 1 decision logger plugin: writes one JSON line per
+# authorization decision to stdout, for scraping by a log-shipping agent
+# (e.g. Grafana Alloy) into Loki.
+adlDecisionLogger:
+  enabled: true
+
 resources: {}

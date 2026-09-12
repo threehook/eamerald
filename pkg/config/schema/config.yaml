@@ -335,7 +335,11 @@ opa:
           registry_image: 'aserto-policies/policy-rebac'
           registry_tag: 'latest'
           digest: ''
-          
+
+      # logius adl level 1 decision logger plugin configuration
+      adl_decision_logger:
+        enabled: true
+
       # aserto edge directory sync plugin configuration
       aserto_edge:
         enabled: false

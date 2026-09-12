@@ -10,6 +10,7 @@ import (
 	"github.com/aserto-dev/go-authorizer/aserto/authorizer/v2/api"
 	"github.com/aserto-dev/go-authorizer/pkg/aerr"
 	"github.com/aserto-dev/go-directory/pkg/pb"
+	"github.com/aserto-dev/topaz/topazd/authorizer/plugins/adl_decision_logger"
 	"github.com/aserto-dev/topaz/topazd/authorizer/plugins/topaz_file_decision_logger"
 
 	"github.com/google/uuid"
@@ -120,29 +121,32 @@ func (s *AuthorizerServer) Is(ctx context.Context, req *authorizer.IsRequest) (*
 		resp.Decisions = append(resp.GetDecisions(), &decision)
 	}
 
-	dlPlugin := topaz_file_decision_logger.Lookup(rt.GetPluginsManager())
-	if dlPlugin == nil {
-		return resp, err
+	if dlPlugin := topaz_file_decision_logger.Lookup(rt.GetPluginsManager()); dlPlugin != nil {
+		d := api.Decision{
+			Id:        uuid.NewString(),
+			Timestamp: timestamppb.New(time.Now().In(time.UTC)),
+			Path:      req.GetPolicyContext().GetPath(),
+			Policy: &api.DecisionPolicy{
+				Context: req.GetPolicyContext(),
+			},
+			User: &api.DecisionUser{
+				Context: req.GetIdentityContext(),
+				Id:      getID(input),
+				Email:   getEmail(input),
+			},
+			Resource: req.GetResourceContext(),
+			Outcomes: getOutcomes(resp.GetDecisions()),
+		}
+
+		if err := dlPlugin.LogDecision(ctx, &d); err != nil {
+			return resp, err
+		}
 	}
 
-	d := api.Decision{
-		Id:        uuid.NewString(),
-		Timestamp: timestamppb.New(time.Now().In(time.UTC)),
-		Path:      req.GetPolicyContext().GetPath(),
-		Policy: &api.DecisionPolicy{
-			Context: req.GetPolicyContext(),
-		},
-		User: &api.DecisionUser{
-			Context: req.GetIdentityContext(),
-			Id:      getID(input),
-			Email:   getEmail(input),
-		},
-		Resource: req.GetResourceContext(),
-		Outcomes: getOutcomes(resp.GetDecisions()),
-	}
-
-	if err := dlPlugin.LogDecision(ctx, &d); err != nil {
-		return resp, err
+	if adlPlugin := adl_decision_logger.Lookup(rt.GetPluginsManager()); adlPlugin != nil {
+		if err := adlPlugin.LogDecision(ctx, req, resp.GetDecisions()); err != nil {
+			return resp, err
+		}
 	}
 
 	return resp, err

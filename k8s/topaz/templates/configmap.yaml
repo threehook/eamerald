@@ -231,3 +231,8 @@ data:
             group_object_type: "{{ .Values.entra.groupObjectType }}"
             member_relation: "{{ .Values.entra.memberRelation }}"
         {{- end }}
+        {{- if .Values.adlDecisionLogger.enabled }}
+          # logius adl level 1 decision logger plugin configuration
+          adl_decision_logger:
+            enabled: true
+        {{- end }}
