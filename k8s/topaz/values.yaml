@@ -57,14 +57,6 @@ persistence:
 logging:
   level: info
 
-# Default policy bundle: the same public "todo" example bundle used in
-# docs/deployments/docker-compose/config/local.yaml, pulled from an OCI
-# registry at runtime rather than baked into the image.
-policyBundle:
-  registry: ghcr.io
-  resource: "ghcr.io/aserto-policies/policy-todo:3.0.0"
-
-
 # microsoft entra id (azure ad) directory sync plugin. The client secret is
 # never set here: create it yourself as a Kubernetes Secret first, e.g.
 #   kubectl create secret generic entra-credentials \
@@ -85,5 +77,16 @@ entra:
 # (e.g. Grafana Alloy) into Loki.
 adlDecisionLogger:
   enabled: true
+
+# git policy source plugin: tracks a policy bundle directly from a git repo.
+# This is the only policy source this chart configures; there is no OCI/ghcr
+# bundle fallback. Only public-repo (unauthenticated HTTPS) fields are
+# exposed here; extend with an auth block if a private repo is needed later.
+git:
+  enabled: true
+  repo: "https://github.com/threehook/opa-policies"
+  ref: "refs/heads/main"
+  path: ""
+  pollIntervalSeconds: 60
 
 resources: {}

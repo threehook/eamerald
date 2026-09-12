@@ -202,20 +202,6 @@ data:
         paths: []
         skip_verification: true
       config:
-        services:
-          ghcr:
-            url: https://{{ .Values.policyBundle.registry }}
-            type: "oci"
-            response_header_timeout_seconds: 15
-        bundles:
-          todo:
-            service: ghcr
-            resource: "{{ .Values.policyBundle.resource }}"
-            persist: false
-            config:
-              polling:
-                min_delay_seconds: 60
-                max_delay_seconds: 120
         decision_logs:
           console: false
         plugins:
@@ -230,6 +216,15 @@ data:
             user_object_type: "{{ .Values.entra.userObjectType }}"
             group_object_type: "{{ .Values.entra.groupObjectType }}"
             member_relation: "{{ .Values.entra.memberRelation }}"
+        {{- end }}
+        {{- if .Values.git.enabled }}
+          # git policy source plugin configuration
+          git:
+            enabled: true
+            repo: "{{ .Values.git.repo }}"
+            ref: "{{ .Values.git.ref }}"
+            path: "{{ .Values.git.path }}"
+            poll_interval_seconds: {{ .Values.git.pollIntervalSeconds }}
         {{- end }}
         {{- if .Values.adlDecisionLogger.enabled }}
           # logius adl level 1 decision logger plugin configuration
