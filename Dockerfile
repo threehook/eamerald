@@ -26,6 +26,7 @@ WORKDIR /app
 COPY \
 ${TARGETPLATFORM}/topaz \
 ${TARGETPLATFORM}/topazd \
+${TARGETPLATFORM}/topaz-db \
 ${TARGETPLATFORM}/topaz-backup \
 /app/
 

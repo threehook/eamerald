@@ -198,6 +198,7 @@ dockers_v2:
     ids:
       - topaz
       - topazd
+      - topaz-db
       - topaz-backup
 
     images:

@@ -57,6 +57,18 @@ persistence:
 logging:
   level: info
 
+# The directory manifest defines the authorization model: object types,
+# relations, and permissions. Edit k8s/topaz/files/manifest.yaml to change it;
+# that file is this deployment's source of truth, applied to the database by
+# an init container on every Pod start.
+#
+# Disable only if you manage the manifest out-of-band (e.g. by hand via
+# `topaz directory set manifest`), accepting that the model then lives solely
+# as state in the database PVC and is not reproducible from this chart.
+directory:
+  manifest:
+    enabled: true
+
 # microsoft entra id (azure ad) directory sync plugin. The client secret is
 # never set here: create it yourself as a Kubernetes Secret first, e.g.
 #   kubectl create secret generic entra-credentials \

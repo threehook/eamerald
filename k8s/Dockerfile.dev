@@ -1,4 +1,6 @@
-# Local dev image: builds topazd straight from source with `go build`.
+# Local dev image: builds topazd and topaz-db straight from source with
+# `go build`. topaz-db is needed by the chart's manifest init container, which
+# applies the directory manifest to the database file before topazd starts.
 #
 # The repo's own ./Dockerfile expects prebuilt per-platform binaries (from a
 # goreleaser release/snapshot run) and isn't a source build. This one is for
@@ -17,6 +19,7 @@ RUN go mod download
 COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /out/topazd ./topazd
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/topaz-db ./topaz-db
 
 FROM alpine
 
@@ -34,6 +37,7 @@ ENV TOPAZ_RUNNING_IN_CONTAINER=true
 WORKDIR /app
 
 COPY --from=builder /out/topazd /app/topazd
+COPY --from=builder /out/topaz-db /app/topaz-db
 
 ENTRYPOINT ["./topazd"]
 CMD ["run", "-c", "/config/config.yaml"]

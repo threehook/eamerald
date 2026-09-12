@@ -1,0 +1,14 @@
+{{- if .Values.directory.manifest.enabled }}
+# The directory manifest (object types, relations, permissions) is kept as a
+# real file at files/manifest.yaml in this chart, rather than inline in
+# values.yaml, so it stays editable/diffable as YAML and remains the single
+# tracked source of the directory model.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-manifest
+  labels:
+    {{- include "topaz.labels" . | nindent 4 }}
+data:
+  {{- (.Files.Glob "files/manifest.yaml").AsConfig | nindent 2 }}
+{{- end }}
