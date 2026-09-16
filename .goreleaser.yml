@@ -7,6 +7,8 @@ env:
   - REGISTRY=ghcr.io
   - ORG=aserto-dev
   - REPO=topaz
+  - IMAGE_ORG=threehook
+  - IMAGE_REPO=topaz-plus
   - DESCRIPTION="Topaz Authorization Service"
   - LICENSE=Apache-2.0
 
@@ -145,8 +147,8 @@ changelog:
 release:
   # https://goreleaser.com/customization/release/
   github:
-    owner: "{{ .Env.ORG }}"
-    name: "{{ .Env.REPO }}"
+    owner: "{{ .Env.IMAGE_ORG }}"
+    name: "{{ .Env.IMAGE_REPO }}"
 
   draft: false
   prerelease: "false"
@@ -154,38 +156,6 @@ release:
 
 blobs:
   # https://goreleaser.com/customization/blob/
-
-homebrew_casks:
-  # https://goreleaser.com/customization/homebrew_casks/
-  - name: topaz
-
-    repository:
-      owner: "{{ .Env.ORG }}"
-      name: homebrew-tap
-      token: "{{ .Env.HOMEBREW_TAP }}"
-
-    url:
-      verified: "github.com/{{ .Env.ORG }}/{{ .ProjectName }}"
-
-    commit_author:
-      name: Topaz Bot
-      email: info@topaz.sh
-
-    homepage: "https://www.topaz.sh/docs/"
-    description: "Topaz CLI"
-    license: "{{ .Env.LICENSE }}"
-
-    binaries:
-      - topaz
-
-    skip_upload: false
-
-    hooks:
-      post:
-        install: |
-          if OS.mac?
-            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/topaz"]
-          end
 
 dockers_v2:
   # https://goreleaser.com/customization/dockers_v2
@@ -202,7 +172,7 @@ dockers_v2:
       - topaz-backup
 
     images:
-      - "{{ .Env.REGISTRY }}/{{ .Env.ORG }}/{{ .Env.REPO }}"
+      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_ORG }}/{{ .Env.IMAGE_REPO }}"
 
     tags:
       - "{{ .Version }}"
@@ -213,7 +183,7 @@ dockers_v2:
       "org.opencontainers.image.name": "{{.ProjectName}}"
       "org.opencontainers.image.revision": "{{.FullCommit}}"
       "org.opencontainers.image.version": "{{.Version}}"
-      "org.opencontainers.image.source": "https://github.com/{{ .Env.ORG }}/{{ .Env.REPO }}"
+      "org.opencontainers.image.source": "https://github.com/{{ .Env.IMAGE_ORG }}/{{ .Env.IMAGE_REPO }}"
       "org.opencontainers.image.description": "{{ .Env.DESCRIPTION }}"
       "org.opencontainers.image.licenses": "{{ .Env.LICENSE }}"
 

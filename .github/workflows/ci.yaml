@@ -5,7 +5,7 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
   push:
-    # Publish `main` as Docker `latest` image.
+    # Push a snapshot-tagged image to GHCR on every push to main (not tagged `latest`).
     branches:
       - main
     # Publish `v1.2.3` tags as releases.
@@ -22,8 +22,6 @@ permissions:
   packages: write
 
 env:
-  PRE_RELEASE: ${{ github.ref == 'refs/heads/main' && 'main' || '' }}
-  GH_TOKEN: ${{ github.token }}
   GO_RELEASER_VER: "v2.18.0"
   GO_LANGCI_LINT_VER: "v2.13.2"
   SYFT_VER: "v1.13.0"
@@ -33,30 +31,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       -
-        uses: actions/checkout@v7
-      -
-        name: Setup Go
-        uses: actions/setup-go@v7
+        name: CI setup
+        uses: ./.github/actions/ci-setup
         with:
-          go-version-file: 'go.mod'
-          cache: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       -
         name: Test Setup
         run: |
           make install-gotestsum
-      -
-        name: Setup QEMU
-        uses: docker/setup-qemu-action@v4
-      - 
-        name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v4
-      -
-        name: Login to GitHub Packages Docker Registry
-        uses: docker/login-action@v4
-        with:
-          registry: https://ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
       -
         name: Build
         uses: goreleaser/goreleaser-action@v7
@@ -82,7 +64,7 @@ jobs:
         with:
           distribution: goreleaser
           version: ${{ env.GO_RELEASER_VER }}
-          args: release --config .goreleaser-test.yml --clean --snapshot --skip archive,homebrew,sbom
+          args: release --config .goreleaser-test.yml --clean --snapshot --skip archive,sbom
       -
         name: Unit Tests
         run: |
@@ -118,33 +100,15 @@ jobs:
   push:
     needs: [test]
     runs-on: ubuntu-latest
-    # when on a branch only push if the branch is main
-    # always push when ref is a tag
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    # release job owns tag pushes exclusively; this job only runs for main branch pushes.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       -
-        uses: actions/checkout@v7
+        name: CI setup
+        uses: ./.github/actions/ci-setup
         with:
-          fetch-depth: 0
-      -
-        name: Setup Go
-        uses: actions/setup-go@v7
-        with:
-          go-version-file: 'go.mod'
-          cache: true
-      -
-        name: Setup QEMU
-        uses: docker/setup-qemu-action@v4
-      - 
-        name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v4
-      -
-        name: Login to GitHub Packages Docker Registry
-        uses: docker/login-action@v4
-        with:
-          registry: https://ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: "0"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       -
         name: Setup syft
         uses: anchore/sbom-action/download-syft@v0
@@ -162,36 +126,17 @@ jobs:
           DOCKER_CLI_EXPERIMENTAL: "enabled"
 
   release:
-    needs: [test, push]
+    needs: [test]
     runs-on: ubuntu-latest
-    env:
-      ASERTO_TAP: "{{ secret.ASERTO_TAP }}"
     # Only release when ref is a tag
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     steps:
       -
-        uses: actions/checkout@v7
+        name: CI setup
+        uses: ./.github/actions/ci-setup
         with:
-          fetch-depth: 0
-      -
-        name: Setup Go
-        uses: actions/setup-go@v7
-        with:
-          go-version-file: 'go.mod'
-          cache: true
-      -
-        name: Setup QEMU
-        uses: docker/setup-qemu-action@v4
-      - 
-        name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v4
-      -
-        name: Login to GitHub Packages Docker Registry
-        uses: docker/login-action@v4
-        with:
-          registry: https://ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: "0"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       -
         name: Setup syft
         uses: anchore/sbom-action/download-syft@v0
@@ -202,7 +147,6 @@ jobs:
         uses: goreleaser/goreleaser-action@v7
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          HOMEBREW_TAP: ${{ secrets.RELEASE_TOKEN }}
           DOCKER_CLI_EXPERIMENTAL: "enabled"
         with:
           distribution: goreleaser
@@ -212,7 +156,7 @@ jobs:
         name: Archive deployment examples
         run: |
           cd docs/deployments/sidecar-deployment && zip topaz_deployment_examples.zip *.yaml
-      - 
+      -
         name: Upload deployment examples
         uses: svenstaro/upload-release-action@v2
         with:
@@ -221,52 +165,3 @@ jobs:
           asset_name: topaz_deployment_examples.zip
           tag: ${{ github.ref }}
           overwrite: false
-
-  msi:
-    needs: release
-    runs-on: windows-latest
-    steps:
-      - 
-        name: Checkout
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - 
-        name: Download exe
-        id: download_exe
-        shell: bash
-        run: |
-          gh release download "${GITHUB_REF#refs/tags/}" -p "topaz_windows_amd64.zip"
-          printf "zip=%s\n" *.zip >> $GITHUB_OUTPUT
-          unzip -o *.zip && rm -v *.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - 
-        name: Install go-msi
-        run: choco install -y "go-msi"
-      - 
-        name: Prepare PATH
-        shell: bash
-        run: |
-          echo "$WIX\\bin" >> $GITHUB_PATH
-          echo "C:\\Program Files\\go-msi" >> $GITHUB_PATH
-      - 
-        name: Build MSI
-        id: buildmsi
-        shell: bash
-        env:
-          ZIP_FILE: ${{ steps.download_exe.outputs.zip }}
-        run: |
-          mkdir -p build
-          msi="$(basename "$ZIP_FILE" ".zip").msi"
-          printf "msi=${msi}" >> $GITHUB_OUTPUT
-          go-msi make --arch amd64 --msi "$PWD/$msi" --out "$PWD/build" --version "${GITHUB_REF#refs/tags/}"
-      - 
-        name: Upload MSI
-        shell: bash
-        run: |
-          tag_name="${GITHUB_REF#refs/tags/}"
-          gh release upload "$tag_name" "$MSI_FILE" --repo aserto-dev/topaz --clobber
-        env:
-          MSI_FILE: ${{ steps.buildmsi.outputs.msi }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
