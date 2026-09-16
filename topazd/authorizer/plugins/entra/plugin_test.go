@@ -117,6 +117,15 @@ func TestSetUser(t *testing.T) {
 	require.Equal(t, "ada@example.com", props["mail"])
 	require.Equal(t, "ada@example.com", props["user_principal_name"])
 
+	require.Len(t, writer.relations, 1)
+
+	rel := writer.relations[0]
+	require.Equal(t, "user", rel.GetObjectType())
+	require.Equal(t, "u1", rel.GetObjectId())
+	require.Equal(t, "identifier", rel.GetRelation())
+	require.Equal(t, "identity", rel.GetSubjectType())
+	require.Equal(t, "ada@example.com", rel.GetSubjectId(), "keyed on the UPN")
+
 	t.Run("respects a configured user object type", func(t *testing.T) {
 		writer := &fakeWriter{}
 		p := &Plugin{config: &Config{UserObjectType: testEmployeeObjectType}, writer: writer}
@@ -134,6 +143,7 @@ func TestSetUser(t *testing.T) {
 
 		require.NoError(t, p.setUser(t.Context(), bare))
 		require.Empty(t, writer.objects[0].GetProperties().AsMap()["mail"])
+		require.Empty(t, writer.relations, "no identifier relation without a UPN")
 	})
 
 	t.Run("propagates writer errors", func(t *testing.T) {
@@ -267,8 +277,11 @@ func TestSync(t *testing.T) {
 		require.Equal(t, "g2", writer.objects[1].GetId())
 		require.Equal(t, "u2", writer.objects[2].GetId())
 
-		require.Len(t, writer.relations, 1)
-		require.Equal(t, "g1", writer.relations[0].GetObjectId())
+		require.Len(t, writer.relations, 2, "1 identifier relation for the user + 1 group membership")
+		require.Equal(t, "u2", writer.relations[0].GetObjectId(), "identifier relation is written by setUser")
+		require.Equal(t, "identifier", writer.relations[0].GetRelation())
+		require.Equal(t, "g1", writer.relations[1].GetObjectId(), "membership relation is written by syncUserMemberships")
+		require.Equal(t, "member", writer.relations[1].GetRelation())
 	})
 
 	t.Run("propagates a graph client creation error", func(t *testing.T) {

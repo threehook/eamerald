@@ -6,6 +6,7 @@ import (
 
 	common "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsw "github.com/aserto-dev/go-directory/aserto/directory/writer/v3"
+	"github.com/aserto-dev/topaz/topazd/directory"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/open-policy-agent/opa/v1/plugins"
 	"github.com/pkg/errors"
@@ -227,8 +228,33 @@ func (p *Plugin) setUser(ctx context.Context, u *models.User) error {
 			Properties: props,
 		},
 	})
+	if err != nil {
+		return errors.Wrap(err, "set object")
+	}
 
-	return errors.Wrap(err, "set object")
+	return p.setUserIdentifier(ctx, u)
+}
+
+// setUserIdentifier writes the identifier relation IDENTITY_TYPE_SUB
+// resolution (topazd/directory.ResolveIdentity) needs to map a subject
+// (the user's UPN) to the synced user object.
+func (p *Plugin) setUserIdentifier(ctx context.Context, u *models.User) error {
+	upn := stringValue(u.GetUserPrincipalName())
+	if upn == "" {
+		return nil
+	}
+
+	_, err := p.writer.SetRelation(ctx, &dsw.SetRelationRequest{
+		Relation: &common.Relation{
+			ObjectType:  userObjectType(p.config),
+			ObjectId:    stringValue(u.GetId()),
+			Relation:    directory.Identifier,
+			SubjectType: directory.Identity,
+			SubjectId:   upn,
+		},
+	})
+
+	return errors.Wrap(err, "set identifier relation")
 }
 
 func (p *Plugin) setGroup(ctx context.Context, g *models.Group) error {
