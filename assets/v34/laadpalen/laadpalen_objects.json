@@ -1,0 +1,129 @@
+{
+  "objects": [
+    {
+      "type": "identity",
+      "id": "rick@example.com",
+      "properties": {
+        "kind": "IDENTITY_KIND_EMAIL",
+        "provider": "local",
+        "verified": true
+      }
+    },
+    {
+      "type": "identity",
+      "id": "morty@example.com",
+      "properties": {
+        "kind": "IDENTITY_KIND_EMAIL",
+        "provider": "local",
+        "verified": true
+      }
+    },
+    {
+      "type": "identity",
+      "id": "beth@example.com",
+      "properties": {
+        "kind": "IDENTITY_KIND_EMAIL",
+        "provider": "local",
+        "verified": true
+      }
+    },
+    {
+      "type": "identity",
+      "id": "jerry@example.com",
+      "properties": {
+        "kind": "IDENTITY_KIND_EMAIL",
+        "provider": "local",
+        "verified": true
+      }
+    },
+    {
+      "type": "identity",
+      "id": "diane@example.com",
+      "properties": {
+        "kind": "IDENTITY_KIND_EMAIL",
+        "provider": "local",
+        "verified": true
+      }
+    },
+    {
+      "type": "user",
+      "id": "rick@example.com",
+      "display_name": "Rick Sanchez",
+      "properties": {}
+    },
+    {
+      "type": "user",
+      "id": "morty@example.com",
+      "display_name": "Morty Smith",
+      "properties": {}
+    },
+    {
+      "type": "user",
+      "id": "beth@example.com",
+      "display_name": "Beth Smith",
+      "properties": {}
+    },
+    {
+      "type": "user",
+      "id": "jerry@example.com",
+      "display_name": "Jerry Smith",
+      "properties": {}
+    },
+    {
+      "type": "user",
+      "id": "diane@example.com",
+      "display_name": "Diane Sanchez",
+      "properties": {}
+    },
+    {
+      "type": "department",
+      "id": "secretariaat",
+      "display_name": "Secretariaat",
+      "properties": {}
+    },
+    {
+      "type": "department",
+      "id": "burgerzaken",
+      "display_name": "Burgerzaken",
+      "properties": {}
+    },
+    {
+      "type": "department",
+      "id": "bestuursbureau",
+      "display_name": "Bestuursbureau",
+      "properties": {}
+    },
+    {
+      "type": "course",
+      "id": "laadpalen-management",
+      "display_name": "Laadpalen Management",
+      "properties": {
+        "validity": "P1Y"
+      }
+    },
+    {
+      "type": "diploma",
+      "id": "beth-laadpalen-management",
+      "display_name": "Beth Smith - Laadpalen Management",
+      "properties": {
+        "last_test_date": "2024-06-01T00:00:00Z"
+      }
+    },
+    {
+      "type": "diploma",
+      "id": "jerry-laadpalen-management",
+      "display_name": "Jerry Smith - Laadpalen Management",
+      "properties": {
+        "last_test_date": "2026-03-01T00:00:00Z"
+      }
+    },
+    {
+      "type": "diploma",
+      "id": "diane-laadpalen-management",
+      "display_name": "Diane Sanchez - Laadpalen Management",
+      "properties": {
+        "last_test_date": "2026-01-15T00:00:00Z"
+      }
+    }
+  ]
+}

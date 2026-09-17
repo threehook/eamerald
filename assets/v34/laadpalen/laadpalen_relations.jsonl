@@ -1,0 +1,16 @@
+{"object_type":"user","object_id":"rick@example.com","relation":"identifier","subject_type":"identity","subject_id":"rick@example.com"}
+{"object_type":"user","object_id":"morty@example.com","relation":"identifier","subject_type":"identity","subject_id":"morty@example.com"}
+{"object_type":"user","object_id":"beth@example.com","relation":"identifier","subject_type":"identity","subject_id":"beth@example.com"}
+{"object_type":"user","object_id":"jerry@example.com","relation":"identifier","subject_type":"identity","subject_id":"jerry@example.com"}
+{"object_type":"user","object_id":"diane@example.com","relation":"identifier","subject_type":"identity","subject_id":"diane@example.com"}
+{"object_type":"department","object_id":"secretariaat","relation":"member","subject_type":"user","subject_id":"rick@example.com"}
+{"object_type":"department","object_id":"burgerzaken","relation":"member","subject_type":"user","subject_id":"morty@example.com"}
+{"object_type":"department","object_id":"burgerzaken","relation":"member","subject_type":"user","subject_id":"beth@example.com"}
+{"object_type":"department","object_id":"burgerzaken","relation":"member","subject_type":"user","subject_id":"jerry@example.com"}
+{"object_type":"department","object_id":"bestuursbureau","relation":"member","subject_type":"user","subject_id":"diane@example.com"}
+{"object_type":"diploma","object_id":"beth-laadpalen-management","relation":"holder","subject_type":"user","subject_id":"beth@example.com"}
+{"object_type":"diploma","object_id":"beth-laadpalen-management","relation":"course","subject_type":"course","subject_id":"laadpalen-management"}
+{"object_type":"diploma","object_id":"jerry-laadpalen-management","relation":"holder","subject_type":"user","subject_id":"jerry@example.com"}
+{"object_type":"diploma","object_id":"jerry-laadpalen-management","relation":"course","subject_type":"course","subject_id":"laadpalen-management"}
+{"object_type":"diploma","object_id":"diane-laadpalen-management","relation":"holder","subject_type":"user","subject_id":"diane@example.com"}
+{"object_type":"diploma","object_id":"diane-laadpalen-management","relation":"course","subject_type":"course","subject_id":"laadpalen-management"}
