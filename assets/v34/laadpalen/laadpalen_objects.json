@@ -124,6 +124,54 @@
       "properties": {
         "last_test_date": "2026-01-15T00:00:00Z"
       }
+    },
+    {
+      "type": "adres",
+      "id": "1111AA-1",
+      "display_name": "1111AA 1",
+      "properties": {
+        "postcode": "1111AA",
+        "huisnummer": 1,
+        "elektrisch_voertuig": true,
+        "laadpaal_aanwezig": true,
+        "diplomatiek": false
+      }
+    },
+    {
+      "type": "adres",
+      "id": "1111DD-4",
+      "display_name": "1111DD 4",
+      "properties": {
+        "postcode": "1111DD",
+        "huisnummer": 4,
+        "elektrisch_voertuig": false,
+        "laadpaal_aanwezig": false,
+        "diplomatiek": false
+      }
+    },
+    {
+      "type": "adres",
+      "id": "1111BB-2",
+      "display_name": "1111BB 2",
+      "properties": {
+        "postcode": "1111BB",
+        "huisnummer": 2,
+        "elektrisch_voertuig": true,
+        "laadpaal_aanwezig": false,
+        "diplomatiek": false
+      }
+    },
+    {
+      "type": "adres",
+      "id": "1111EE-5",
+      "display_name": "1111EE 5",
+      "properties": {
+        "postcode": "1111EE",
+        "huisnummer": 5,
+        "elektrisch_voertuig": true,
+        "laadpaal_aanwezig": false,
+        "diplomatiek": true
+      }
     }
   ]
 }

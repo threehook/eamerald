@@ -21,3 +21,5 @@ types:
     relations:
       holder: user
       course: course
+
+  adres: {}
