@@ -15,7 +15,10 @@ services:
       - ENTRA_TENANT_ID=${ENTRA_TENANT_ID}
       - ENTRA_CLIENT_ID=${ENTRA_CLIENT_ID}
       - ENTRA_CLIENT_SECRET=${ENTRA_CLIENT_SECRET}
-    image: ghcr.io/threehook/topaz-plus:0.0.0-test-0bb3fa7-arm64
+    image: topaz-plus:local
+    build:
+      context: ../../..
+      dockerfile: k8s/Dockerfile.dev
     ports:
       - 8080:8080 # console http
       - 8081:8081 # console grpc
