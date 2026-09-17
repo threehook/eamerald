@@ -84,7 +84,7 @@ func (c *Client) importFromReader(stream dsi.Importer_ImportClient, r io.Reader)
 		obj := &dsc.Object{}
 		rel := &dsc.Relation{}
 
-		if err := jsonx.Unmarshal(scanner.Bytes(), obj); err == nil {
+		if err := jsonx.Unmarshal(scanner.Bytes(), obj); err == nil && obj.GetType() != "" && obj.GetId() != "" {
 			if err := stream.Send(&dsi.ImportRequest{
 				OpCode: dsi.Opcode_OPCODE_SET,
 				Msg: &dsi.ImportRequest_Object{
@@ -97,7 +97,9 @@ func (c *Client) importFromReader(stream dsi.Importer_ImportClient, r io.Reader)
 			continue
 		}
 
-		if err := jsonx.Unmarshal(scanner.Bytes(), rel); err == nil {
+		if err := jsonx.Unmarshal(scanner.Bytes(), rel); err == nil &&
+			rel.GetObjectType() != "" && rel.GetObjectId() != "" && rel.GetRelation() != "" &&
+			rel.GetSubjectType() != "" && rel.GetSubjectId() != "" {
 			if err := stream.Send(&dsi.ImportRequest{
 				OpCode: dsi.Opcode_OPCODE_SET,
 				Msg: &dsi.ImportRequest_Relation{
