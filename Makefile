@@ -208,18 +208,6 @@ write-version:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
 	@git describe --tags > ./VERSION.txt
 
-# pulls upstream/main into your fork's main and pushes it back to origin.
-# one-time setup if the 'upstream' remote is missing:
-#   git remote add upstream https://github.com/${ORG}/${REPO}.git
-.PHONY: sync-upstream
-sync-upstream:
-	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
-	@git remote get-url upstream >/dev/null 2>&1 || (echo "no 'upstream' remote configured; run: git remote add upstream https://github.com/${ORG}/${REPO}.git" && exit 1)
-	@git fetch upstream
-	@git checkout main
-	@git merge upstream/main
-	@git push origin main
-
 .PHONY: topaz-run-test-snapshot
 topaz-run-test-snapshot:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
