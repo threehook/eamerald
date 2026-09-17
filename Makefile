@@ -151,6 +151,13 @@ laadpalen-gui:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
 	@cd assets/laadpalen/gui && npm install && npm run dev
 
+# checks every case in assets/laadpalen/test_cases.json against a running
+# authorizer's request_laadpaal decision (see: make laadpalen-deploy).
+.PHONY: laadpalen-test
+laadpalen-test:
+	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
+	@assets/laadpalen/test.sh
+
 PHONY: go-mod-tidy
 go-mod-tidy:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"

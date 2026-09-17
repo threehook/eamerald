@@ -1,0 +1,12 @@
+[
+  { "user": "rick@example.com",  "postcode": "1111AA", "huisnummer": 1,  "decision": false, "reason": "Niet geautoriseerd vanwege afdeling" },
+  { "user": "morty@example.com", "postcode": "1111AA", "huisnummer": 1,  "decision": false, "reason": "Niet geautoriseerd vanwege opleiding" },
+  { "user": "beth@example.com",  "postcode": "1111AA", "huisnummer": 1,  "decision": false, "reason": "Niet geautoriseerd vanwege verlopen opleiding" },
+  { "user": "jerry@example.com", "postcode": "1111DD", "huisnummer": 4,  "decision": false, "reason": "Geen elektrisch voertuig gevonden op adres" },
+  { "user": "jerry@example.com", "postcode": "1111AA", "huisnummer": 1,  "decision": false, "reason": "Reeds laadpaal aanwezig" },
+  { "user": "jerry@example.com", "postcode": "1111BB", "huisnummer": 2,  "decision": true,  "reason": "Toegekend" },
+  { "user": "jerry@example.com", "postcode": "1111EE", "huisnummer": 5,  "decision": false, "reason": "Niet toegekend vanwege diplomatiek kenteken" },
+  { "user": "diane@example.com", "postcode": "1111EE", "huisnummer": 5,  "decision": true,  "reason": "Toegekend" },
+  { "user": "diane@example.com", "postcode": "1111BB", "huisnummer": 2,  "decision": false, "reason": "Niet toegekend vanwege ontbrekend diplomatiek kenteken op adres" },
+  { "user": "jerry@example.com", "postcode": "9999ZZ", "huisnummer": 99, "decision": false, "reason": "Postcode/huisnummer niet gevonden" }
+]
