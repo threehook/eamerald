@@ -12,7 +12,7 @@ image:
   # `make k8s-build` still exist for quick manual builds, just don't expect a
   # `kubectl delete pod` alone to pick up a rebuild under this same tag.
   #
-  # To use a published image instead (e.g. ghcr.io/threehook/topaz-plus once
+  # To use a published image instead (e.g. ghcr.io/threehook/eamerald once
   # you publish one), override repository/tag. If that tag is ever reused/
   # overwritten in the registry (e.g. `:latest`), set pullPolicy: Always, or
   # you'll hit the exact same staleness problem against a real registry.
@@ -20,7 +20,7 @@ image:
   # published images too sidesteps this more robustly than relying on
   # pullPolicy: Always, and remains compatible with IfNotPresent's more
   # efficient (no registry round trip) local-cache behavior.
-  repository: topaz-plus
+  repository: eamerald
   tag: dev
   pullPolicy: IfNotPresent
 

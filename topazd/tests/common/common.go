@@ -29,7 +29,7 @@ func CommitSHA() string {
 }
 
 func TestImage() string {
-	return "ghcr.io/threehook/topaz-plus:0.0.0-test-" + CommitSHA() + "-" + runtime.GOARCH
+	return "ghcr.io/threehook/eamerald:0.0.0-test-" + CommitSHA() + "-" + runtime.GOARCH
 }
 
 func MappedAddr(ctx context.Context, container testcontainers.Container, port string) (string, error) {

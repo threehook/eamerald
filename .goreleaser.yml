@@ -8,7 +8,7 @@ env:
   - ORG=aserto-dev
   - REPO=topaz
   - IMAGE_ORG=threehook
-  - IMAGE_REPO=topaz-plus
+  - IMAGE_REPO=eamerald
   - DESCRIPTION="Topaz Authorization Service"
   - LICENSE=Apache-2.0
 

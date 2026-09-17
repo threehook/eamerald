@@ -7,7 +7,7 @@
 # quickly testing local changes in Docker Desktop's Kubernetes, which shares
 # the local Docker daemon, so no registry push is needed:
 #
-#   docker build -f k8s/Dockerfile.dev -t topaz-plus:dev .
+#   docker build -f k8s/Dockerfile.dev -t eamerald:dev .
 
 FROM golang:1.27 AS builder
 

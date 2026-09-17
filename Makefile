@@ -10,7 +10,7 @@ REGISTRY           := ghcr.io
 ORG                := aserto-dev
 REPO               := topaz
 IMAGE_ORG          := threehook
-IMAGE_REPO         := topaz-plus
+IMAGE_REPO         := eamerald
 DESCRIPTION        := "Topaz Authorization Service"
 LICENSE            := Apache-2.0
 
@@ -36,7 +36,7 @@ RELEASE_TAG        := $$(${EXT_BIN_DIR}/svu current)
 K8S_NAMESPACE      := topaz
 K8S_RELEASE        := topaz
 K8S_CHART          := k8s/topaz
-K8S_DEV_IMAGE      := topaz-plus:dev
+K8S_DEV_IMAGE      := eamerald:dev
 
 .DEFAULT_GOAL      := build
 
@@ -110,8 +110,8 @@ k8s-install:
 k8s-deploy:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
 	@TAG=dev-$$(git rev-parse --short HEAD)-$$(date +%s); \
-	echo "building topaz-plus:$$TAG"; \
-	docker build -f k8s/Dockerfile.dev -t topaz-plus:$$TAG . && \
+	echo "building eamerald:$$TAG"; \
+	docker build -f k8s/Dockerfile.dev -t eamerald:$$TAG . && \
 	helm upgrade --install ${K8S_RELEASE} ${K8S_CHART} -n ${K8S_NAMESPACE} --create-namespace --reuse-values --set image.tag=$$TAG && \
 	kubectl -n ${K8S_NAMESPACE} rollout restart deployment/${K8S_RELEASE}
 	@kubectl -n ${K8S_NAMESPACE} rollout status deployment/${K8S_RELEASE}

@@ -1,8 +1,8 @@
 # laadpalen
 
-An example authorization scenario for topaz-plus: a Dutch municipality's process
+An example authorization scenario for eamerald: a Dutch municipality's process
 for approving a request for a laadpaal (EV charging station). It demonstrates
-topaz-plus's full authorization stack together - a ReBAC directory (users,
+eamerald's full authorization stack together - a ReBAC directory (users,
 departments, courses, diplomas, addresses), a git-sourced Rego policy, and an
 AuthZEN-shaped decision (`{"decision": bool, "context": {"reason": string}}`).
 

@@ -15,7 +15,7 @@ services:
       - ENTRA_TENANT_ID=${ENTRA_TENANT_ID}
       - ENTRA_CLIENT_ID=${ENTRA_CLIENT_ID}
       - ENTRA_CLIENT_SECRET=${ENTRA_CLIENT_SECRET}
-    image: topaz-plus:local
+    image: eamerald:local
     build:
       context: ../../..
       dockerfile: k8s/Dockerfile.dev
