@@ -142,14 +142,14 @@ laadpalen-deploy:
 	@if [ "$$(kubectl -n ${K8S_NAMESPACE} get deployment ${K8S_RELEASE} -o jsonpath='{.status.readyReplicas}' 2>/dev/null)" != "1" ]; then \
 		$(MAKE) k8s-deploy; \
 	fi
-	@go run ./topaz directory set manifest assets/v34/laadpalen/manifest.yaml -H localhost:9292 --insecure
-	@cat assets/v34/laadpalen/laadpalen_objects.jsonl assets/v34/laadpalen/laadpalen_relations.jsonl | go run ./topaz directory import --stdin -H localhost:9292 --insecure
+	@go run ./topaz directory set manifest assets/laadpalen/manifest.yaml -H localhost:9292 --insecure
+	@cat assets/laadpalen/laadpalen_objects.jsonl assets/laadpalen/laadpalen_relations.jsonl | go run ./topaz directory import --stdin -H localhost:9292 --insecure
 	@echo "laadpalen manifest and data loaded - run 'make laadpalen-gui' to start the frontend"
 
 .PHONY: laadpalen-gui
 laadpalen-gui:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
-	@cd assets/v34/laadpalen/gui && npm install && npm run dev
+	@cd assets/laadpalen/gui && npm install && npm run dev
 
 PHONY: go-mod-tidy
 go-mod-tidy:

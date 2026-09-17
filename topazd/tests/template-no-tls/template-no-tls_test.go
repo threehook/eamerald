@@ -81,16 +81,16 @@ func TestTemplatesNoTLS(t *testing.T) {
 }
 
 var tcs = []string{
-	"../../../assets/v34/acmecorp.json",
-	"../../../assets/v34/peoplefinder.json",
+	"../../../assets/acmecorp.json",
+	"../../../assets/peoplefinder.json",
 
-	"../../../assets/v34/citadel.json",
-	"../../../assets/v34/api-auth.json",
-	"../../../assets/v34/api-gateway.json",
-	"../../../assets/v34/gdrive.json",
-	"../../../assets/v34/github.json",
-	"../../../assets/v34/multi-tenant.json",
-	"../../../assets/v34/simple-rbac.json",
-	"../../../assets/v34/slack.json",
-	"../../../assets/v34/todo.json",
+	"../../../assets/citadel.json",
+	"../../../assets/api-auth.json",
+	"../../../assets/api-gateway.json",
+	"../../../assets/gdrive.json",
+	"../../../assets/github.json",
+	"../../../assets/multi-tenant.json",
+	"../../../assets/simple-rbac.json",
+	"../../../assets/slack.json",
+	"../../../assets/todo.json",
 }
