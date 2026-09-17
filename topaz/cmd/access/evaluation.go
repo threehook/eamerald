@@ -4,10 +4,10 @@ import (
 	"context"
 	"os"
 
-	"github.com/aserto-dev/topaz/topaz/clients"
-	dsc "github.com/aserto-dev/topaz/topaz/clients/directory"
-	"github.com/aserto-dev/topaz/topaz/jsonx"
 	dsa "github.com/authzen/access.go/api/access/v1"
+	"github.com/threehook/eamerald/topaz/clients"
+	dsc "github.com/threehook/eamerald/topaz/clients/directory"
+	"github.com/threehook/eamerald/topaz/jsonx"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/structpb"

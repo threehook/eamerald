@@ -2,10 +2,10 @@ package cc
 
 import (
 	logger "github.com/aserto-dev/logger"
-	"github.com/aserto-dev/topaz/internal/certs"
-	opalogger "github.com/aserto-dev/topaz/internal/runtime/logger"
-	"github.com/aserto-dev/topaz/pkg/config"
-	"github.com/aserto-dev/topaz/topazd/cc/context"
+	"github.com/threehook/eamerald/internal/certs"
+	opalogger "github.com/threehook/eamerald/internal/runtime/logger"
+	"github.com/threehook/eamerald/pkg/config"
+	"github.com/threehook/eamerald/topazd/cc/context"
 )
 
 // buildCC sets up the CC struct that contains all dependencies that are cross cutting.

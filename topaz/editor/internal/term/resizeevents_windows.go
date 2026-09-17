@@ -19,8 +19,8 @@ package term
 import (
 	"time"
 
-	"github.com/aserto-dev/topaz/topaz/editor/internal/remotecommand"
-	"github.com/aserto-dev/topaz/topaz/editor/internal/runtime"
+	"github.com/threehook/eamerald/topaz/editor/internal/remotecommand"
+	"github.com/threehook/eamerald/topaz/editor/internal/runtime"
 )
 
 // monitorResizeEvents spawns a goroutine that periodically gets the terminal size and tries to send

@@ -3,7 +3,7 @@ package topaz
 import (
 	"context"
 
-	"github.com/aserto-dev/topaz/topaz/cc"
+	"github.com/threehook/eamerald/topaz/cc"
 )
 
 type RunCmd struct {

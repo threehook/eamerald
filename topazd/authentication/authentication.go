@@ -4,9 +4,9 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/aserto-dev/topaz/pkg/config"
-	"github.com/aserto-dev/topaz/topazd/app/handlers"
 	"github.com/rs/zerolog"
+	"github.com/threehook/eamerald/pkg/config"
+	"github.com/threehook/eamerald/topazd/app/handlers"
 )
 
 func (a *APIKeyAuthMiddleware) ConfigAuth(h http.Handler, authCfg config.AuthnConfig) http.Handler {

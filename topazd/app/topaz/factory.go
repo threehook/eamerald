@@ -2,10 +2,10 @@ package topaz
 
 import (
 	"github.com/aserto-dev/logger"
-	"github.com/aserto-dev/topaz/pkg/config"
-	"github.com/aserto-dev/topaz/topazd/app"
-	"github.com/aserto-dev/topaz/topazd/cc"
-	"github.com/aserto-dev/topaz/topazd/service/builder"
+	"github.com/threehook/eamerald/pkg/config"
+	"github.com/threehook/eamerald/topazd/app"
+	"github.com/threehook/eamerald/topazd/cc"
+	"github.com/threehook/eamerald/topazd/service/builder"
 	"google.golang.org/grpc"
 )
 

@@ -5,9 +5,9 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/aserto-dev/topaz/internal/eds/pkg/directory"
-	"github.com/aserto-dev/topaz/topaz-db/pkg/inproc"
-	dsc "github.com/aserto-dev/topaz/topaz/clients/directory"
+	"github.com/threehook/eamerald/internal/eds/pkg/directory"
+	"github.com/threehook/eamerald/topaz-db/pkg/inproc"
+	dsc "github.com/threehook/eamerald/topaz/clients/directory"
 
 	"github.com/rs/zerolog"
 )

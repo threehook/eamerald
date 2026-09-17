@@ -5,14 +5,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/aserto-dev/topaz/internal/fs"
-	"github.com/aserto-dev/topaz/topaz/cc"
-	azc "github.com/aserto-dev/topaz/topaz/clients/authorizer"
-	dsc "github.com/aserto-dev/topaz/topaz/clients/directory"
-	"github.com/aserto-dev/topaz/topaz/cmd/common"
-	"github.com/aserto-dev/topaz/topaz/cmd/directory"
-	"github.com/aserto-dev/topaz/topaz/cmd/directory/data"
 	"github.com/pkg/errors"
+	"github.com/threehook/eamerald/internal/fs"
+	"github.com/threehook/eamerald/topaz/cc"
+	azc "github.com/threehook/eamerald/topaz/clients/authorizer"
+	dsc "github.com/threehook/eamerald/topaz/clients/directory"
+	"github.com/threehook/eamerald/topaz/cmd/common"
+	"github.com/threehook/eamerald/topaz/cmd/directory"
+	"github.com/threehook/eamerald/topaz/cmd/directory/data"
 )
 
 type ApplyTemplateCmd struct {

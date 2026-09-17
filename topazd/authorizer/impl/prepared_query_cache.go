@@ -4,11 +4,11 @@ import (
 	"context"
 	"strings"
 
-	"github.com/aserto-dev/topaz/internal/runtime"
-	"github.com/aserto-dev/topaz/internal/tsync"
 	"github.com/open-policy-agent/opa/v1/plugins"
 	"github.com/open-policy-agent/opa/v1/rego"
 	"github.com/open-policy-agent/opa/v1/storage"
+	"github.com/threehook/eamerald/internal/runtime"
+	"github.com/threehook/eamerald/internal/tsync"
 )
 
 // preparedQueryCache memoizes rego.PreparedEvalQuery values keyed by the

@@ -10,10 +10,10 @@ import (
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	dsw "github.com/aserto-dev/go-directory/aserto/directory/writer/v3"
 
-	"github.com/aserto-dev/topaz/internal/eds"
-	"github.com/aserto-dev/topaz/internal/eds/pkg/directory"
-	"github.com/aserto-dev/topaz/internal/grpc/middlewares/gerr"
 	"github.com/rs/zerolog"
+	"github.com/threehook/eamerald/internal/eds"
+	"github.com/threehook/eamerald/internal/eds/pkg/directory"
+	"github.com/threehook/eamerald/internal/grpc/middlewares/gerr"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

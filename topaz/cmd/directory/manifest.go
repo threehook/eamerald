@@ -5,10 +5,10 @@ import (
 	"io"
 	"os"
 
-	"github.com/aserto-dev/topaz/topaz/cc"
-	"github.com/aserto-dev/topaz/topaz/clients"
-	dsc "github.com/aserto-dev/topaz/topaz/clients/directory"
-	"github.com/aserto-dev/topaz/topaz/cmd/common"
+	"github.com/threehook/eamerald/topaz/cc"
+	"github.com/threehook/eamerald/topaz/clients"
+	dsc "github.com/threehook/eamerald/topaz/clients/directory"
+	"github.com/threehook/eamerald/topaz/cmd/common"
 )
 
 type GetManifestCmd struct {

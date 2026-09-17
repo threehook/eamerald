@@ -25,7 +25,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/aserto-dev/topaz/topaz/editor/internal/term"
+	"github.com/threehook/eamerald/topaz/editor/internal/term"
 )
 
 // Enclose argument in double-quotes. Double each double-quote character as

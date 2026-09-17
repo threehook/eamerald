@@ -12,10 +12,10 @@ import (
 	cerr "github.com/aserto-dev/errors"
 	az2 "github.com/aserto-dev/go-authorizer/aserto/authorizer/v2"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
-	"github.com/aserto-dev/topaz/topaz/cc"
-	azc "github.com/aserto-dev/topaz/topaz/clients/authorizer"
-	dsc "github.com/aserto-dev/topaz/topaz/clients/directory"
 	dsa "github.com/authzen/access.go/api/access/v1"
+	"github.com/threehook/eamerald/topaz/cc"
+	azc "github.com/threehook/eamerald/topaz/clients/authorizer"
+	dsc "github.com/threehook/eamerald/topaz/clients/directory"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"

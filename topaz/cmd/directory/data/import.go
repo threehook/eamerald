@@ -5,10 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/aserto-dev/topaz/topaz/cc"
-	"github.com/aserto-dev/topaz/topaz/clients"
-	dsc "github.com/aserto-dev/topaz/topaz/clients/directory"
 	"github.com/pkg/errors"
+	"github.com/threehook/eamerald/topaz/cc"
+	"github.com/threehook/eamerald/topaz/clients"
+	dsc "github.com/threehook/eamerald/topaz/clients/directory"
 )
 
 type ImportCmd struct {

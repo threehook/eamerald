@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/aserto-dev/topaz/topaz/x"
+	"github.com/threehook/eamerald/topaz/x"
 )
 
 // feature flags package.

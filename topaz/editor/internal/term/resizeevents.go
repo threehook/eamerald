@@ -23,8 +23,8 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/aserto-dev/topaz/topaz/editor/internal/remotecommand"
-	"github.com/aserto-dev/topaz/topaz/editor/internal/runtime"
+	"github.com/threehook/eamerald/topaz/editor/internal/remotecommand"
+	"github.com/threehook/eamerald/topaz/editor/internal/runtime"
 
 	"golang.org/x/sys/unix"
 )

@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/aserto-dev/topaz/internal/header"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
+	"github.com/threehook/eamerald/internal/header"
 )
 
 func RequestIDContext(t *testing.T) context.Context {

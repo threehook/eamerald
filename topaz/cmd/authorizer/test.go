@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	azc "github.com/aserto-dev/topaz/topaz/clients/authorizer"
-	"github.com/aserto-dev/topaz/topaz/cmd/common"
+	azc "github.com/threehook/eamerald/topaz/clients/authorizer"
+	"github.com/threehook/eamerald/topaz/cmd/common"
 )
 
 type TestCmd struct {

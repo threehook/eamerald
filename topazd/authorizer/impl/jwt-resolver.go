@@ -3,8 +3,8 @@ package impl
 import (
 	"context"
 
-	"github.com/aserto-dev/topaz/pkg/config"
 	"github.com/pkg/errors"
+	"github.com/threehook/eamerald/pkg/config"
 
 	"github.com/jwx-go/jwkfetch/v4"
 	"github.com/lestrrat-go/httprc/v3"

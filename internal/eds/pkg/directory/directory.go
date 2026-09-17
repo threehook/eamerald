@@ -13,10 +13,10 @@ import (
 	dsw "github.com/aserto-dev/go-directory/aserto/directory/writer/v3"
 	dsa "github.com/authzen/access.go/api/access/v1"
 
-	"github.com/aserto-dev/topaz/internal/eds/pkg/bdb"
-	"github.com/aserto-dev/topaz/internal/eds/pkg/bdb/migrations/migrate"
-	"github.com/aserto-dev/topaz/internal/eds/pkg/datasync"
-	v3 "github.com/aserto-dev/topaz/internal/eds/pkg/directory/v3"
+	"github.com/threehook/eamerald/internal/eds/pkg/bdb"
+	"github.com/threehook/eamerald/internal/eds/pkg/bdb/migrations/migrate"
+	"github.com/threehook/eamerald/internal/eds/pkg/datasync"
+	v3 "github.com/threehook/eamerald/internal/eds/pkg/directory/v3"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/rs/zerolog"

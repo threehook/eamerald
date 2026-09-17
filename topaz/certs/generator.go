@@ -5,10 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/aserto-dev/topaz/internal/certs"
-	"github.com/aserto-dev/topaz/topaz/table"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"github.com/threehook/eamerald/internal/certs"
+	"github.com/threehook/eamerald/topaz/table"
 )
 
 type CertPaths struct {

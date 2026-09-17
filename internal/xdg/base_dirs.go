@@ -1,6 +1,6 @@
 package xdg
 
-import "github.com/aserto-dev/topaz/internal/xdg/internal/pathutil"
+import "github.com/threehook/eamerald/internal/xdg/internal/pathutil"
 
 // XDG Base Directory environment variables.
 const (

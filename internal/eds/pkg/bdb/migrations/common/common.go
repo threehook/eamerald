@@ -12,9 +12,9 @@ import (
 	"github.com/aserto-dev/azm/model"
 	v3 "github.com/aserto-dev/azm/v3"
 	dsm "github.com/aserto-dev/go-directory/aserto/directory/model/v3"
-	"github.com/aserto-dev/topaz/internal/eds/pkg/bdb"
-	"github.com/aserto-dev/topaz/internal/fs"
 	"github.com/rs/zerolog"
+	"github.com/threehook/eamerald/internal/eds/pkg/bdb"
+	"github.com/threehook/eamerald/internal/fs"
 
 	"github.com/Masterminds/semver/v3"
 	bolt "go.etcd.io/bbolt"

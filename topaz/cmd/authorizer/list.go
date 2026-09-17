@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/aserto-dev/go-authorizer/aserto/authorizer/v2"
-	"github.com/aserto-dev/topaz/topaz/clients"
-	azc "github.com/aserto-dev/topaz/topaz/clients/authorizer"
-	"github.com/aserto-dev/topaz/topaz/jsonx"
-	"github.com/aserto-dev/topaz/topaz/table"
+	"github.com/threehook/eamerald/topaz/clients"
+	azc "github.com/threehook/eamerald/topaz/clients/authorizer"
+	"github.com/threehook/eamerald/topaz/jsonx"
+	"github.com/threehook/eamerald/topaz/table"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )

@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/aserto-dev/topaz/topaz/cc"
-	"github.com/aserto-dev/topaz/topaz/table"
+	"github.com/threehook/eamerald/topaz/cc"
+	"github.com/threehook/eamerald/topaz/table"
 )
 
 type ListConfigCmd struct {

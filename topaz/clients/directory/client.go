@@ -10,8 +10,8 @@ import (
 	dsm "github.com/aserto-dev/go-directory/aserto/directory/model/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	dsw "github.com/aserto-dev/go-directory/aserto/directory/writer/v3"
-	"github.com/aserto-dev/topaz/topaz/clients"
 	dsa "github.com/authzen/access.go/api/access/v1"
+	"github.com/threehook/eamerald/topaz/clients"
 
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"

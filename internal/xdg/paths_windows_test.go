@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/aserto-dev/topaz/internal/xdg"
 	"github.com/stretchr/testify/require"
+	"github.com/threehook/eamerald/internal/xdg"
 )
 
 func TestDefaultBaseDirs(t *testing.T) {

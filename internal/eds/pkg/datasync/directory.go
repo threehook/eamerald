@@ -10,7 +10,7 @@ import (
 
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dse "github.com/aserto-dev/go-directory/aserto/directory/exporter/v3"
-	"github.com/aserto-dev/topaz/internal/eds/pkg/bdb"
+	"github.com/threehook/eamerald/internal/eds/pkg/bdb"
 	bolt "go.etcd.io/bbolt"
 
 	cuckoo "github.com/panmari/cuckoofilter"

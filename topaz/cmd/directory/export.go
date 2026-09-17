@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 
 	dse "github.com/aserto-dev/go-directory/aserto/directory/exporter/v3"
-	"github.com/aserto-dev/topaz/internal/fs"
-	"github.com/aserto-dev/topaz/topaz/cc"
-	"github.com/aserto-dev/topaz/topaz/clients"
-	dsc "github.com/aserto-dev/topaz/topaz/clients/directory"
+	"github.com/threehook/eamerald/internal/fs"
+	"github.com/threehook/eamerald/topaz/cc"
+	"github.com/threehook/eamerald/topaz/clients"
+	dsc "github.com/threehook/eamerald/topaz/clients/directory"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/aserto-dev/topaz/internal/header"
 	"github.com/stretchr/testify/assert"
+	"github.com/threehook/eamerald/internal/header"
 	"google.golang.org/grpc/metadata"
 )
 

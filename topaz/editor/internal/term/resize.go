@@ -17,10 +17,10 @@ limitations under the License.
 package term
 
 import (
-	"github.com/aserto-dev/topaz/topaz/editor/internal/remotecommand"
-	"github.com/aserto-dev/topaz/topaz/editor/internal/runtime"
 	"github.com/moby/term"
 	"github.com/pkg/errors"
+	"github.com/threehook/eamerald/topaz/editor/internal/remotecommand"
+	"github.com/threehook/eamerald/topaz/editor/internal/runtime"
 )
 
 // GetSize returns the current size of the user's terminal. If it isn't a terminal,

@@ -7,11 +7,11 @@ import (
 
 	"github.com/aserto-dev/go-authorizer/aserto/authorizer/v2"
 	"github.com/aserto-dev/go-authorizer/pkg/aerr"
-	"github.com/aserto-dev/topaz/internal/runtime"
+	"github.com/threehook/eamerald/internal/runtime"
 
-	"github.com/aserto-dev/topaz/pkg/config"
-	"github.com/aserto-dev/topaz/topazd/authorizer/resolvers"
-	"github.com/aserto-dev/topaz/topazd/version"
+	"github.com/threehook/eamerald/pkg/config"
+	"github.com/threehook/eamerald/topazd/authorizer/resolvers"
+	"github.com/threehook/eamerald/topazd/version"
 
 	"github.com/open-policy-agent/opa/v1/server/types"
 	"github.com/rs/zerolog"

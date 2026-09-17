@@ -7,9 +7,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/aserto-dev/topaz/topazd/service/builder"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
+	"github.com/threehook/eamerald/topazd/service/builder"
 )
 
 const AuthZENConfiguration string = `/.well-known/authzen-configuration`

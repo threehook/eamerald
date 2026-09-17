@@ -10,7 +10,7 @@ import (
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/aserto-dev/go-directory/pkg/derr"
 	"github.com/aserto-dev/go-directory/pkg/prop"
-	"github.com/aserto-dev/topaz/internal/eds/pkg/bdb"
+	"github.com/threehook/eamerald/internal/eds/pkg/bdb"
 
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/protobuf/types/known/structpb"

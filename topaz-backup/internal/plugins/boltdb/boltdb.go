@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aserto-dev/topaz/internal/fs"
-	"github.com/aserto-dev/topaz/topaz-backup/internal/plugin"
 	"github.com/pkg/errors"
+	"github.com/threehook/eamerald/internal/fs"
+	"github.com/threehook/eamerald/topaz-backup/internal/plugin"
 	bolt "go.etcd.io/bbolt"
 )
 

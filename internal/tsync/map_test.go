@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/aserto-dev/topaz/internal/tsync"
+	"github.com/threehook/eamerald/internal/tsync"
 )
 
 // TestTypedSyncMapBasic validates fundamental CRUD methods.

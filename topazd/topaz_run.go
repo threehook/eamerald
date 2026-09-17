@@ -3,12 +3,12 @@ package main
 import (
 	"os"
 
-	"github.com/aserto-dev/topaz/pkg/config"
-	"github.com/aserto-dev/topaz/topazd/app"
-	"github.com/aserto-dev/topaz/topazd/app/directory"
-	"github.com/aserto-dev/topaz/topazd/app/topaz"
-	"github.com/aserto-dev/topaz/topazd/debug"
 	"github.com/spf13/cobra"
+	"github.com/threehook/eamerald/pkg/config"
+	"github.com/threehook/eamerald/topazd/app"
+	"github.com/threehook/eamerald/topazd/app/directory"
+	"github.com/threehook/eamerald/topazd/app/topaz"
+	"github.com/threehook/eamerald/topazd/debug"
 )
 
 var (

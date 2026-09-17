@@ -6,9 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/aserto-dev/topaz/topaz/cc"
-	"github.com/aserto-dev/topaz/topaz/cmd/common"
-	"github.com/aserto-dev/topaz/topaz/editor"
+	"github.com/threehook/eamerald/topaz/cc"
+	"github.com/threehook/eamerald/topaz/cmd/common"
+	"github.com/threehook/eamerald/topaz/editor"
 )
 
 type EditConfigCmd struct {

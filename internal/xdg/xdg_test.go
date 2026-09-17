@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/aserto-dev/topaz/internal/xdg"
+	"github.com/threehook/eamerald/internal/xdg"
 )
 
 type envSample struct {

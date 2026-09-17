@@ -3,8 +3,8 @@ package eds
 import (
 	"context"
 
-	"github.com/aserto-dev/topaz/internal/eds/pkg/directory"
 	"github.com/rs/zerolog"
+	"github.com/threehook/eamerald/internal/eds/pkg/directory"
 )
 
 func New(ctx context.Context, config *directory.Config, logger *zerolog.Logger) (*directory.Directory, error) {

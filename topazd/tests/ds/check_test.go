@@ -7,8 +7,8 @@ import (
 
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/aserto-dev/go-directory/pkg/prop"
-	tc "github.com/aserto-dev/topaz/topazd/tests/common"
 	"github.com/stretchr/testify/require"
+	tc "github.com/threehook/eamerald/topazd/tests/common"
 )
 
 type checkTestCase struct {

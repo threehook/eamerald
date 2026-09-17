@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"os"
 
-	"github.com/aserto-dev/topaz/topaz/editor"
-	"github.com/aserto-dev/topaz/topaz/jsonx"
+	"github.com/threehook/eamerald/topaz/editor"
+	"github.com/threehook/eamerald/topaz/jsonx"
 	"google.golang.org/protobuf/proto"
 )
 

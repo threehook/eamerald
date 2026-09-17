@@ -24,7 +24,7 @@ import (
 	wordwrap "github.com/mitchellh/go-wordwrap"
 	"github.com/moby/term"
 
-	"github.com/aserto-dev/topaz/topaz/editor/internal/remotecommand"
+	"github.com/threehook/eamerald/topaz/editor/internal/remotecommand"
 )
 
 type wordWrapWriter struct {

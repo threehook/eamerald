@@ -5,13 +5,13 @@ import (
 	"context"
 
 	dsw "github.com/aserto-dev/go-directory/aserto/directory/writer/v3"
-	"github.com/aserto-dev/topaz/topazd/authorizer/plugins/noop"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/open-policy-agent/opa/v1/plugins"
 	"github.com/open-policy-agent/opa/v1/util"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
+	"github.com/threehook/eamerald/topazd/authorizer/plugins/noop"
 	"google.golang.org/grpc"
 )
 

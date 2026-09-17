@@ -5,8 +5,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/aserto-dev/topaz/topaz/edit"
-	"github.com/aserto-dev/topaz/topaz/fflag"
+	"github.com/threehook/eamerald/topaz/edit"
+	"github.com/threehook/eamerald/topaz/fflag"
 
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/encoding/protojson"

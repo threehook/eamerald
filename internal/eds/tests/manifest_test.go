@@ -15,9 +15,9 @@ import (
 	dsm "github.com/aserto-dev/go-directory/aserto/directory/model/v3"
 	dsw "github.com/aserto-dev/go-directory/aserto/directory/writer/v3"
 	"github.com/aserto-dev/go-directory/pkg/pb"
-	"github.com/aserto-dev/topaz/internal/eds/pkg/server"
-	"github.com/aserto-dev/topaz/internal/fs"
 	"github.com/samber/lo"
+	"github.com/threehook/eamerald/internal/eds/pkg/server"
+	"github.com/threehook/eamerald/internal/fs"
 
 	"github.com/gonvenience/ytbx"
 	"github.com/homeport/dyff/pkg/dyff"

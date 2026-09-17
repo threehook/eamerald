@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/aserto-dev/topaz/internal/eds"
-	"github.com/aserto-dev/topaz/internal/eds/pkg/directory"
+	"github.com/threehook/eamerald/internal/eds"
+	"github.com/threehook/eamerald/internal/eds/pkg/directory"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"

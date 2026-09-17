@@ -6,10 +6,10 @@ import (
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/aserto-dev/go-directory/pkg/validator"
-	"github.com/aserto-dev/topaz/internal/eds/pkg/bdb"
-	"github.com/aserto-dev/topaz/internal/eds/pkg/ds"
-	"github.com/aserto-dev/topaz/internal/eds/pkg/x"
 	"github.com/pkg/errors"
+	"github.com/threehook/eamerald/internal/eds/pkg/bdb"
+	"github.com/threehook/eamerald/internal/eds/pkg/ds"
+	"github.com/threehook/eamerald/internal/eds/pkg/x"
 
 	"github.com/go-http-utils/headers"
 	"github.com/rs/zerolog"

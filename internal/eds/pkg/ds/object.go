@@ -5,7 +5,7 @@ import (
 
 	"github.com/aserto-dev/azm/safe"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
-	"github.com/aserto-dev/topaz/internal/eds/pkg/x"
+	"github.com/threehook/eamerald/internal/eds/pkg/x"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 

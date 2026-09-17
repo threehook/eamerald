@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver/v3"
-	ver "github.com/aserto-dev/topaz/topaz/version"
-	"github.com/aserto-dev/topaz/topaz/x"
 	"github.com/samber/lo"
+	ver "github.com/threehook/eamerald/topaz/version"
+	"github.com/threehook/eamerald/topaz/x"
 )
 
 const (

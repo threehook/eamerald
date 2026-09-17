@@ -4,12 +4,12 @@ import (
 	"context"
 	"strings"
 
-	grpcutil "github.com/aserto-dev/topaz/internal/grpc"
-	"github.com/aserto-dev/topaz/internal/header"
 	"github.com/google/uuid"
 	grpcmiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	grpcutil "github.com/threehook/eamerald/internal/grpc"
+	"github.com/threehook/eamerald/internal/header"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )

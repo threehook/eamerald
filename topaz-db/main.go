@@ -8,9 +8,9 @@ import (
 	"syscall"
 
 	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/topaz/topaz-db/cmd"
-	"github.com/aserto-dev/topaz/topaz/cc"
-	"github.com/aserto-dev/topaz/topaz/x"
+	"github.com/threehook/eamerald/topaz-db/cmd"
+	"github.com/threehook/eamerald/topaz/cc"
+	"github.com/threehook/eamerald/topaz/x"
 )
 
 func main() {

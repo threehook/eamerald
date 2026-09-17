@@ -23,7 +23,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aserto-dev/topaz/topaz/editor"
+	"github.com/threehook/eamerald/topaz/editor"
 )
 
 func TestArgs(t *testing.T) {

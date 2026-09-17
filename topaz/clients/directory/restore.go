@@ -15,8 +15,8 @@ import (
 
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsi "github.com/aserto-dev/go-directory/aserto/directory/importer/v3"
-	"github.com/aserto-dev/topaz/internal/fs"
-	"github.com/aserto-dev/topaz/topaz/js"
+	"github.com/threehook/eamerald/internal/fs"
+	"github.com/threehook/eamerald/topaz/js"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 

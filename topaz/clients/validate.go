@@ -6,8 +6,8 @@ import (
 	"time"
 
 	client "github.com/aserto-dev/go-aserto"
-	"github.com/aserto-dev/topaz/topaz/version"
 	"github.com/pkg/errors"
+	"github.com/threehook/eamerald/topaz/version"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

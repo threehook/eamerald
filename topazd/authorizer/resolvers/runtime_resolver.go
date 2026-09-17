@@ -3,7 +3,7 @@ package resolvers
 import (
 	"context"
 
-	"github.com/aserto-dev/topaz/internal/runtime"
+	"github.com/threehook/eamerald/internal/runtime"
 )
 
 type RuntimeResolver interface {

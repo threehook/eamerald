@@ -7,8 +7,8 @@ WARN_COLOR         := \033[36;01m
 ATTN_COLOR         := \033[33;01m
 
 REGISTRY           := ghcr.io
-ORG                := aserto-dev
-REPO               := topaz
+ORG                := threehook
+REPO               := eamerald
 IMAGE_ORG          := threehook
 IMAGE_REPO         := eamerald
 DESCRIPTION        := "Topaz Authorization Service"

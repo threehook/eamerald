@@ -1,13 +1,13 @@
 package cmd
 
 import (
-	"github.com/aserto-dev/topaz/topaz/cmd/access"
-	"github.com/aserto-dev/topaz/topaz/cmd/authorizer"
-	"github.com/aserto-dev/topaz/topaz/cmd/certs"
-	"github.com/aserto-dev/topaz/topaz/cmd/configure"
-	"github.com/aserto-dev/topaz/topaz/cmd/directory"
-	"github.com/aserto-dev/topaz/topaz/cmd/templates"
-	"github.com/aserto-dev/topaz/topaz/cmd/topaz"
+	"github.com/threehook/eamerald/topaz/cmd/access"
+	"github.com/threehook/eamerald/topaz/cmd/authorizer"
+	"github.com/threehook/eamerald/topaz/cmd/certs"
+	"github.com/threehook/eamerald/topaz/cmd/configure"
+	"github.com/threehook/eamerald/topaz/cmd/directory"
+	"github.com/threehook/eamerald/topaz/cmd/templates"
+	"github.com/threehook/eamerald/topaz/cmd/topaz"
 )
 
 type SaveContext bool

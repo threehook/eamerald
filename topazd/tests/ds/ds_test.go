@@ -5,15 +5,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aserto-dev/topaz/internal/fs"
-	azc "github.com/aserto-dev/topaz/topaz/clients/authorizer"
-	dsc "github.com/aserto-dev/topaz/topaz/clients/directory"
-	"github.com/aserto-dev/topaz/topaz/x"
+	"github.com/threehook/eamerald/internal/fs"
+	azc "github.com/threehook/eamerald/topaz/clients/authorizer"
+	dsc "github.com/threehook/eamerald/topaz/clients/directory"
+	"github.com/threehook/eamerald/topaz/x"
 
 	client "github.com/aserto-dev/go-aserto"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
-	assets_test "github.com/aserto-dev/topaz/topazd/tests/assets"
-	tc "github.com/aserto-dev/topaz/topazd/tests/common"
+	assets_test "github.com/threehook/eamerald/topazd/tests/assets"
+	tc "github.com/threehook/eamerald/topazd/tests/common"
 
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"

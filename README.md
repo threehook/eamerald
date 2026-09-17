@@ -71,7 +71,7 @@ $ brew install --cask aserto-dev/tap/topaz
 * Via a GO install
 
 ```console
-$ go install github.com/aserto-dev/topaz/topaz@latest
+$ go install github.com/threehook/eamerald/topaz@latest
 ```
 
 ### Building from source

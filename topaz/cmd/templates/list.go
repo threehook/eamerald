@@ -4,8 +4,8 @@ import (
 	"context"
 	"os"
 
-	"github.com/aserto-dev/topaz/topaz/table"
-	"github.com/aserto-dev/topaz/topaz/x"
+	"github.com/threehook/eamerald/topaz/table"
+	"github.com/threehook/eamerald/topaz/x"
 )
 
 type ListTemplatesCmd struct {

@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	runtime "github.com/aserto-dev/topaz/internal/runtime"
-	"github.com/aserto-dev/topaz/internal/runtime/testutil"
 	"github.com/stretchr/testify/require"
+	runtime "github.com/threehook/eamerald/internal/runtime"
+	"github.com/threehook/eamerald/internal/runtime/testutil"
 )
 
 const defaultTestContextTimeout = 60 * time.Second

@@ -10,9 +10,9 @@ import (
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/aserto-dev/go-directory/pkg/pb"
-	"github.com/aserto-dev/topaz/pkg/grpcc"
-	"github.com/aserto-dev/topaz/topazd/directory"
 	"github.com/pkg/errors"
+	"github.com/threehook/eamerald/pkg/grpcc"
+	"github.com/threehook/eamerald/topazd/directory"
 )
 
 const identityResolutionTimeout = 60 * time.Second

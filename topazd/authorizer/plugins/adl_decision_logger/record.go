@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/aserto-dev/go-authorizer/aserto/authorizer/v2"
-	"github.com/aserto-dev/topaz/internal/header"
 	dsa "github.com/authzen/access.go/api/access/v1"
+	"github.com/threehook/eamerald/internal/header"
 )
 
 // Status is the Logius ADL 1.0 §3.3.5 decision status. A denied access

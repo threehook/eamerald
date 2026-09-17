@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/aserto-dev/topaz/internal/xdg/internal/pathutil"
+	"github.com/threehook/eamerald/internal/xdg/internal/pathutil"
 )
 
 var (

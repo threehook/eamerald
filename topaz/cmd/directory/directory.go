@@ -1,6 +1,6 @@
 package directory
 
-import "github.com/aserto-dev/topaz/topaz/cmd/directory/data"
+import "github.com/threehook/eamerald/topaz/cmd/directory/data"
 
 type DirectoryCmd struct {
 	Check   CheckCmd   `cmd:"" help:"check single permission"`

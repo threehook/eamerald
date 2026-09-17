@@ -21,7 +21,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aserto-dev/topaz/topaz/editor/internal/term"
+	"github.com/threehook/eamerald/topaz/editor/internal/term"
 )
 
 const test = "Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube Kube"

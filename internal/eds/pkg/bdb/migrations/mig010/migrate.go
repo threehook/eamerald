@@ -3,9 +3,9 @@ package mig010
 import (
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 
-	"github.com/aserto-dev/topaz/internal/eds/pkg/bdb"
-	"github.com/aserto-dev/topaz/internal/eds/pkg/bdb/migrations/common"
-	"github.com/aserto-dev/topaz/internal/eds/pkg/ds"
+	"github.com/threehook/eamerald/internal/eds/pkg/bdb"
+	"github.com/threehook/eamerald/internal/eds/pkg/bdb/migrations/common"
+	"github.com/threehook/eamerald/internal/eds/pkg/ds"
 
 	"github.com/rs/zerolog"
 	bolt "go.etcd.io/bbolt"

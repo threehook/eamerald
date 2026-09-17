@@ -3,8 +3,8 @@ package fflag_test
 import (
 	"testing"
 
-	"github.com/aserto-dev/topaz/topaz/fflag"
 	"github.com/stretchr/testify/assert"
+	"github.com/threehook/eamerald/topaz/fflag"
 )
 
 func TestFFlag(t *testing.T) {

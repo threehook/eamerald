@@ -1,9 +1,9 @@
 package mig006
 
 import (
-	"github.com/aserto-dev/topaz/internal/eds/pkg/bdb"
-	"github.com/aserto-dev/topaz/internal/eds/pkg/bdb/migrations/common"
 	"github.com/rs/zerolog"
+	"github.com/threehook/eamerald/internal/eds/pkg/bdb"
+	"github.com/threehook/eamerald/internal/eds/pkg/bdb/migrations/common"
 
 	bolt "go.etcd.io/bbolt"
 )

@@ -1,4 +1,4 @@
-module github.com/aserto-dev/topaz
+module github.com/threehook/eamerald
 
 go 1.26.3
 

@@ -4,9 +4,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/aserto-dev/topaz/internal/fs"
-	"github.com/aserto-dev/topaz/internal/xdg"
-	"github.com/aserto-dev/topaz/topaz/x"
+	"github.com/threehook/eamerald/internal/fs"
+	"github.com/threehook/eamerald/internal/xdg"
+	"github.com/threehook/eamerald/topaz/x"
 )
 
 // Common topaz directory paths and operations.

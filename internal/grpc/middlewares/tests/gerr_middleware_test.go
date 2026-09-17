@@ -7,9 +7,9 @@ import (
 
 	aerr "github.com/aserto-dev/errors"
 	"github.com/aserto-dev/logger"
-	"github.com/aserto-dev/topaz/internal/grpc/middlewares/gerr"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
+	"github.com/threehook/eamerald/internal/grpc/middlewares/gerr"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

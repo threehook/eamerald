@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc"
 
 	az2 "github.com/aserto-dev/go-authorizer/aserto/authorizer/v2"
-	"github.com/aserto-dev/topaz/topaz/clients"
+	"github.com/threehook/eamerald/topaz/clients"
 )
 
 type Config struct {

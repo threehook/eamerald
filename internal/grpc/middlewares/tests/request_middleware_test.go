@@ -5,11 +5,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aserto-dev/topaz/internal/grpc/middlewares/request"
-	"github.com/aserto-dev/topaz/internal/header"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
+	"github.com/threehook/eamerald/internal/grpc/middlewares/request"
+	"github.com/threehook/eamerald/internal/header"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )

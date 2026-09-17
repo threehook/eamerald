@@ -19,7 +19,7 @@ import (
 	"github.com/lestrrat-go/jwx/v4/jwt"
 	"github.com/stretchr/testify/require"
 
-	"github.com/aserto-dev/topaz/pkg/config"
+	"github.com/threehook/eamerald/pkg/config"
 )
 
 // ---------------------------------------------------------------------------

@@ -7,7 +7,7 @@ import (
 	"github.com/aserto-dev/azm/model"
 	"github.com/aserto-dev/azm/stats"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
-	"github.com/aserto-dev/topaz/internal/eds/pkg/bdb"
+	"github.com/threehook/eamerald/internal/eds/pkg/bdb"
 
 	bolt "go.etcd.io/bbolt"
 )

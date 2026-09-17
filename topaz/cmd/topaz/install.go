@@ -3,8 +3,8 @@ package topaz
 import (
 	"context"
 
-	"github.com/aserto-dev/topaz/topaz/cc"
-	"github.com/aserto-dev/topaz/topaz/dockerx"
+	"github.com/threehook/eamerald/topaz/cc"
+	"github.com/threehook/eamerald/topaz/dockerx"
 )
 
 type InstallCmd struct {

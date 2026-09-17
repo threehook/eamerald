@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/aserto-dev/topaz/pkg/config"
-	"github.com/aserto-dev/topaz/topazd/app/handlers"
-	"github.com/aserto-dev/topaz/topazd/service/builder"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/threehook/eamerald/pkg/config"
+	"github.com/threehook/eamerald/topazd/app/handlers"
+	"github.com/threehook/eamerald/topazd/service/builder"
 	"google.golang.org/grpc"
 )
 

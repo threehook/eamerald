@@ -14,10 +14,10 @@ import (
 	dsi "github.com/aserto-dev/go-directory/aserto/directory/importer/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	dsw "github.com/aserto-dev/go-directory/aserto/directory/writer/v3"
-	"github.com/aserto-dev/topaz/internal/eds/pkg/directory"
-	"github.com/aserto-dev/topaz/internal/eds/pkg/server"
-	"github.com/aserto-dev/topaz/internal/fs"
 	"github.com/pkg/errors"
+	"github.com/threehook/eamerald/internal/eds/pkg/directory"
+	"github.com/threehook/eamerald/internal/eds/pkg/server"
+	"github.com/threehook/eamerald/internal/fs"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"

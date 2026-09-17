@@ -3,10 +3,10 @@ package topaz_file_decision_logger
 import (
 	"context"
 
-	"github.com/aserto-dev/topaz/topazd/authorizer/plugins/noop"
 	"github.com/open-policy-agent/opa/v1/plugins"
 	"github.com/open-policy-agent/opa/v1/util"
 	"github.com/rs/zerolog"
+	"github.com/threehook/eamerald/topazd/authorizer/plugins/noop"
 )
 
 type PluginFactory struct {

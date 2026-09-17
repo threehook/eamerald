@@ -9,9 +9,9 @@ import (
 
 	"github.com/aserto-dev/azm/stats"
 	dse "github.com/aserto-dev/go-directory/aserto/directory/exporter/v3"
-	dsc "github.com/aserto-dev/topaz/topaz/clients/directory"
-	"github.com/aserto-dev/topaz/topaz/jsonx"
-	"github.com/aserto-dev/topaz/topaz/table"
+	dsc "github.com/threehook/eamerald/topaz/clients/directory"
+	"github.com/threehook/eamerald/topaz/jsonx"
+	"github.com/threehook/eamerald/topaz/table"
 
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/types/known/structpb"

@@ -9,7 +9,7 @@ import (
 
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsi "github.com/aserto-dev/go-directory/aserto/directory/importer/v3"
-	"github.com/aserto-dev/topaz/topaz/jsonx"
+	"github.com/threehook/eamerald/topaz/jsonx"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

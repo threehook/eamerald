@@ -5,8 +5,8 @@ import (
 	"regexp"
 
 	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/topaz/topaz/fflag"
 	"github.com/pkg/errors"
+	"github.com/threehook/eamerald/topaz/fflag"
 )
 
 type ConfigCmd struct {

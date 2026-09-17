@@ -20,8 +20,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/aserto-dev/topaz/topaz/editor/internal/interrupt"
-	"github.com/aserto-dev/topaz/topaz/editor/internal/printers"
+	"github.com/threehook/eamerald/topaz/editor/internal/interrupt"
+	"github.com/threehook/eamerald/topaz/editor/internal/printers"
 
 	"github.com/moby/term"
 )

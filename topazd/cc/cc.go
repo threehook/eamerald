@@ -5,8 +5,8 @@ import (
 	"sync"
 
 	"github.com/aserto-dev/logger"
-	"github.com/aserto-dev/topaz/pkg/config"
 	"github.com/rs/zerolog"
+	"github.com/threehook/eamerald/pkg/config"
 	"golang.org/x/sync/errgroup"
 )
 

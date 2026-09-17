@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/aserto-dev/topaz/internal/xdg/internal/pathutil"
+	"github.com/threehook/eamerald/internal/xdg/internal/pathutil"
 
 	"github.com/stretchr/testify/require"
 )

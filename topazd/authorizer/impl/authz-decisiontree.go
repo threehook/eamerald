@@ -8,7 +8,7 @@ import (
 	"github.com/aserto-dev/go-authorizer/aserto/authorizer/v2"
 	"github.com/aserto-dev/go-authorizer/aserto/authorizer/v2/api"
 	"github.com/aserto-dev/go-authorizer/pkg/aerr"
-	"github.com/aserto-dev/topaz/internal/runtime"
+	"github.com/threehook/eamerald/internal/runtime"
 
 	"github.com/open-policy-agent/opa/v1/rego"
 	"github.com/pkg/errors"

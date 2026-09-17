@@ -24,7 +24,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	"github.com/aserto-dev/topaz/topazd/app"
+	"github.com/threehook/eamerald/topazd/app"
 	"google.golang.org/grpc/health/grpc_health_v1"
 )
 

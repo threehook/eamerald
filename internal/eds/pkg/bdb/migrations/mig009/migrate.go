@@ -1,9 +1,9 @@
 package mig009
 
 import (
-	"github.com/aserto-dev/topaz/internal/eds/pkg/bdb"
-	"github.com/aserto-dev/topaz/internal/eds/pkg/bdb/migrations/common"
 	"github.com/rs/zerolog"
+	"github.com/threehook/eamerald/internal/eds/pkg/bdb"
+	"github.com/threehook/eamerald/internal/eds/pkg/bdb/migrations/common"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 

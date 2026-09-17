@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aserto-dev/topaz/topazd/version"
-	"github.com/aserto-dev/topaz/topazd/x"
 	"github.com/spf13/cobra"
+	"github.com/threehook/eamerald/topazd/version"
+	"github.com/threehook/eamerald/topazd/x"
 )
 
 var rootCmd = &cobra.Command{

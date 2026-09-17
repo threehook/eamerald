@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 
 	"github.com/aserto-dev/go-authorizer/aserto/authorizer/v2"
-	"github.com/aserto-dev/topaz/internal/header"
 	"github.com/pkg/errors"
+	"github.com/threehook/eamerald/internal/header"
 )
 
 // LogDecision writes a Logius ADL 1.0 Level 1 record for a Topaz Is() call

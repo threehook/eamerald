@@ -6,12 +6,12 @@ import (
 
 	cerr "github.com/aserto-dev/errors"
 	console "github.com/aserto-dev/go-topaz-ui"
-	"github.com/aserto-dev/topaz/internal/eds"
-	"github.com/aserto-dev/topaz/pkg/config"
-	"github.com/aserto-dev/topaz/topazd/app/handlers"
-	"github.com/aserto-dev/topaz/topazd/app/middlewares"
-	"github.com/aserto-dev/topaz/topazd/authentication"
-	"github.com/aserto-dev/topaz/topazd/service/builder"
+	"github.com/threehook/eamerald/internal/eds"
+	"github.com/threehook/eamerald/pkg/config"
+	"github.com/threehook/eamerald/topazd/app/handlers"
+	"github.com/threehook/eamerald/topazd/app/middlewares"
+	"github.com/threehook/eamerald/topazd/authentication"
+	"github.com/threehook/eamerald/topazd/service/builder"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/pkg/errors"

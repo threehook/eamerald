@@ -8,7 +8,7 @@ import (
 	"github.com/aserto-dev/go-authorizer/aserto/authorizer/v2/api"
 	"github.com/aserto-dev/go-authorizer/pkg/aerr"
 	"github.com/aserto-dev/go-directory/pkg/pb"
-	"github.com/aserto-dev/topaz/internal/runtime"
+	"github.com/threehook/eamerald/internal/runtime"
 
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/types/known/structpb"

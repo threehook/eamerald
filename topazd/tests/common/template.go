@@ -5,12 +5,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	azc "github.com/aserto-dev/topaz/topaz/clients/authorizer"
-	dsc "github.com/aserto-dev/topaz/topaz/clients/directory"
-	"github.com/aserto-dev/topaz/topaz/cmd/common"
-	"github.com/aserto-dev/topaz/topaz/cmd/directory"
-	"github.com/aserto-dev/topaz/topaz/cmd/directory/data"
-	"github.com/aserto-dev/topaz/topaz/cmd/templates"
+	azc "github.com/threehook/eamerald/topaz/clients/authorizer"
+	dsc "github.com/threehook/eamerald/topaz/clients/directory"
+	"github.com/threehook/eamerald/topaz/cmd/common"
+	"github.com/threehook/eamerald/topaz/cmd/directory"
+	"github.com/threehook/eamerald/topaz/cmd/directory/data"
+	"github.com/threehook/eamerald/topaz/cmd/templates"
 	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/stretchr/testify/assert"

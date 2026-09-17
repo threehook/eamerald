@@ -8,7 +8,7 @@ import (
 	"os"
 
 	dse "github.com/aserto-dev/go-directory/aserto/directory/exporter/v3"
-	"github.com/aserto-dev/topaz/topaz/jsonx"
+	"github.com/threehook/eamerald/topaz/jsonx"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

@@ -6,11 +6,11 @@ import (
 
 	common "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsw "github.com/aserto-dev/go-directory/aserto/directory/writer/v3"
-	"github.com/aserto-dev/topaz/topazd/directory"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/open-policy-agent/opa/v1/plugins"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"github.com/threehook/eamerald/topazd/directory"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 

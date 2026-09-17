@@ -6,10 +6,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/aserto-dev/topaz/internal/fs"
-	"github.com/aserto-dev/topaz/topaz/cc"
 	"github.com/distribution/reference"
 	"github.com/pkg/errors"
+	"github.com/threehook/eamerald/internal/fs"
+	"github.com/threehook/eamerald/topaz/cc"
 )
 
 const defaultPolicyRegistry string = "https://ghcr.io"

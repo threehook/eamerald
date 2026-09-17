@@ -7,13 +7,13 @@ import (
 
 	client "github.com/aserto-dev/go-aserto"
 	"github.com/aserto-dev/logger"
-	"github.com/aserto-dev/topaz/internal/certs"
-	"github.com/aserto-dev/topaz/internal/eds/pkg/directory"
-	"github.com/aserto-dev/topaz/internal/runtime"
-	"github.com/aserto-dev/topaz/topazd/debug"
-	"github.com/aserto-dev/topaz/topazd/service/builder"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"github.com/threehook/eamerald/internal/certs"
+	"github.com/threehook/eamerald/internal/eds/pkg/directory"
+	"github.com/threehook/eamerald/internal/runtime"
+	"github.com/threehook/eamerald/topazd/debug"
+	"github.com/threehook/eamerald/topazd/service/builder"
 )
 
 // CommandMode -- enum type.

@@ -10,8 +10,8 @@ import (
 	"github.com/aserto-dev/go-authorizer/aserto/authorizer/v2/api"
 	"github.com/aserto-dev/go-authorizer/pkg/aerr"
 	"github.com/aserto-dev/go-directory/pkg/pb"
-	"github.com/aserto-dev/topaz/topazd/authorizer/plugins/adl_decision_logger"
-	"github.com/aserto-dev/topaz/topazd/authorizer/plugins/topaz_file_decision_logger"
+	"github.com/threehook/eamerald/topazd/authorizer/plugins/adl_decision_logger"
+	"github.com/threehook/eamerald/topazd/authorizer/plugins/topaz_file_decision_logger"
 
 	"github.com/google/uuid"
 	"github.com/open-policy-agent/opa/v1/rego"

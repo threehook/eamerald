@@ -4,14 +4,14 @@ import (
 	"bytes"
 	"context"
 
-	topaz "github.com/aserto-dev/topaz/pkg/config"
-	"github.com/aserto-dev/topaz/topazd/authorizer/plugins/noop"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/open-policy-agent/opa/v1/plugins"
 	"github.com/open-policy-agent/opa/v1/util"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
+	topaz "github.com/threehook/eamerald/pkg/config"
+	"github.com/threehook/eamerald/topazd/authorizer/plugins/noop"
 )
 
 type PluginFactory struct {

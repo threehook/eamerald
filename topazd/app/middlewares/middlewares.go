@@ -3,13 +3,13 @@ package middlewares
 import (
 	"context"
 
-	grpcutil "github.com/aserto-dev/topaz/internal/grpc"
-	"github.com/aserto-dev/topaz/internal/grpc/middlewares/gerr"
-	"github.com/aserto-dev/topaz/internal/grpc/middlewares/request"
-	"github.com/aserto-dev/topaz/internal/grpc/middlewares/tracing"
-	"github.com/aserto-dev/topaz/pkg/config"
-	"github.com/aserto-dev/topaz/topazd/authentication"
 	"github.com/rs/zerolog"
+	grpcutil "github.com/threehook/eamerald/internal/grpc"
+	"github.com/threehook/eamerald/internal/grpc/middlewares/gerr"
+	"github.com/threehook/eamerald/internal/grpc/middlewares/request"
+	"github.com/threehook/eamerald/internal/grpc/middlewares/tracing"
+	"github.com/threehook/eamerald/pkg/config"
+	"github.com/threehook/eamerald/topazd/authentication"
 	"google.golang.org/grpc"
 )
 

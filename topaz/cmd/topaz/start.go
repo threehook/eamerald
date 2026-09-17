@@ -3,8 +3,8 @@ package topaz
 import (
 	"context"
 
-	"github.com/aserto-dev/topaz/pkg/config"
-	"github.com/aserto-dev/topaz/topaz/cc"
+	"github.com/threehook/eamerald/pkg/config"
+	"github.com/threehook/eamerald/topaz/cc"
 )
 
 type StartCmd struct {

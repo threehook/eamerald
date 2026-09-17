@@ -7,8 +7,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/aserto-dev/topaz/topazd/x"
 	"github.com/rs/zerolog"
+	"github.com/threehook/eamerald/topazd/x"
 )
 
 type Config struct {

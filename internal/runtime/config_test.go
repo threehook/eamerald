@@ -3,9 +3,9 @@ package runtime_test
 import (
 	"testing"
 
-	runtime "github.com/aserto-dev/topaz/internal/runtime"
 	"github.com/mitchellh/copystructure"
 	"github.com/stretchr/testify/require"
+	runtime "github.com/threehook/eamerald/internal/runtime"
 )
 
 func TestDeepCopy(t *testing.T) {

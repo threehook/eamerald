@@ -5,11 +5,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/aserto-dev/topaz/topazd/authorizer/plugins/noop"
 	"github.com/open-policy-agent/opa/v1/plugins"
 	"github.com/open-policy-agent/opa/v1/storage/inmem"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+	"github.com/threehook/eamerald/topazd/authorizer/plugins/noop"
 )
 
 func TestFactoryValidate(t *testing.T) {

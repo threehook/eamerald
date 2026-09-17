@@ -8,13 +8,13 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/aserto-dev/topaz/topaz/cc"
-	"github.com/aserto-dev/topaz/topaz/x"
-	"github.com/aserto-dev/topaz/topazd/authorizer/plugins/topaz_file_decision_logger"
-	"github.com/aserto-dev/topaz/topazd/service/builder"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/samber/lo"
 	"github.com/spf13/viper"
+	"github.com/threehook/eamerald/topaz/cc"
+	"github.com/threehook/eamerald/topaz/x"
+	"github.com/threehook/eamerald/topazd/authorizer/plugins/topaz_file_decision_logger"
+	"github.com/threehook/eamerald/topazd/service/builder"
 )
 
 const (

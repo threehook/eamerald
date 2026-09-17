@@ -6,7 +6,7 @@ import (
 	"os"
 
 	dsi "github.com/aserto-dev/go-directory/aserto/directory/importer/v3"
-	"github.com/aserto-dev/topaz/topaz/js"
+	"github.com/threehook/eamerald/topaz/js"
 
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"

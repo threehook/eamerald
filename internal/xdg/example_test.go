@@ -3,7 +3,7 @@ package xdg_test
 import (
 	"fmt"
 
-	"github.com/aserto-dev/topaz/internal/xdg"
+	"github.com/threehook/eamerald/internal/xdg"
 )
 
 func ExampleDataFile() {

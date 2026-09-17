@@ -7,10 +7,10 @@ import (
 
 	"github.com/aserto-dev/go-authorizer/aserto/authorizer/v2"
 	"github.com/aserto-dev/go-authorizer/aserto/authorizer/v2/api"
-	"github.com/aserto-dev/topaz/internal/header"
 	dsa "github.com/authzen/access.go/api/access/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/threehook/eamerald/internal/header"
 )
 
 const decisionAllowed = "allowed"

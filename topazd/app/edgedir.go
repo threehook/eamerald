@@ -11,9 +11,9 @@ import (
 	dsw "github.com/aserto-dev/go-directory/aserto/directory/writer/v3"
 	dsm3stream "github.com/aserto-dev/go-directory/pkg/gateway/model/v3"
 	dsOpenAPI "github.com/aserto-dev/openapi-directory/publish/directory"
-	"github.com/aserto-dev/topaz/internal/eds/pkg/directory"
-	"github.com/aserto-dev/topaz/topazd/service/builder"
 	dsa "github.com/authzen/access.go/api/access/v1"
+	"github.com/threehook/eamerald/internal/eds/pkg/directory"
+	"github.com/threehook/eamerald/topazd/service/builder"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/samber/lo"

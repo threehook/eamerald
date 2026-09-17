@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/aserto-dev/topaz/topaz/cc"
-	"github.com/aserto-dev/topaz/topaz/dockerx"
-	"github.com/aserto-dev/topaz/topaz/version"
-	"github.com/aserto-dev/topaz/topaz/x"
+	"github.com/threehook/eamerald/topaz/cc"
+	"github.com/threehook/eamerald/topaz/dockerx"
+	"github.com/threehook/eamerald/topaz/version"
+	"github.com/threehook/eamerald/topaz/x"
 )
 
 type VersionCmd struct {

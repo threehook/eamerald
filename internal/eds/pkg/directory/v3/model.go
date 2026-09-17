@@ -15,8 +15,8 @@ import (
 	mnfst "github.com/aserto-dev/go-directory/pkg/manifest"
 	"github.com/aserto-dev/go-directory/pkg/pb"
 	"github.com/aserto-dev/go-directory/pkg/validator"
-	"github.com/aserto-dev/topaz/internal/eds/pkg/bdb"
-	"github.com/aserto-dev/topaz/internal/eds/pkg/ds"
+	"github.com/threehook/eamerald/internal/eds/pkg/bdb"
+	"github.com/threehook/eamerald/internal/eds/pkg/ds"
 
 	"github.com/go-http-utils/headers"
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"

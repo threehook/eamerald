@@ -5,11 +5,11 @@ import (
 	"strconv"
 
 	aerr "github.com/aserto-dev/errors"
-	grpcutil "github.com/aserto-dev/topaz/internal/grpc"
 	"github.com/google/uuid"
 	grpcmiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/rs/zerolog"
 	zlog "github.com/rs/zerolog/log"
+	grpcutil "github.com/threehook/eamerald/internal/grpc"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

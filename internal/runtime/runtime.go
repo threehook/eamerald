@@ -5,7 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/aserto-dev/topaz/internal/runtime/logger"
 	"github.com/open-policy-agent/opa/v1/ast"
 	"github.com/open-policy-agent/opa/v1/hooks"
 	"github.com/open-policy-agent/opa/v1/plugins"
@@ -16,6 +15,7 @@ import (
 	"github.com/open-policy-agent/opa/v1/topdown/cache"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"github.com/threehook/eamerald/internal/runtime/logger"
 )
 
 const defaultInstanceID string = "topazd"
