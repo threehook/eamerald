@@ -5,8 +5,8 @@ project_name: topaz
 env:
   # https://goreleaser.com/customization/env/
   - REGISTRY=ghcr.io
-  - ORG=aserto-dev
-  - REPO=topaz
+  - ORG=threehook
+  - REPO=eamerald
   - IMAGE_ORG=threehook
   - IMAGE_REPO=eamerald
   - DESCRIPTION="Topaz Authorization Service"
