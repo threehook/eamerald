@@ -1,9 +1,9 @@
 export const GEBRUIKERS = [
-  { id: "rick@example.com", naam: "Rick Sanchez", info: "Secretariaat" },
-  { id: "morty@example.com", naam: "Morty Smith", info: "Burgerzaken — geen diploma" },
-  { id: "beth@example.com", naam: "Beth Smith", info: "Burgerzaken — verlopen diploma" },
-  { id: "jerry@example.com", naam: "Jerry Smith", info: "Burgerzaken — geldig diploma" },
-  { id: "diane@example.com", naam: "Diane Sanchez", info: "Bestuursbureau — geldig diploma" },
+  { id: "rick@example.com", naam: "Rick Turner", info: "Secretariaat" },
+  { id: "morty@example.com", naam: "Morty Adams", info: "Burgerzaken — geen diploma" },
+  { id: "beth@example.com", naam: "Beth Walker", info: "Burgerzaken — verlopen diploma" },
+  { id: "jerry@example.com", naam: "Jerry Coleman", info: "Burgerzaken — geldig diploma" },
+  { id: "diane@example.com", naam: "Diane Foster", info: "Bestuursbureau — geldig diploma" },
 ];
 
 export const ADRESSEN = [

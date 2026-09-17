@@ -48,31 +48,31 @@
     {
       "type": "user",
       "id": "rick@example.com",
-      "display_name": "Rick Sanchez",
+      "display_name": "Rick Turner",
       "properties": {}
     },
     {
       "type": "user",
       "id": "morty@example.com",
-      "display_name": "Morty Smith",
+      "display_name": "Morty Adams",
       "properties": {}
     },
     {
       "type": "user",
       "id": "beth@example.com",
-      "display_name": "Beth Smith",
+      "display_name": "Beth Walker",
       "properties": {}
     },
     {
       "type": "user",
       "id": "jerry@example.com",
-      "display_name": "Jerry Smith",
+      "display_name": "Jerry Coleman",
       "properties": {}
     },
     {
       "type": "user",
       "id": "diane@example.com",
-      "display_name": "Diane Sanchez",
+      "display_name": "Diane Foster",
       "properties": {}
     },
     {
@@ -104,7 +104,7 @@
     {
       "type": "diploma",
       "id": "beth-laadpalen-management",
-      "display_name": "Beth Smith - Laadpalen Management",
+      "display_name": "Beth Walker - Laadpalen Management",
       "properties": {
         "last_test_date": "2024-06-01T00:00:00Z"
       }
@@ -112,7 +112,7 @@
     {
       "type": "diploma",
       "id": "jerry-laadpalen-management",
-      "display_name": "Jerry Smith - Laadpalen Management",
+      "display_name": "Jerry Coleman - Laadpalen Management",
       "properties": {
         "last_test_date": "2026-03-01T00:00:00Z"
       }
@@ -120,7 +120,7 @@
     {
       "type": "diploma",
       "id": "diane-laadpalen-management",
-      "display_name": "Diane Sanchez - Laadpalen Management",
+      "display_name": "Diane Foster - Laadpalen Management",
       "properties": {
         "last_test_date": "2026-01-15T00:00:00Z"
       }

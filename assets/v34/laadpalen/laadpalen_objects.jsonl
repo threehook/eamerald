@@ -3,18 +3,18 @@
 {"type":"identity","id":"beth@example.com","properties":{"kind":"IDENTITY_KIND_EMAIL","provider":"local","verified":true}}
 {"type":"identity","id":"jerry@example.com","properties":{"kind":"IDENTITY_KIND_EMAIL","provider":"local","verified":true}}
 {"type":"identity","id":"diane@example.com","properties":{"kind":"IDENTITY_KIND_EMAIL","provider":"local","verified":true}}
-{"type":"user","id":"rick@example.com","display_name":"Rick Sanchez","properties":{}}
-{"type":"user","id":"morty@example.com","display_name":"Morty Smith","properties":{}}
-{"type":"user","id":"beth@example.com","display_name":"Beth Smith","properties":{}}
-{"type":"user","id":"jerry@example.com","display_name":"Jerry Smith","properties":{}}
-{"type":"user","id":"diane@example.com","display_name":"Diane Sanchez","properties":{}}
+{"type":"user","id":"rick@example.com","display_name":"Rick Turner","properties":{}}
+{"type":"user","id":"morty@example.com","display_name":"Morty Adams","properties":{}}
+{"type":"user","id":"beth@example.com","display_name":"Beth Walker","properties":{}}
+{"type":"user","id":"jerry@example.com","display_name":"Jerry Coleman","properties":{}}
+{"type":"user","id":"diane@example.com","display_name":"Diane Foster","properties":{}}
 {"type":"department","id":"secretariaat","display_name":"Secretariaat","properties":{}}
 {"type":"department","id":"burgerzaken","display_name":"Burgerzaken","properties":{}}
 {"type":"department","id":"bestuursbureau","display_name":"Bestuursbureau","properties":{}}
 {"type":"course","id":"laadpalen-management","display_name":"Laadpalen Management","properties":{"validity":"P1Y"}}
-{"type":"diploma","id":"beth-laadpalen-management","display_name":"Beth Smith - Laadpalen Management","properties":{"last_test_date":"2024-06-01T00:00:00Z"}}
-{"type":"diploma","id":"jerry-laadpalen-management","display_name":"Jerry Smith - Laadpalen Management","properties":{"last_test_date":"2026-03-01T00:00:00Z"}}
-{"type":"diploma","id":"diane-laadpalen-management","display_name":"Diane Sanchez - Laadpalen Management","properties":{"last_test_date":"2026-01-15T00:00:00Z"}}
+{"type":"diploma","id":"beth-laadpalen-management","display_name":"Beth Walker - Laadpalen Management","properties":{"last_test_date":"2024-06-01T00:00:00Z"}}
+{"type":"diploma","id":"jerry-laadpalen-management","display_name":"Jerry Coleman - Laadpalen Management","properties":{"last_test_date":"2026-03-01T00:00:00Z"}}
+{"type":"diploma","id":"diane-laadpalen-management","display_name":"Diane Foster - Laadpalen Management","properties":{"last_test_date":"2026-01-15T00:00:00Z"}}
 {"type":"adres","id":"1111AA-1","display_name":"1111AA 1","properties":{"postcode":"1111AA","huisnummer":1,"elektrisch_voertuig":true,"laadpaal_aanwezig":true,"diplomatiek":false}}
 {"type":"adres","id":"1111DD-4","display_name":"1111DD 4","properties":{"postcode":"1111DD","huisnummer":4,"elektrisch_voertuig":false,"laadpaal_aanwezig":false,"diplomatiek":false}}
 {"type":"adres","id":"1111BB-2","display_name":"1111BB 2","properties":{"postcode":"1111BB","huisnummer":2,"elektrisch_voertuig":true,"laadpaal_aanwezig":false,"diplomatiek":false}}
