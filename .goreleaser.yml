@@ -22,17 +22,12 @@ builds:
     main: ./topazd
     binary: topazd
     goos:
-      - darwin
       - linux
-      - windows
     goarch:
       - amd64
       - arm64
     env:
       - CGO_ENABLED=0
-    ignore:
-      - goos: windows
-        goarch: arm64
     ldflags:
       - -s
       - -w
@@ -47,15 +42,11 @@ builds:
     goos:
       - darwin
       - linux
-      - windows
     goarch:
       - amd64
       - arm64
     env:
       - CGO_ENABLED=0
-    ignore:
-      - goos: windows
-        goarch: arm64
     ldflags:
       - -s
       - -w
@@ -68,17 +59,12 @@ builds:
     main: ./topaz-db
     binary: topaz-db
     goos:
-      - darwin
       - linux
-      - windows
     goarch:
       - amd64
       - arm64
     env:
       - CGO_ENABLED=0
-    ignore:
-      - goos: windows
-        goarch: arm64
     ldflags:
       - -s
       - -w
@@ -91,17 +77,12 @@ builds:
     main: ./topaz-backup
     binary: topaz-backup
     goos:
-      - darwin
       - linux
-      - windows
     goarch:
       - amd64
       - arm64
     env:
       - CGO_ENABLED=0
-    ignore:
-      - goos: windows
-        goarch: arm64
     ldflags:
       - -s
       - -w

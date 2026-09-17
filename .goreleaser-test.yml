@@ -81,7 +81,6 @@ builds:
     main: ./topaz-backup
     binary: topaz-backup
     goos:
-      - darwin
       - linux
     goarch:
       - amd64
