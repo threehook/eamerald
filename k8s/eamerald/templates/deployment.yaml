@@ -45,9 +45,9 @@ spec:
           args:
             - |
               if [ ! -f /db/directory.db ]; then
-                ./eamerald-db init /db/directory.db
+                ./mrld-db init /db/directory.db
               fi
-              ./eamerald-db set /db/directory.db /manifest/manifest.yaml
+              ./mrld-db set /db/directory.db /manifest/manifest.yaml
           volumeMounts:
             - name: db
               mountPath: /db
@@ -59,7 +59,7 @@ spec:
         - name: eameraldd
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ["./eameraldd"]
+          command: ["./mrldd"]
           args: ["run", "-c", "/config/config.yaml"]
           env:
             - name: EAMERALD_RUNNING_IN_CONTAINER
