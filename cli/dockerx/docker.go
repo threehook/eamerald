@@ -185,7 +185,7 @@ func (dc *DockerClient) GetRunningTopazContainers() ([]container.Summary, error)
 	var topazContainers []container.Summary
 
 	for i := range containers {
-		if strings.Contains(containers[i].Image, "ghcr.io/aserto-dev/topaz") && containers[i].State == running {
+		if strings.Contains(containers[i].Image, "ghcr.io/threehook/eamerald") && containers[i].State == running {
 			topazContainers = append(topazContainers, containers[i])
 		}
 	}

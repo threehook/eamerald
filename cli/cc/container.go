@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	defaultContainerRegistry    string = "ghcr.io/aserto-dev"
-	defaultContainerImage       string = "topaz"
+	defaultContainerRegistry    string = "ghcr.io/threehook"
+	defaultContainerImage       string = "eamerald"
 	defaultContainerTagFallback string = "latest"
 	defaultContainerName        string = "eamerald"
 )

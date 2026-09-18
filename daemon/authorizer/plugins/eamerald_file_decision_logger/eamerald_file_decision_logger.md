@@ -1,4 +1,4 @@
-# Topaz File Decision Logger plugin
+# Eamerald File Decision Logger plugin
 
 Plugin configuration structure
 
@@ -8,7 +8,7 @@ opa:
 
     # plugins section
     plugins:
-      topaz_file_decision_logger:
+      eamerald_file_decision_logger:
         enabled: true
         logger:
           filename: '/tmp/decisions.json' # default "", uses <processname>-lumberjack.log in os.TempDir()
@@ -27,7 +27,7 @@ opa:
 
 ## Updating from the deprecated Aserto Decision Log plugin (aserto_decision_log)
 
-Replace `plugins.aserto_decision_log` section with the `plugins.topaz_file_decision_logger` and remove the `decision_logger` section completely.
+Replace `plugins.aserto_decision_log` section with the `plugins.eamerald_file_decision_logger` and remove the `decision_logger` section completely.
 
 Old deprecated `aserto_decision_log` plugin configuration 
 ```
@@ -59,7 +59,7 @@ decision_logger:
 
 See https://www.openpolicyagent.org/docs/configuration#decision-logs 
 
-The OPA `config.decision_logs` section is not utilized by the current `topaz_file_decision_logger` implementation, as the plugin logs `api.Decisions` instead of `logs.EventV1` instances.
+The OPA `config.decision_logs` section is not utilized by the current `eamerald_file_decision_logger` implementation, as the plugin logs `api.Decisions` instead of `logs.EventV1` instances.
 
 ```
 type Decision struct {
@@ -79,5 +79,5 @@ As such you do NOT need to add the the plugin name to `decisions_logs.plugin`:
 ```
     decision_logs:
       console: false
-      plugin: topaz_file_decision_logger # !!! DO NOT ADD THIS !!!
+      plugin: eamerald_file_decision_logger # !!! DO NOT ADD THIS !!!
 ```

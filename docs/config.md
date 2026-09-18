@@ -429,11 +429,11 @@ opa:
     decision_logs:
       console: false
     plugins:
-      # topaz file decision logger plugin configuration
-      topaz_file_decision_logger:
+      # eamerald file decision logger plugin configuration
+      eamerald_file_decision_logger:
         enabled: false
         logger:
-          filename: '${TOPAZ_DECISIONS_DIR}/my-topaz.json'
+          filename: '${EAMERALD_DECISIONS_DIR}/my-eamerald.json'
           max_size: 100
           max_age: 0
           max_backups: 0

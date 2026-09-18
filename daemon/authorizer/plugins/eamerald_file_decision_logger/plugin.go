@@ -1,4 +1,4 @@
-package topaz_file_decision_logger
+package eamerald_file_decision_logger
 
 import (
 	"context"
@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	PluginName = "topaz_file_decision_logger"
-	PluginDesc = "Topaz File Decision Logger"
+	PluginName = "eamerald_file_decision_logger"
+	PluginDesc = "Eamerald File Decision Logger"
 )
 
 type Plugin struct {

@@ -24,9 +24,9 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// Topaz is an authorizer service instance, responsible for managing
+// Eamerald is an authorizer service instance, responsible for managing
 // the authorizer API, user directory instance and the OPA plugins.
-type Topaz struct {
+type Eamerald struct {
 	Context        context.Context
 	Logger         *zerolog.Logger
 	ServerOptions  []grpc.ServerOption
@@ -57,7 +57,7 @@ func SetServiceStatus(log *zerolog.Logger, service string, servingStatus grpc_he
 }
 
 // Start starts all services required by the engine.
-func (e *Topaz) Start() error {
+func (e *Eamerald) Start() error {
 	// build dependencies map.
 	for _, cfg := range e.Configuration.APIConfig.Services {
 		if len(cfg.Needs) > 0 {
@@ -88,7 +88,7 @@ func (e *Topaz) Start() error {
 }
 
 //nolint:funlen,nestif,gocognit
-func (e *Topaz) ConfigServices() error {
+func (e *Eamerald) ConfigServices() error {
 	metricsMiddleware, err := e.setupHealthAndMetrics()
 	if err != nil {
 		return err
@@ -211,7 +211,7 @@ func (e *Topaz) ConfigServices() error {
 	return nil
 }
 
-func (e *Topaz) setupHealthAndMetrics() ([]grpc.ServerOption, error) {
+func (e *Eamerald) setupHealthAndMetrics() ([]grpc.ServerOption, error) {
 	if e.Configuration.APIConfig.Health.ListenAddress != "" {
 		err := e.Manager.SetupHealthServer(e.Configuration.APIConfig.Health.ListenAddress, &e.Configuration.APIConfig.Health.Certificates)
 		if err != nil {
@@ -249,7 +249,7 @@ func (e *Topaz) setupHealthAndMetrics() ([]grpc.ServerOption, error) {
 	return nil, nil
 }
 
-func (e *Topaz) prepareServices() error {
+func (e *Eamerald) prepareServices() error {
 	// prepare services
 	if e.Configuration.Edge.DBPath != "" {
 		dir, err := eds.New(e.Context, &e.Configuration.Edge, e.Logger)
@@ -308,7 +308,7 @@ func mapToGRPCPorts(api map[string]*builder.API) map[string]services {
 	return portMap
 }
 
-func (e *Topaz) validateConfig() error {
+func (e *Eamerald) validateConfig() error {
 	if readerConfig, ok := e.Configuration.APIConfig.Services["reader"]; ok {
 		if readerConfig.GRPC.ListenAddress != e.Configuration.DirectoryResolver.Address {
 			for _, serviceName := range e.Services["edge"].AvailableServices() {

@@ -403,7 +403,7 @@ opa:
             max_delay_seconds: 120
     plugins:
       # topaz file decision logger plugin configuration
-      topaz_file_decision_logger:
+      eamerald_file_decision_logger:
         enabled: false
         logger:
           filename: '${EAMERALD_DECISIONS_DIR}/peoplefinder.json'

@@ -1,4 +1,4 @@
-package topaz
+package eamerald
 
 import (
 	"github.com/aserto-dev/logger"
@@ -15,7 +15,7 @@ func BuildApp(
 	configPath config.Path,
 	overrides config.Overrider,
 ) (
-	*app.Topaz,
+	*app.Eamerald,
 	func(),
 	error,
 ) {
@@ -31,7 +31,7 @@ func BuildApp(
 	serviceFactory := builder.NewServiceFactory()
 	serviceManager := builder.NewServiceManager(zerologLogger)
 	v2 := DefaultServices()
-	topaz := &app.Topaz{
+	eamerald := &app.Eamerald{
 		Context:        context,
 		Logger:         zerologLogger,
 		ServerOptions:  v,
@@ -41,7 +41,7 @@ func BuildApp(
 		Services:       v2,
 	}
 
-	return topaz, func() {
+	return eamerald, func() {
 		cleanup()
 	}, nil
 }

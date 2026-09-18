@@ -1,4 +1,4 @@
-package topaz_file_decision_logger
+package eamerald_file_decision_logger
 
 const (
 	default_decision_log_filename string = "decisions.json"

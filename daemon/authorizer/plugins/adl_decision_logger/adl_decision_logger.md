@@ -35,7 +35,7 @@ opa:
 ## Scope
 
 Only the `Is()` RPC is covered. `DecisionTree`, `Query`, and `Compile` do not
-emit decision logs today (via either this plugin or `topaz_file_decision_logger`)
+emit decision logs today (via either this plugin or `eamerald_file_decision_logger`)
 and are out of scope for this plugin too.
 
 ## Not included

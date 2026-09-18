@@ -11,7 +11,7 @@ import (
 	"github.com/aserto-dev/go-authorizer/pkg/aerr"
 	"github.com/aserto-dev/go-directory/pkg/pb"
 	"github.com/threehook/eamerald/daemon/authorizer/plugins/adl_decision_logger"
-	"github.com/threehook/eamerald/daemon/authorizer/plugins/topaz_file_decision_logger"
+	"github.com/threehook/eamerald/daemon/authorizer/plugins/eamerald_file_decision_logger"
 
 	"github.com/google/uuid"
 	"github.com/open-policy-agent/opa/v1/rego"
@@ -121,7 +121,7 @@ func (s *AuthorizerServer) Is(ctx context.Context, req *authorizer.IsRequest) (*
 		resp.Decisions = append(resp.GetDecisions(), &decision)
 	}
 
-	if dlPlugin := topaz_file_decision_logger.Lookup(rt.GetPluginsManager()); dlPlugin != nil {
+	if dlPlugin := eamerald_file_decision_logger.Lookup(rt.GetPluginsManager()); dlPlugin != nil {
 		d := api.Decision{
 			Id:        uuid.NewString(),
 			Timestamp: timestamppb.New(time.Now().In(time.UTC)),

@@ -1,4 +1,4 @@
-package topaz
+package eamerald
 
 import (
 	"context"
@@ -12,10 +12,10 @@ import (
 	"github.com/threehook/eamerald/daemon/authorizer/builtins/az"
 	"github.com/threehook/eamerald/daemon/authorizer/builtins/ds"
 	"github.com/threehook/eamerald/daemon/authorizer/plugins/adl_decision_logger"
+	"github.com/threehook/eamerald/daemon/authorizer/plugins/eamerald_file_decision_logger"
 	"github.com/threehook/eamerald/daemon/authorizer/plugins/edge"
 	"github.com/threehook/eamerald/daemon/authorizer/plugins/entra"
 	"github.com/threehook/eamerald/daemon/authorizer/plugins/git"
-	"github.com/threehook/eamerald/daemon/authorizer/plugins/topaz_file_decision_logger"
 	"github.com/threehook/eamerald/daemon/authorizer/resolvers"
 	"github.com/threehook/eamerald/internal/runtime"
 	"github.com/threehook/eamerald/pkg/config"
@@ -60,7 +60,7 @@ func NewRuntimeResolver(
 		runtime.WithBuiltin1(az.RegisterActionSearch(logger, builtins.AZActionSearch, acClient)),
 
 		// plugins
-		runtime.WithPlugin(topaz_file_decision_logger.PluginName, topaz_file_decision_logger.NewFactory(logger.WithContext(ctx))),
+		runtime.WithPlugin(eamerald_file_decision_logger.PluginName, eamerald_file_decision_logger.NewFactory(logger.WithContext(ctx))),
 		runtime.WithPlugin(adl_decision_logger.PluginName, adl_decision_logger.NewFactory(logger.WithContext(ctx))),
 		runtime.WithPlugin(edge.PluginName, edge.NewPluginFactory(ctx, cfg, logger)),
 		runtime.WithPlugin(git.PluginName, git.NewPluginFactory(ctx, logger)),

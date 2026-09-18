@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-templates=("assets/v32/api-auth.json" "assets/v32/gdrive.json" "assets/v32/github.json" "assets/v32/multi-tenant.json" "assets/v32/peoplefinder.json" "assets/v32/simple-rbac.json" "assets/v32/slack.json" "assets/v32/todo.json" \
-           "assets/v33/api-auth.json" "assets/v33/gdrive.json" "assets/v33/github.json" "assets/v33/multi-tenant.json" "assets/v33/peoplefinder.json" "assets/v33/simple-rbac.json" "assets/v33/slack.json" "assets/v33/todo.json")
+templates=("assets/acmecorp.json" "assets/api-auth.json" "assets/api-gateway.json" "assets/citadel.json" "assets/gdrive.json" "assets/github.json" "assets/multi-tenant.json" "assets/peoplefinder.json" "assets/simple-rbac.json" "assets/slack.json" "assets/todo.json")
 
 teamerald="./dist/eamerald_$(go env GOOS)_$(go env GOARCH)/eamerald"
 

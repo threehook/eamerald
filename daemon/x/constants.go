@@ -1,7 +1,7 @@
 package x
 
 const (
-	AppName        string = "topazd"
-	AppDescription string = "Topaz Service"
+	AppName        string = "eameraldd"
+	AppDescription string = "Eamerald Service"
 	AppVersionTag  string = ""
 )

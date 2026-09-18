@@ -378,7 +378,7 @@ opa:
 
 const topazFileDecisionLoggerPlugin string = `
       # topaz file decision logger plugin configuration
-      topaz_file_decision_logger:
+      eamerald_file_decision_logger:
         enabled: false
         logger:
           filename: '${EAMERALD_DECISIONS_DIR}/{{ .ConfigName }}.json'

@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/threehook/eamerald/cli/cc"
 	"github.com/threehook/eamerald/cli/x"
-	"github.com/threehook/eamerald/daemon/authorizer/plugins/topaz_file_decision_logger"
+	"github.com/threehook/eamerald/daemon/authorizer/plugins/eamerald_file_decision_logger"
 	"github.com/threehook/eamerald/daemon/service/builder"
 )
 
@@ -107,13 +107,13 @@ func (l *Loader) GetPaths() ([]string, error) {
 		paths[l.Configuration.Edge.DBPath] = true
 	}
 
-	if c, ok := l.Configuration.OPA.Config.Plugins[topaz_file_decision_logger.PluginName]; ok {
+	if c, ok := l.Configuration.OPA.Config.Plugins[eamerald_file_decision_logger.PluginName]; ok {
 		b, err := json.Marshal(c)
 		if err != nil {
 			return nil, err
 		}
 
-		var pCfg topaz_file_decision_logger.Config
+		var pCfg eamerald_file_decision_logger.Config
 		if err := json.Unmarshal(b, &pCfg); err != nil {
 			return nil, err
 		}

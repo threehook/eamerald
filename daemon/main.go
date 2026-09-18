@@ -10,7 +10,7 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:           "topazd [flags]",
+	Use:           "eameraldd [flags]",
 	SilenceErrors: true,
 	SilenceUsage:  true,
 }

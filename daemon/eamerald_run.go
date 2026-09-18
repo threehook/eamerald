@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/threehook/eamerald/daemon/app"
 	"github.com/threehook/eamerald/daemon/app/directory"
-	"github.com/threehook/eamerald/daemon/app/topaz"
+	"github.com/threehook/eamerald/daemon/app/eamerald"
 	"github.com/threehook/eamerald/daemon/debug"
 	"github.com/threehook/eamerald/pkg/config"
 )
@@ -22,46 +22,46 @@ var (
 
 var cmdRun = &cobra.Command{
 	Use:   "run [args]",
-	Short: "Start Topaz authorization service",
-	Long:  `Start instance of the Topaz authorization service.`,
+	Short: "Start Eamerald authorization service",
+	Long:  `Start instance of the Eamerald authorization service.`,
 	RunE:  run,
 }
 
 func run(cmd *cobra.Command, args []string) error {
 	configPath := config.Path(flagRunConfigFile)
 
-	topazApp, cleanup, err := topaz.BuildApp(os.Stdout, os.Stderr, configPath, configOverrides)
+	eameraldApp, cleanup, err := eamerald.BuildApp(os.Stdout, os.Stderr, configPath, configOverrides)
 	if err != nil {
 		return err
 	}
 
-	defer topazApp.Manager.StopServers()
+	defer eameraldApp.Manager.StopServers()
 
 	defer cleanup()
 
-	if err := topazApp.ConfigServices(); err != nil {
+	if err := eameraldApp.ConfigServices(); err != nil {
 		return err
 	}
 
-	if topazApp.Configuration.DebugService.Enabled {
-		debugService = debug.NewServer(&topazApp.Configuration.DebugService, topazApp.Logger)
+	if eameraldApp.Configuration.DebugService.Enabled {
+		debugService = debug.NewServer(&eameraldApp.Configuration.DebugService, eameraldApp.Logger)
 		debugService.Start()
 
 		defer debugService.Stop()
 	}
 
-	if _, ok := topazApp.Services["authorizer"]; ok {
-		dirResolver, err := directory.NewResolver(topazApp.Logger, &topazApp.Configuration.DirectoryResolver)
+	if _, ok := eameraldApp.Services["authorizer"]; ok {
+		dirResolver, err := directory.NewResolver(eameraldApp.Logger, &eameraldApp.Configuration.DirectoryResolver)
 		if err != nil {
 			return err
 		}
 
 		defer dirResolver.Close()
 
-		runtime, runtimeCleanup, err := topaz.NewRuntimeResolver(
-			topazApp.Context,
-			topazApp.Logger,
-			topazApp.Configuration,
+		runtime, runtimeCleanup, err := eamerald.NewRuntimeResolver(
+			eameraldApp.Context,
+			eameraldApp.Logger,
+			eameraldApp.Configuration,
 			dirResolver.GetConn(),
 		)
 		if err != nil {
@@ -70,18 +70,18 @@ func run(cmd *cobra.Command, args []string) error {
 
 		defer runtimeCleanup()
 
-		if authorizer, ok := topazApp.Services["authorizer"].(*app.Authorizer); ok {
+		if authorizer, ok := eameraldApp.Services["authorizer"].(*app.Authorizer); ok {
 			authorizer.Resolver.SetRuntimeResolver(runtime)
 			authorizer.Resolver.SetDirectoryResolver(dirResolver)
 		}
 	}
 
-	err = topazApp.Start()
+	err = eameraldApp.Start()
 	if err != nil {
 		return err
 	}
 
-	<-topazApp.Context.Done()
+	<-eameraldApp.Context.Done()
 
 	return nil
 }
