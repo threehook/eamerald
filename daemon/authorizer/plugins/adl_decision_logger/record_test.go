@@ -13,7 +13,10 @@ import (
 	"github.com/threehook/eamerald/internal/header"
 )
 
-const decisionAllowed = "allowed"
+const (
+	decisionAllowed = "allowed"
+	decisionEnabled = "enabled"
+)
 
 func testTraceContext() header.TraceContext {
 	return header.TraceContext{
@@ -55,7 +58,7 @@ func TestBuildRecord_SingleDecision_UsesSingularEventName(t *testing.T) {
 func TestBuildRecord_MultipleDecisions_UsesBatchEventName(t *testing.T) {
 	decisions := []*authorizer.Decision{
 		{Decision: decisionAllowed, Is: true},
-		{Decision: "enabled", Is: false},
+		{Decision: decisionEnabled, Is: false},
 	}
 
 	record := buildRecord(testTraceContext(), testRequest(), decisions)
@@ -66,7 +69,7 @@ func TestBuildRecord_MultipleDecisions_UsesBatchEventName(t *testing.T) {
 	require.True(t, ok, "expected a batch EvaluationsRequest")
 	require.Len(t, req.GetEvaluations(), 2)
 	assert.Equal(t, decisionAllowed, req.GetEvaluations()[0].GetAction().GetName())
-	assert.Equal(t, "enabled", req.GetEvaluations()[1].GetAction().GetName())
+	assert.Equal(t, decisionEnabled, req.GetEvaluations()[1].GetAction().GetName())
 
 	resp, ok := record.Body.Response.(*dsa.EvaluationsResponse)
 	require.True(t, ok, "expected a batch EvaluationsResponse")
@@ -113,4 +116,67 @@ func TestBuildRecord_ParentSpanIDPresentWhenNotTraceRoot(t *testing.T) {
 	require.NoError(t, json.Unmarshal(b, &m))
 
 	assert.Equal(t, "00f067aa0ba902b7", m["parent_span_id"])
+}
+
+func TestBuildErrorRecord_StatusIsError(t *testing.T) {
+	record := buildErrorRecord(testTraceContext(), testRequest(), []string{decisionAllowed})
+
+	assert.Equal(t, StatusError, record.Status)
+}
+
+func TestBuildErrorRecord_ResponseOmitted(t *testing.T) {
+	// §3.3.8: response MAY be omitted when status is Error - the PDP never
+	// reached a decision, so there is nothing to report.
+	record := buildErrorRecord(testTraceContext(), testRequest(), []string{decisionAllowed})
+
+	b, err := json.Marshal(record)
+	require.NoError(t, err)
+
+	var m map[string]any
+	require.NoError(t, json.Unmarshal(b, &m))
+
+	body, ok := m["body"].(map[string]any)
+	require.True(t, ok)
+	assert.Contains(t, body, "adl.core.request")
+	assert.NotContains(t, body, "adl.core.response")
+}
+
+func TestBuildErrorRecord_SingleDecision_UsesSingularEventName(t *testing.T) {
+	record := buildErrorRecord(testTraceContext(), testRequest(), []string{decisionAllowed})
+
+	assert.Equal(t, EventNameAccessEvaluation, record.EventName)
+
+	req, ok := record.Body.Request.(*dsa.EvaluationRequest)
+	require.True(t, ok, "expected a singular EvaluationRequest")
+	assert.Equal(t, decisionAllowed, req.GetAction().GetName())
+}
+
+func TestBuildErrorRecord_MultipleDecisions_UsesBatchEventName(t *testing.T) {
+	record := buildErrorRecord(testTraceContext(), testRequest(), []string{decisionAllowed, decisionEnabled})
+
+	assert.Equal(t, EventNameAccessEvaluations, record.EventName)
+
+	req, ok := record.Body.Request.(*dsa.EvaluationsRequest)
+	require.True(t, ok, "expected a batch EvaluationsRequest")
+	require.Len(t, req.GetEvaluations(), 2)
+}
+
+func TestBuildErrorRecord_NoDecisions_UsesBatchEventNameWithNoEvaluations(t *testing.T) {
+	// A request can fail validation before any decisions were even parsed
+	// (e.g. isVerifyRequest rejecting an empty decisions list) - must still
+	// produce a valid record, not panic or pick an arbitrary shape.
+	record := buildErrorRecord(testTraceContext(), testRequest(), nil)
+
+	assert.Equal(t, EventNameAccessEvaluations, record.EventName)
+
+	req, ok := record.Body.Request.(*dsa.EvaluationsRequest)
+	require.True(t, ok, "expected a batch EvaluationsRequest")
+	assert.Empty(t, req.GetEvaluations())
+}
+
+func TestIsEnabled(t *testing.T) {
+	assert.False(t, IsEnabled(nil))
+	assert.False(t, IsEnabled(map[string]any{decisionEnabled: false}))
+	assert.True(t, IsEnabled(map[string]any{decisionEnabled: true}))
+	assert.False(t, IsEnabled("not a config object"))
 }

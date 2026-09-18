@@ -16,10 +16,10 @@ type templateParams struct {
 	RegistryTag       string //
 }
 
-const LocalImageTemplate string = templatePreamble + opaLocalPolicyImage + eameraldFileDecisionLoggerPlugin +
+const LocalImageTemplate string = templatePreamble + opaLocalPolicyImage +
 	adlDecisionLoggerPlugin + asertoEdgePlugin + gitPolicySourcePlugin + entraDirectorySyncPlugin
 
-const RemoteImageTemplate string = templatePreamble + opaRemotePolicyImage + eameraldFileDecisionLoggerPlugin +
+const RemoteImageTemplate string = templatePreamble + opaRemotePolicyImage +
 	adlDecisionLoggerPlugin + asertoEdgePlugin + gitPolicySourcePlugin + entraDirectorySyncPlugin
 
 const templatePreamble string = `# yaml-language-server: $schema=https://topaz.sh/schema/config.json
@@ -376,29 +376,14 @@ opa:
     plugins:
 `
 
-const eameraldFileDecisionLoggerPlugin string = `
-      # eamerald file decision logger plugin configuration
-      eamerald_file_decision_logger:
-        enabled: false
-        logger:
-          filename: '${EAMERALD_DECISIONS_DIR}/{{ .ConfigName }}.json'
-          max_size: 100
-          max_age: 0
-          max_backups: 0
-          local_time: false
-          compress: false
-        policy_info:
-          policy_name: '{{ .PolicyName }}'
-          registry_service: '{{ .RegistryService }}'
-          registry_image: '{{ .RegistryImage }}'
-          registry_tag: '{{ .RegistryTag }}'
-          digest: ''
-`
-
 const adlDecisionLoggerPlugin string = `
       # logius adl level 1 decision logger plugin configuration
       adl_decision_logger:
         enabled: false
+        output: 'stdout,otlp'        # comma-separated: stdout, otlp, or both. Defaults to both when unset. Settable via ${LOG_OUTPUT}.
+        otlp:
+          endpoint: ''               # otlp/gRPC collector address, e.g. a Grafana Alloy receiver: localhost:4317
+          insecure: true             # disable TLS - typical for a same-cluster/sidecar collector
 `
 
 const asertoEdgePlugin string = `

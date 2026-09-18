@@ -4,20 +4,16 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/aserto-dev/go-authorizer/aserto/authorizer/v2"
 	"github.com/aserto-dev/go-authorizer/aserto/authorizer/v2/api"
 	"github.com/aserto-dev/go-authorizer/pkg/aerr"
 	"github.com/aserto-dev/go-directory/pkg/pb"
 	"github.com/threehook/eamerald/daemon/authorizer/plugins/adl_decision_logger"
-	"github.com/threehook/eamerald/daemon/authorizer/plugins/eamerald_file_decision_logger"
+	"github.com/threehook/eamerald/internal/runtime"
 
-	"github.com/google/uuid"
 	"github.com/open-policy-agent/opa/v1/rego"
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 //nolint:funlen
@@ -25,11 +21,13 @@ func (s *AuthorizerServer) Is(ctx context.Context, req *authorizer.IsRequest) (*
 	log := s.logger.With().Str("api", "is").Logger()
 
 	if err := s.isVerifyRequest(req); err != nil {
+		s.logADLEvaluationErrorDirect(ctx, req)
 		return &authorizer.IsResponse{}, err
 	}
 
 	input, err := s.isSetInput(ctx, req)
 	if err != nil {
+		s.logADLEvaluationErrorDirect(ctx, req)
 		return &authorizer.IsResponse{}, err
 	}
 
@@ -37,6 +35,7 @@ func (s *AuthorizerServer) Is(ctx context.Context, req *authorizer.IsRequest) (*
 
 	rt, err := s.getRuntime(ctx)
 	if err != nil {
+		s.logADLEvaluationErrorDirect(ctx, req)
 		return &authorizer.IsResponse{}, err
 	}
 
@@ -86,6 +85,7 @@ func (s *AuthorizerServer) Is(ctx context.Context, req *authorizer.IsRequest) (*
 		return prepared, nil
 	})
 	if err != nil {
+		s.logADLEvaluationError(ctx, rt, req)
 		return &authorizer.IsResponse{}, err
 	}
 
@@ -95,10 +95,12 @@ func (s *AuthorizerServer) Is(ctx context.Context, req *authorizer.IsRequest) (*
 
 	queryResults, err := query.Eval(ctx, rego.EvalInput(input))
 	if err != nil {
+		s.logADLEvaluationError(ctx, rt, req)
 		return resp, aerr.ErrBadQuery.Err(err).Msgf("query evaluation failed: path=%s decisions=%v", policyPath, decisions)
 	}
 
 	if len(queryResults) == 0 {
+		s.logADLEvaluationError(ctx, rt, req)
 		return resp, aerr.ErrBadQuery.Err(err).Msgf("undefined results: path=%s decisions=%v", policyPath, decisions)
 	}
 
@@ -121,28 +123,6 @@ func (s *AuthorizerServer) Is(ctx context.Context, req *authorizer.IsRequest) (*
 		resp.Decisions = append(resp.GetDecisions(), &decision)
 	}
 
-	if dlPlugin := eamerald_file_decision_logger.Lookup(rt.GetPluginsManager()); dlPlugin != nil {
-		d := api.Decision{
-			Id:        uuid.NewString(),
-			Timestamp: timestamppb.New(time.Now().In(time.UTC)),
-			Path:      req.GetPolicyContext().GetPath(),
-			Policy: &api.DecisionPolicy{
-				Context: req.GetPolicyContext(),
-			},
-			User: &api.DecisionUser{
-				Context: req.GetIdentityContext(),
-				Id:      getID(input),
-				Email:   getEmail(input),
-			},
-			Resource: req.GetResourceContext(),
-			Outcomes: getOutcomes(resp.GetDecisions()),
-		}
-
-		if err := dlPlugin.LogDecision(ctx, &d); err != nil {
-			return resp, err
-		}
-	}
-
 	if adlPlugin := adl_decision_logger.Lookup(rt.GetPluginsManager()); adlPlugin != nil {
 		if err := adlPlugin.LogDecision(ctx, req, resp.GetDecisions()); err != nil {
 			return resp, err
@@ -152,36 +132,37 @@ func (s *AuthorizerServer) Is(ctx context.Context, req *authorizer.IsRequest) (*
 	return resp, err
 }
 
-func getOutcomes(decisions []*authorizer.Decision) map[string]bool {
-	return lo.SliceToMap(decisions, func(item *authorizer.Decision) (string, bool) {
-		return item.GetDecision(), item.GetIs()
-	})
-}
-
-func getID(v map[string]any) string {
-	if u, ok := v["user"].(map[string]any); ok {
-		if i, ok := u["id"].(string); ok {
-			return i
-		}
+// logADLEvaluationErrorDirect records an ADL status-Error entry for an Is()
+// failure that occurs before an OPA runtime is resolved, so there is no
+// plugins.Manager to look the adl_decision_logger plugin instance up from.
+// Per the ADL 1.0 spec (§3.3.9), every evaluated request - including ones
+// the PDP could not complete - MUST produce exactly one log record; a
+// logging failure here is itself logged, but the original error from the
+// caller is always what gets returned, not this one.
+func (s *AuthorizerServer) logADLEvaluationErrorDirect(ctx context.Context, req *authorizer.IsRequest) {
+	rawConfig, ok := s.cfg.OPA.Config.Plugins[adl_decision_logger.PluginName]
+	if !ok || !adl_decision_logger.IsEnabled(rawConfig) {
+		return
 	}
 
-	return ""
+	if err := adl_decision_logger.LogEvaluationErrorDirect(ctx, req); err != nil {
+		s.logger.Error().Err(err).Msg("failed to write adl evaluation-error record")
+	}
 }
 
-func getEmail(v map[string]any) string {
-	if u, ok := v["user"].(map[string]any); ok {
-		if e, ok := u["email"].(string); ok {
-			return e
-		}
-
-		if p, ok := u["properties"].(map[string]any); ok {
-			if e, ok := p["email"].(string); ok {
-				return e
-			}
-		}
+// logADLEvaluationError records an ADL status-Error entry for an Is()
+// failure that occurs after an OPA runtime was resolved (query preparation,
+// evaluation, or undefined results) - see logADLEvaluationErrorDirect for
+// failures before that point.
+func (s *AuthorizerServer) logADLEvaluationError(ctx context.Context, rt *runtime.Runtime, req *authorizer.IsRequest) {
+	adlPlugin := adl_decision_logger.Lookup(rt.GetPluginsManager())
+	if adlPlugin == nil {
+		return
 	}
 
-	return ""
+	if err := adlPlugin.LogEvaluationError(ctx, req); err != nil {
+		s.logger.Error().Err(err).Msg("failed to write adl evaluation-error record")
+	}
 }
 
 func (*AuthorizerServer) isVerifyRequest(req *authorizer.IsRequest) error {

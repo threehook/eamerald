@@ -112,3 +112,59 @@ func buildRecord(tc header.TraceContext, req *authorizer.IsRequest, decisions []
 
 	return record
 }
+
+// buildErrorRecord maps a failed Is() call - one where the PDP could not
+// reach a decision at all - onto an ADL Level 1 record with status Error.
+// Per §3.3.8, Response MAY be omitted when status is Error; Request is
+// still populated where available, to show what was attempted. decisions
+// here are the requested decision names (strings), not outcomes - none
+// were reached.
+func buildErrorRecord(tc header.TraceContext, req *authorizer.IsRequest, decisions []string) Record {
+	record := Record{
+		TraceID:      tc.TraceID,
+		SpanID:       tc.SpanID,
+		ParentSpanID: tc.ParentSpanID,
+		Timestamp:    time.Now().UTC().UnixMilli(),
+		Status:       StatusError,
+		Attributes:   map[string]any{},
+	}
+
+	subject := &dsa.Subject{
+		Type: req.GetIdentityContext().GetType().String(),
+		Id:   req.GetIdentityContext().GetIdentity(),
+	}
+	resource := &dsa.Resource{
+		Properties: req.GetResourceContext(),
+	}
+
+	if len(decisions) == 1 {
+		record.EventName = EventNameAccessEvaluation
+		record.Body = Body{
+			Request: &dsa.EvaluationRequest{
+				Subject:  subject,
+				Action:   &dsa.Action{Name: decisions[0]},
+				Resource: resource,
+			},
+		}
+
+		return record
+	}
+
+	evalReqs := make([]*dsa.EvaluationRequest, 0, len(decisions))
+	for _, d := range decisions {
+		evalReqs = append(evalReqs, &dsa.EvaluationRequest{
+			Action: &dsa.Action{Name: d},
+		})
+	}
+
+	record.EventName = EventNameAccessEvaluations
+	record.Body = Body{
+		Request: &dsa.EvaluationsRequest{
+			Subject:     subject,
+			Resource:    resource,
+			Evaluations: evalReqs,
+		},
+	}
+
+	return record
+}
