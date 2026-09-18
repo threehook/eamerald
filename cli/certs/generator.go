@@ -1,0 +1,96 @@
+package certs
+
+import (
+	"context"
+	"os"
+	"path/filepath"
+
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
+	"github.com/threehook/eamerald/cli/table"
+	"github.com/threehook/eamerald/internal/certs"
+)
+
+type CertPaths struct {
+	Name string
+	Cert string
+	CA   string
+	Key  string
+	Dir  string
+}
+
+func (c *CertPaths) FindExisting() []string {
+	existing := []string{}
+
+	for _, cert := range []string{c.Cert, c.CA, c.Key} {
+		if fi, err := os.Stat(cert); !os.IsNotExist(err) && !fi.IsDir() {
+			existing = append(existing, cert)
+		}
+	}
+
+	return existing
+}
+
+func GenerateCerts(force bool, dnsNames []string, certPaths ...*CertPaths) error {
+	if !force {
+		existingFiles := make([]string, 0, len(certPaths))
+		for _, cert := range certPaths {
+			existingFiles = append(existingFiles, cert.FindExisting()...)
+		}
+
+		if len(existingFiles) != 0 {
+			tab := table.New(os.Stderr)
+			defer tab.Close()
+
+			tab.Header("File", "Action")
+
+			data := make([][]any, 0, len(existingFiles))
+			for _, fqn := range existingFiles {
+				data = append(data, []any{filepath.Base(fqn), "skipped, file already exists"})
+			}
+
+			tab.Bulk(data)
+			tab.Render()
+
+			return nil
+		}
+	}
+
+	return generate(dnsNames, certPaths...)
+}
+
+const generated string = "generated"
+
+func generate(dnsNames []string, certPaths ...*CertPaths) error {
+	logger := zerolog.Nop()
+	ctx := logger.WithContext(context.Background())
+	generator := certs.NewGenerator(ctx)
+
+	tab := table.New(os.Stderr)
+	defer tab.Close()
+
+	tab.Header("File", "Action")
+
+	data := [][]any{}
+
+	for _, certPaths := range certPaths {
+		if err := generator.MakeDevCert(&certs.CertGenConfig{
+			CommonName:  certPaths.Name,
+			CertKeyPath: certPaths.Key,
+			CertPath:    certPaths.Cert,
+			CertCAPath:  certPaths.CA,
+			DNSNames:    dnsNames,
+		}); err != nil {
+			return errors.Wrap(err, "failed to create dev certs")
+		}
+
+		data = append(data, []any{filepath.Base(certPaths.CA), generated})
+		data = append(data, []any{filepath.Base(certPaths.Cert), generated})
+		data = append(data, []any{filepath.Base(certPaths.Key), generated})
+	}
+
+	tab.Bulk(data)
+	tab.Render()
+
+	return nil
+}

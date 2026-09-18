@@ -11,10 +11,10 @@ import (
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/samber/lo"
 	"github.com/spf13/viper"
-	"github.com/threehook/eamerald/topaz/cc"
-	"github.com/threehook/eamerald/topaz/x"
-	"github.com/threehook/eamerald/topazd/authorizer/plugins/topaz_file_decision_logger"
-	"github.com/threehook/eamerald/topazd/service/builder"
+	"github.com/threehook/eamerald/cli/cc"
+	"github.com/threehook/eamerald/cli/x"
+	"github.com/threehook/eamerald/daemon/authorizer/plugins/topaz_file_decision_logger"
+	"github.com/threehook/eamerald/daemon/service/builder"
 )
 
 const (
@@ -38,7 +38,7 @@ func newReplacer() *replacer {
 }
 
 func (r replacer) Replace(s string) string {
-	if s == "TOPAZ_VERSION" {
+	if s == "EAMERALD_VERSION" {
 		// Prevent the `version` field from be overridden by env vars.
 		return ""
 	}
@@ -51,7 +51,7 @@ func LoadConfiguration(fileName string) (*Loader, error) {
 	v.SetConfigType("yaml")
 	v.AddConfigPath(".")
 	v.SetConfigFile(fileName)
-	v.SetEnvPrefix("TOPAZ")
+	v.SetEnvPrefix("EAMERALD")
 
 	// Set defaults
 	v.SetDefault("debug_service.enabled", false)
@@ -72,7 +72,9 @@ func LoadConfiguration(fileName string) (*Loader, error) {
 		return nil, err
 	}
 
-	withTopazDir := strings.Contains(string(fileContents), x.EnvTopazDir)
+	// TOPAZ_DIR is the historical (pre-rename) single-root variable; detecting it
+	// literally, rather than via the current x.EnvEameraldDir constant, is intentional.
+	withTopazDir := strings.Contains(string(fileContents), "TOPAZ_DIR")
 
 	cfg := new(Config)
 
@@ -212,19 +214,19 @@ func (l *Loader) GetPorts() ([]string, error) {
 }
 
 func SetEnvVars(fileContents string) (string, error) {
-	if err := os.Setenv(x.EnvTopazCfgDir, cc.GetTopazCfgDir()); err != nil {
+	if err := os.Setenv(x.EnvEameraldCfgDir, cc.GetEameraldCfgDir()); err != nil {
 		return "", err
 	}
 
-	if err := os.Setenv(x.EnvTopazCertsDir, cc.GetTopazCertsDir()); err != nil {
+	if err := os.Setenv(x.EnvEameraldCertsDir, cc.GetEameraldCertsDir()); err != nil {
 		return "", err
 	}
 
-	if err := os.Setenv(x.EnvTopazDBDir, cc.GetTopazDataDir()); err != nil {
+	if err := os.Setenv(x.EnvEameraldDBDir, cc.GetEameraldDataDir()); err != nil {
 		return "", err
 	}
 
-	if err := os.Setenv(x.EnvTopazDecisionsDir, cc.GetTopazDecisionsDir()); err != nil {
+	if err := os.Setenv(x.EnvEameraldDecisionsDir, cc.GetEameraldDecisionsDir()); err != nil {
 		return "", err
 	}
 

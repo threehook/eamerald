@@ -9,11 +9,11 @@ import (
 	"github.com/aserto-dev/logger"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"github.com/threehook/eamerald/daemon/debug"
+	"github.com/threehook/eamerald/daemon/service/builder"
 	"github.com/threehook/eamerald/internal/certs"
 	"github.com/threehook/eamerald/internal/eds/pkg/directory"
 	"github.com/threehook/eamerald/internal/runtime"
-	"github.com/threehook/eamerald/topazd/debug"
-	"github.com/threehook/eamerald/topazd/service/builder"
 )
 
 // CommandMode -- enum type.
@@ -155,7 +155,7 @@ func NewConfig(
 
 		if configLoader.HasTopazDir {
 			log.Warn().Msg("This configuration file uses the obsolete TOPAZ_DIR environment variable.")
-			log.Warn().Msg("Please update to use the new TOPAZ_DB_DIR and TOPAZ_CERTS_DIR environment variables.")
+			log.Warn().Msg("Please update to use the new EAMERALD_DB_DIR and EAMERALD_CERTS_DIR environment variables.")
 		}
 
 		if err := validateVersion(configLoader.Configuration.Version); err != nil {

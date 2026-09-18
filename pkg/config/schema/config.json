@@ -115,7 +115,7 @@
                 "db_path": {
                     "type": "string",
                     "description": "file path of edge directory database file",
-                    "default": "${TOPAZ_DB_DIR}/directory.db"
+                    "default": "${EAMERALD_DB_DIR}/directory.db"
                 },
                 "request_timeout": {
                     "type": "string",

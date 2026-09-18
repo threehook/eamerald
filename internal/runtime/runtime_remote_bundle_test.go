@@ -17,11 +17,11 @@ import (
 	"github.com/stretchr/testify/require"
 	runtime "github.com/threehook/eamerald/internal/runtime"
 	"github.com/threehook/eamerald/pkg/config"
-	"github.com/threehook/eamerald/topazd/authorizer/builtins"
-	"github.com/threehook/eamerald/topazd/authorizer/builtins/az"
-	"github.com/threehook/eamerald/topazd/authorizer/builtins/ds"
-	"github.com/threehook/eamerald/topazd/authorizer/plugins/edge"
-	"github.com/threehook/eamerald/topazd/authorizer/plugins/topaz_file_decision_logger"
+	"github.com/threehook/eamerald/daemon/authorizer/builtins"
+	"github.com/threehook/eamerald/daemon/authorizer/builtins/az"
+	"github.com/threehook/eamerald/daemon/authorizer/builtins/ds"
+	"github.com/threehook/eamerald/daemon/authorizer/plugins/edge"
+	"github.com/threehook/eamerald/daemon/authorizer/plugins/topaz_file_decision_logger"
 	"google.golang.org/grpc"
 )
 

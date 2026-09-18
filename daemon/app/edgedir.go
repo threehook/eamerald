@@ -1,0 +1,134 @@
+package app
+
+import (
+	"context"
+	"net/http"
+
+	dse "github.com/aserto-dev/go-directory/aserto/directory/exporter/v3"
+	dsi "github.com/aserto-dev/go-directory/aserto/directory/importer/v3"
+	dsm "github.com/aserto-dev/go-directory/aserto/directory/model/v3"
+	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
+	dsw "github.com/aserto-dev/go-directory/aserto/directory/writer/v3"
+	dsm3stream "github.com/aserto-dev/go-directory/pkg/gateway/model/v3"
+	dsOpenAPI "github.com/aserto-dev/openapi-directory/publish/directory"
+	dsa "github.com/authzen/access.go/api/access/v1"
+	"github.com/threehook/eamerald/daemon/service/builder"
+	"github.com/threehook/eamerald/internal/eds/pkg/directory"
+
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/samber/lo"
+	"google.golang.org/grpc"
+)
+
+const (
+	modelService    = "model"
+	readerService   = "reader"
+	writerService   = "writer"
+	exporterService = "exporter"
+	importerService = "importer"
+	accessService   = "access"
+)
+
+type EdgeDir struct {
+	dir *directory.Directory
+}
+
+var _ builder.ServiceTypes = (*EdgeDir)(nil)
+
+func NewEdgeDir(edge *directory.Directory) (*EdgeDir, error) {
+	return &EdgeDir{
+		dir: edge,
+	}, nil
+}
+
+func (e *EdgeDir) Close() {
+	if e.dir != nil {
+		e.dir.Close()
+	}
+}
+
+func (e *EdgeDir) AvailableServices() []string {
+	return []string{modelService, readerService, writerService, exporterService, importerService, accessService}
+}
+
+func (e *EdgeDir) GetGRPCRegistrations(services ...string) builder.GRPCRegistrations {
+	return func(server *grpc.Server) {
+		if lo.Contains(services, modelService) {
+			dsm.RegisterModelServer(server, e.dir.Model3())
+		}
+
+		if lo.Contains(services, readerService) {
+			dsr.RegisterReaderServer(server, e.dir.Reader3())
+			dsa.RegisterAccessServer(server, e.dir.Access1())
+		}
+
+		if lo.Contains(services, writerService) {
+			dsw.RegisterWriterServer(server, e.dir.Writer3())
+		}
+
+		if lo.Contains(services, importerService) {
+			dsi.RegisterImporterServer(server, e.dir.Importer3())
+		}
+
+		if lo.Contains(services, exporterService) {
+			dse.RegisterExporterServer(server, e.dir.Exporter3())
+		}
+	}
+}
+
+func (e *EdgeDir) GetGatewayRegistration(port string, services ...string) builder.HandlerRegistrations {
+	return func(ctx context.Context, mux *runtime.ServeMux, grpcEndpoint string, opts []grpc.DialOption) error {
+		if lo.Contains(services, modelService) {
+			err := dsm.RegisterModelHandlerFromEndpoint(ctx, mux, grpcEndpoint, opts)
+			if err != nil {
+				return err
+			}
+
+			if err := dsm3stream.RegisterModelStreamHandlersFromEndpoint(ctx, mux, grpcEndpoint, opts); err != nil {
+				return err
+			}
+		}
+
+		if lo.Contains(services, readerService) {
+			{
+				err := dsr.RegisterReaderHandlerFromEndpoint(ctx, mux, grpcEndpoint, opts)
+				if err != nil {
+					return err
+				}
+			}
+			{
+				err := dsa.RegisterAccessHandlerFromEndpoint(ctx, mux, grpcEndpoint, opts)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		if lo.Contains(services, writerService) {
+			err := dsw.RegisterWriterHandlerFromEndpoint(ctx, mux, grpcEndpoint, opts)
+			if err != nil {
+				return err
+			}
+		}
+
+		if len(services) > 0 {
+			if err := mux.HandlePath(http.MethodGet, directoryOpenAPISpec, dsOpenAPIHandler(port, services...)); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+}
+
+const (
+	directoryOpenAPISpec string = "/directory/openapi.json"
+)
+
+func dsOpenAPIHandler(port string, services ...string) func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
+	handler := dsOpenAPI.OpenAPIHandler(port, services...)
+
+	return func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
+		handler(w, r)
+	}
+}

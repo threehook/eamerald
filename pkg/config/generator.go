@@ -8,8 +8,8 @@ import (
 
 	"github.com/distribution/reference"
 	"github.com/pkg/errors"
+	"github.com/threehook/eamerald/cli/cc"
 	"github.com/threehook/eamerald/internal/fs"
-	"github.com/threehook/eamerald/topaz/cc"
 )
 
 const defaultPolicyRegistry string = "https://ghcr.io"
@@ -82,7 +82,7 @@ func (g *Generator) GenerateConfig(w io.Writer, templateData string) error {
 }
 
 func (g *Generator) CreateConfigDir() (string, error) {
-	configDir := cc.GetTopazCfgDir()
+	configDir := cc.GetEameraldCfgDir()
 	if fi, err := os.Stat(configDir); err == nil && fi.IsDir() {
 		return configDir, nil
 	}
@@ -91,7 +91,7 @@ func (g *Generator) CreateConfigDir() (string, error) {
 }
 
 func (g *Generator) CreateCertsDir() (string, error) {
-	certsDir := cc.GetTopazCertsDir()
+	certsDir := cc.GetEameraldCertsDir()
 	if fi, err := os.Stat(certsDir); err == nil && fi.IsDir() {
 		return certsDir, nil
 	}
@@ -100,7 +100,7 @@ func (g *Generator) CreateCertsDir() (string, error) {
 }
 
 func (g *Generator) CreateDataDir() (string, error) {
-	dataDir := cc.GetTopazDataDir()
+	dataDir := cc.GetEameraldDataDir()
 	if fi, err := os.Stat(dataDir); err == nil && fi.IsDir() {
 		return dataDir, nil
 	}

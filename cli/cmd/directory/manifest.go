@@ -1,0 +1,110 @@
+package directory
+
+import (
+	"context"
+	"io"
+	"os"
+
+	"github.com/threehook/eamerald/cli/cc"
+	"github.com/threehook/eamerald/cli/clients"
+	dsc "github.com/threehook/eamerald/cli/clients/directory"
+	"github.com/threehook/eamerald/cli/cmd/common"
+)
+
+type GetManifestCmd struct {
+	dsc.Config
+
+	File   string `arg:"" help:"file path to manifest target file" type:"path" optional:""`
+	Stdout bool   `flag:"" help:"output manifest to --stdout"`
+}
+
+type SetManifestCmd struct {
+	dsc.Config
+
+	File  string `arg:"" help:"file path to manifest source file" type:"path" optional:""`
+	Stdin bool   `flag:"" help:"set manifest from --stdin"`
+}
+
+type DeleteManifestCmd struct {
+	dsc.Config
+
+	Force bool `flag:"" short:"f" default:"false" help:"do not ask for confirmation to delete the manifest"`
+}
+
+func (cmd *GetManifestCmd) Run(ctx context.Context) error {
+	if ok, err := clients.Validate(ctx, &cmd.Config); !ok {
+		return err
+	}
+
+	dsClient, err := dsc.NewClient(ctx, &cmd.Config)
+	if err != nil {
+		return err
+	}
+
+	cc.Con().Info().Msg(">>> get manifest to %s", cmd.File)
+
+	r, err := dsClient.GetManifest(ctx)
+	if err != nil {
+		return err
+	}
+
+	w := os.Stdout
+
+	if cmd.File != "" {
+		w, err = os.Create(cmd.File)
+		if err != nil {
+			return err
+		}
+	}
+
+	defer w.Close()
+
+	if _, err := io.Copy(w, r); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (cmd *SetManifestCmd) Run(ctx context.Context) error {
+	if ok, err := clients.Validate(ctx, &cmd.Config); !ok {
+		return err
+	}
+
+	dsClient, err := dsc.NewClient(ctx, &cmd.Config)
+	if err != nil {
+		return err
+	}
+
+	r := os.Stdin
+	if cmd.File != "" {
+		r, err = os.Open(cmd.File)
+		if err != nil {
+			return err
+		}
+	}
+
+	cc.Con().Info().Msg(">>> set manifest to %s\n", cmd.File)
+
+	return dsClient.SetManifest(ctx, r)
+}
+
+func (cmd *DeleteManifestCmd) Run(ctx context.Context) error {
+	if ok, err := clients.Validate(ctx, &cmd.Config); !ok {
+		return err
+	}
+
+	dsClient, err := dsc.NewClient(ctx, &cmd.Config)
+	if err != nil {
+		return err
+	}
+
+	cc.Con().Warn().Msg("WARNING: delete manifest resets all directory state, including relation and object data")
+
+	if cmd.Force || common.PromptYesNo("Do you want to continue?", false) {
+		cc.Con().Info().Msg(">>> delete manifest")
+		return dsClient.DeleteManifest(ctx)
+	}
+
+	return nil
+}
