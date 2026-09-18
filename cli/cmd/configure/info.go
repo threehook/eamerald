@@ -67,12 +67,12 @@ type Info struct {
 		XdgDataHome   string `json:"xdg_data_home"`
 	} `json:"environment"`
 	Config struct {
-		TopazCfgDir       string `json:"topaz_cfg_dir"`
-		TopazCertsDir     string `json:"topaz_certs_dir"`
-		TopazDataDir      string `json:"topaz_db_dir"`
-		TopazDecisionsDir string `json:"topaz_decisions_dir"`
-		TopazTemplateDir  string `json:"topaz_tmpl_dir"`
-		TopazDir          string `json:"topaz_dir"`
+		EameraldCfgDir       string `json:"eamerald_cfg_dir"`
+		EameraldCertsDir     string `json:"eamerald_certs_dir"`
+		EameraldDataDir      string `json:"eamerald_db_dir"`
+		EameraldDecisionsDir string `json:"eamerald_decisions_dir"`
+		EameraldTemplateDir  string `json:"eamerald_tmpl_dir"`
+		EameraldDir          string `json:"eamerald_dir"`
 	} `json:"config"`
 	Runtime struct {
 		ActiveConfigurationName  string `json:"active_configuration_name"`
@@ -80,27 +80,27 @@ type Info struct {
 		RunningConfigurationName string `json:"running_configuration_name"`
 		RunningConfigurationFile string `json:"running_configuration_file"`
 		RunningContainerName     string `json:"running_container_name"`
-		TopazConfigFile          string `json:"topaz_json"`
+		EameraldConfigFile       string `json:"eamerald_json"`
 	} `json:"runtime"`
 	Default struct {
 		ContainerRegistry string `json:"container_registry"`
 		ContainerImage    string `json:"container_image"`
 		ContainerTag      string `json:"container_tag"`
 		ContainerPlatform string `json:"container_platform"`
-		NoCheck           bool   `json:"topaz_no_check"`
-		NoColor           bool   `json:"topaz_no_color"`
+		NoCheck           bool   `json:"eamerald_no_check"`
+		NoColor           bool   `json:"eamerald_no_color"`
 	} `json:"default"`
 	Directory struct {
-		DirectorySvc   string `json:"topaz_directory_svc"`
-		DirectoryKey   string `json:"topaz_directory_key"`
-		DirectoryToken string `json:"topaz_directory_token"`
-		Insecure       bool   `json:"topaz_insecure"`
+		DirectorySvc   string `json:"eamerald_directory_svc"`
+		DirectoryKey   string `json:"eamerald_directory_key"`
+		DirectoryToken string `json:"eamerald_directory_token"`
+		Insecure       bool   `json:"eamerald_insecure"`
 	} `json:"directory"`
 	Authorizer struct {
-		AuthorizerSvc   string `json:"topaz_authorizer_svc"`
-		AuthorizerKey   string `json:"topaz_authorizer_key"`
-		AuthorizerToken string `json:"topaz_authorizer_token"`
-		Insecure        bool   `json:"topaz_insecure"`
+		AuthorizerSvc   string `json:"eamerald_authorizer_svc"`
+		AuthorizerKey   string `json:"eamerald_authorizer_key"`
+		AuthorizerToken string `json:"eamerald_authorizer_token"`
+		Insecure        bool   `json:"eamerald_insecure"`
 	} `json:"authorizer"`
 }
 
@@ -111,12 +111,12 @@ func (cmd InfoConfigCmd) info() *Info {
 	info.Environment.XdgConfigHome = xdg.ConfigHome
 	info.Environment.XdgDataHome = xdg.DataHome
 
-	info.Config.TopazCfgDir = cc.GetEameraldCfgDir()
-	info.Config.TopazCertsDir = cc.GetEameraldCertsDir()
-	info.Config.TopazDataDir = cc.GetEameraldDataDir()
-	info.Config.TopazDecisionsDir = cc.GetEameraldDecisionsDir()
-	info.Config.TopazTemplateDir = cc.GetEameraldTemplateDir()
-	info.Config.TopazDir = cc.GetEameraldDir()
+	info.Config.EameraldCfgDir = cc.GetEameraldCfgDir()
+	info.Config.EameraldCertsDir = cc.GetEameraldCertsDir()
+	info.Config.EameraldDataDir = cc.GetEameraldDataDir()
+	info.Config.EameraldDecisionsDir = cc.GetEameraldDecisionsDir()
+	info.Config.EameraldTemplateDir = cc.GetEameraldTemplateDir()
+	info.Config.EameraldDir = cc.GetEameraldDir()
 
 	cfg := cc.GetConfig()
 	info.Runtime.ActiveConfigurationName = cfg.Active.Config
@@ -124,7 +124,7 @@ func (cmd InfoConfigCmd) info() *Info {
 	info.Runtime.RunningConfigurationName = cfg.Running.Config
 	info.Runtime.RunningConfigurationFile = cfg.Running.ConfigFile
 	info.Runtime.RunningContainerName = cfg.Running.ContainerName
-	info.Runtime.TopazConfigFile = filepath.Join(cc.GetEameraldDir(), common.CLIConfigurationFile)
+	info.Runtime.EameraldConfigFile = filepath.Join(cc.GetEameraldDir(), common.CLIConfigurationFile)
 
 	info.Default.ContainerRegistry = cc.ContainerRegistry()
 	info.Default.ContainerImage = cc.ContainerImage()
