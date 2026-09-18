@@ -3,11 +3,11 @@ kind: Service
 metadata:
   name: {{ .Release.Name }}
   labels:
-    {{- include "topaz.labels" . | nindent 4 }}
+    {{- include "eamerald.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   selector:
-    {{- include "topaz.labels" . | nindent 4 }}
+    {{- include "eamerald.labels" . | nindent 4 }}
   ports:
     - name: health
       port: {{ .Values.service.ports.health }}

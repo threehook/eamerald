@@ -1,4 +1,4 @@
-# Default values for the topaz chart.
+# Default values for the eamerald chart.
 
 image:
   # For local iteration on Docker Desktop's Kubernetes, prefer `make k8s-deploy`
@@ -24,7 +24,7 @@ image:
   tag: dev
   pullPolicy: IfNotPresent
 
-# topazd's directory service uses an embedded, single-writer BoltDB file, so
+# eameraldd's directory service uses an embedded, single-writer BoltDB file, so
 # this chart is not meant to be scaled beyond one replica.
 replicaCount: 1
 
@@ -58,12 +58,12 @@ logging:
   level: info
 
 # The directory manifest defines the authorization model: object types,
-# relations, and permissions. Edit k8s/topaz/files/manifest.yaml to change it;
+# relations, and permissions. Edit k8s/eamerald/files/manifest.yaml to change it;
 # that file is this deployment's source of truth, applied to the database by
 # an init container on every Pod start.
 #
 # Disable only if you manage the manifest out-of-band (e.g. by hand via
-# `topaz directory set manifest`), accepting that the model then lives solely
+# `eamerald directory set manifest`), accepting that the model then lives solely
 # as state in the database PVC and is not reproducible from this chart.
 directory:
   manifest:

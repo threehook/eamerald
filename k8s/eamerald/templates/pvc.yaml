@@ -4,7 +4,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: {{ .Release.Name }}-db
   labels:
-    {{- include "topaz.labels" . | nindent 4 }}
+    {{- include "eamerald.labels" . | nindent 4 }}
 spec:
   accessModes:
     - ReadWriteOnce
@@ -20,7 +20,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: {{ .Release.Name }}-certs
   labels:
-    {{- include "topaz.labels" . | nindent 4 }}
+    {{- include "eamerald.labels" . | nindent 4 }}
 spec:
   accessModes:
     - ReadWriteOnce

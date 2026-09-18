@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: {{ .Release.Name }}
   labels:
-    {{- include "topaz.labels" . | nindent 4 }}
+    {{- include "eamerald.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   # eameraldd's embedded directory database is a single-writer file store (BoltDB):
@@ -13,7 +13,7 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      {{- include "topaz.labels" . | nindent 6 }}
+      {{- include "eamerald.labels" . | nindent 6 }}
   template:
     metadata:
       {{- if .Values.directory.manifest.enabled }}
@@ -24,7 +24,7 @@ spec:
         checksum/manifest: {{ .Files.Get "files/manifest.yaml" | sha256sum }}
       {{- end }}
       labels:
-        {{- include "topaz.labels" . | nindent 8 }}
+        {{- include "eamerald.labels" . | nindent 8 }}
     spec:
       {{- if .Values.directory.manifest.enabled }}
       # Applying the manifest offline, before eameraldd starts, rather than

@@ -27,13 +27,13 @@ data that policy runs against.
 Deploy first:
 
 ```
-make laadpalen-deploy   # deploys topaz to k8s if not already running, then
+make laadpalen-deploy   # deploys eamerald to k8s if not already running, then
                          # applies this manifest and data on top
 ```
 
 `laadpalen-deploy` is additive - it layers this schema and data onto an
-already-running topaz via the directory API, leaving the chart's own manifest
-(`k8s/topaz/files/manifest.yaml`) as the generic starter model.
+already-running eamerald via the directory API, leaving the chart's own manifest
+(`k8s/eamerald/files/manifest.yaml`) as the generic starter model.
 
 From there, `laadpalen-gui` and `laadpalen-test` are two independent ways of
 using that same deployment - neither depends on the other, and you can run
@@ -71,7 +71,7 @@ and sends each one as a real `POST /api/v2/authz/query` to a real, running
 authorizer. It exercises the actual directory data, the actual git-sourced
 Rego policy fetched from `opa-policies`, and the actual network path a real
 caller would use - which is exactly why it lives here, run on demand, rather
-than inside `make build lint test`: it depends on a live topaz deployment and
+than inside `make build lint test`: it depends on a live eamerald deployment and
 on GitHub being reachable to sync the policy.
 
 **How to use it:** run it yourself, by hand, after `make laadpalen-deploy`,

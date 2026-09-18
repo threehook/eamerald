@@ -1,4 +1,4 @@
-Topaz is deploying into namespace {{ .Release.Namespace }}.
+Eamerald is deploying into namespace {{ .Release.Namespace }}.
 
 Check rollout status:
   kubectl -n {{ .Release.Namespace }} rollout status deployment/{{ .Release.Name }}

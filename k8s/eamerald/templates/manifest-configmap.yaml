@@ -8,7 +8,7 @@ kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-manifest
   labels:
-    {{- include "topaz.labels" . | nindent 4 }}
+    {{- include "eamerald.labels" . | nindent 4 }}
 data:
   {{- (.Files.Glob "files/manifest.yaml").AsConfig | nindent 2 }}
 {{- end }}

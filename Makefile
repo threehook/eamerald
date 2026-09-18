@@ -32,9 +32,9 @@ SYFT_VER           := 1.13.0
 
 RELEASE_TAG        := $$(${EXT_BIN_DIR}/svu current)
 
-K8S_NAMESPACE      := topaz
-K8S_RELEASE        := topaz
-K8S_CHART          := k8s/topaz
+K8S_NAMESPACE      := eamerald
+K8S_RELEASE        := eamerald
+K8S_CHART          := k8s/eamerald
 K8S_DEV_IMAGE      := eamerald:dev
 
 .DEFAULT_GOAL      := build
@@ -131,9 +131,9 @@ k8s-logs:
 	@kubectl -n ${K8S_NAMESPACE} logs -f deployment/${K8S_RELEASE}
 
 # applies the laadpalen example's manifest and data on top of an already
-# generic topaz deployment, without touching the chart's own manifest
-# (k8s/topaz/files/manifest.yaml stays the generic starter model - this is
-# additive, layered on via the directory API). Deploys topaz first only if
+# generic eamerald deployment, without touching the chart's own manifest
+# (k8s/eamerald/files/manifest.yaml stays the generic starter model - this is
+# additive, layered on via the directory API). Deploys eamerald first only if
 # it isn't already running.
 .PHONY: laadpalen-deploy
 laadpalen-deploy:
