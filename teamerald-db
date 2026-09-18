@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-BIN=topaz-db
+BIN=eamerald-db
 
 set -o errexit
 set -o nounset

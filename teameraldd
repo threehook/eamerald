@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-BIN=topazd
+BIN=eameraldd
 
 set -o errexit
 set -o nounset

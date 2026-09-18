@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-BIN=topaz
+BIN=eamerald
 
 set -o errexit
 set -o nounset

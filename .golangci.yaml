@@ -103,7 +103,7 @@ linters:
           yaml: snake
 
         overrides:
-          - pkg: topazd/app/handlers
+          - pkg: daemon/app/handlers
             rules:
               json: camel
 
@@ -118,11 +118,11 @@ linters:
     # Paths to exclude
     paths:
       - internal/xdg/
-      - topazd/signals/
-      - topaz/editor/
+      - daemon/signals/
+      - cli/editor/
 
     rules:
-      - path: topaz/cmd/
+      - path: cli/cmd/
         linters:
           - dupl
       - path: builtins/
@@ -132,10 +132,10 @@ linters:
         linters:
           - dupl
           - goconst
-      - path: topazd/tests
+      - path: daemon/tests
         linters:
           - goconst
-      # - path: topaz/cmd/certs/
+      # - path: cli/cmd/certs/
       #   linters:
       #     - staticcheck # See https://github.com/dominikh/go-tools/issues/1737
 

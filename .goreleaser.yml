@@ -1,6 +1,6 @@
 version: 2
 
-project_name: topaz
+project_name: eamerald
 
 env:
   # https://goreleaser.com/customization/env/
@@ -18,9 +18,9 @@ before:
 
 builds:
   # https://goreleaser.com/customization/build/
-  - id: topazd
-    main: ./topazd
-    binary: topazd
+  - id: eameraldd
+    main: ./daemon
+    binary: eameraldd
     goos:
       - linux
     goarch:
@@ -31,14 +31,14 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/topazd/version.ver={{.Version}}
-      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/topazd/version.commit={{.ShortCommit}}
-      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/topazd/version.date={{.Date}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/daemon/version.ver={{.Version}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/daemon/version.commit={{.ShortCommit}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/daemon/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
-  - id: topaz
-    main: ./topaz
-    binary: topaz
+  - id: eamerald
+    main: ./cli
+    binary: eamerald
     goos:
       - darwin
       - linux
@@ -50,14 +50,14 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/topaz/version.ver={{.Version}}
-      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/topaz/version.commit={{.ShortCommit}}
-      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/topaz/version.date={{.Date}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/cli/version.ver={{.Version}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/cli/version.commit={{.ShortCommit}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/cli/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
-  - id: topaz-db
-    main: ./topaz-db
-    binary: topaz-db
+  - id: eamerald-db
+    main: ./db
+    binary: eamerald-db
     goos:
       - linux
     goarch:
@@ -73,9 +73,9 @@ builds:
       - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/pkg/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
-  - id: topaz-backup
-    main: ./topaz-backup
-    binary: topaz-backup
+  - id: eamerald-backup
+    main: ./backup
+    binary: eamerald-backup
     goos:
       - linux
     goarch:
@@ -96,14 +96,14 @@ archives:
   - formats:
       - zip
     ids:
-      - topaz
-      - topazd
-      - topaz-backup
+      - eamerald
+      - eameraldd
+      - eamerald-backup
     files:
       - LICENSE
       - README.md
     name_template: >-
-      topaz_{{ .Os }}_{{ .Arch }}
+      eamerald_{{ .Os }}_{{ .Arch }}
 
 checksum:
   # https://goreleaser.com/customization/checksum/
@@ -147,10 +147,10 @@ dockers_v2:
       - linux/arm64
 
     ids:
-      - topaz
-      - topazd
-      - topaz-db
-      - topaz-backup
+      - eamerald
+      - eameraldd
+      - eamerald-db
+      - eamerald-backup
 
     images:
       - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_ORG }}/{{ .Env.IMAGE_REPO }}"
@@ -195,7 +195,7 @@ sboms:
       - SYFT_FILE_METADATA_CATALOGER_ENABLED=true
     artifacts: binary
     ids:
-      - topaz
-      - topazd
-      - topaz-backup
-      - topaz-db
+      - eamerald
+      - eameraldd
+      - eamerald-backup
+      - eamerald-db

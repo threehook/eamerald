@@ -11,13 +11,12 @@ ORG                := threehook
 REPO               := eamerald
 IMAGE_ORG          := threehook
 IMAGE_REPO         := eamerald
-DESCRIPTION        := "Topaz Authorization Service"
+DESCRIPTION        := "Eamerald Authorization Service"
 LICENSE            := Apache-2.0
 
 GOOS               := $(shell go env GOOS)
 GOARCH             := $(shell go env GOARCH)
-TOPAZ_DIST         := ${PWD}/$(shell cat dist/artifacts.json | jq -r '.[] | select(.name == "topaz").path')
-GOPRIVATE          := "github.com/aserto-dev"
+EAMERALD_DIST      := ${PWD}/$(shell cat dist/artifacts.json | jq -r '.[] | select(.name == "eamerald").path')
 DOCKER_BUILDKIT    := 1
 
 EXT_DIR            := ${PWD}/.ext
@@ -142,8 +141,8 @@ laadpalen-deploy:
 	@if [ "$$(kubectl -n ${K8S_NAMESPACE} get deployment ${K8S_RELEASE} -o jsonpath='{.status.readyReplicas}' 2>/dev/null)" != "1" ]; then \
 		$(MAKE) k8s-deploy; \
 	fi
-	@go run ./topaz directory set manifest assets/laadpalen/manifest.yaml -H localhost:9292 --insecure
-	@cat assets/laadpalen/laadpalen_objects.jsonl assets/laadpalen/laadpalen_relations.jsonl | go run ./topaz directory import --stdin -H localhost:9292 --insecure
+	@go run ./cli directory set manifest assets/laadpalen/manifest.yaml -H localhost:9292 --insecure
+	@cat assets/laadpalen/laadpalen_objects.jsonl assets/laadpalen/laadpalen_relations.jsonl | go run ./cli directory import --stdin -H localhost:9292 --insecure
 	@echo "laadpalen manifest and data loaded - run 'make laadpalen-gui' to start the frontend"
 
 .PHONY: laadpalen-gui
@@ -194,10 +193,10 @@ lint-clean: gover
 test: gover test-snapshot
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
 	@echo -e "$(WARN_COLOR)!!! TESTCONTAINERS_RYUK_DISABLED=${TESTCONTAINERS_RYUK_DISABLED} !!!$(NO_COLOR)"
-	@${EXT_BIN_DIR}/gotestsum --format short-verbose -- $$(go list ./... | grep -v topazd/tests)                     -count=1 -timeout 120s --race -parallel=1 -v -coverprofile=cover.out -coverpkg=./...
-	@${EXT_BIN_DIR}/gotestsum --format short-verbose -- $$(go list ./topazd/tests/... | grep -v tests/template)      -count=1 -timeout 120s --race -parallel=1 -v -coverprofile=cover.out -coverpkg=./...
-	@${EXT_BIN_DIR}/gotestsum --format short-verbose -- github.com/${ORG}/${REPO}/topazd/tests/template-no-tls/...   -count=1 -timeout 120s --race -parallel=1 -v -coverprofile=cover.out -coverpkg=./...
-	@${EXT_BIN_DIR}/gotestsum --format short-verbose -- github.com/${ORG}/${REPO}/topazd/tests/template-with-tls/... -count=1 -timeout 120s --race -parallel=1 -v -coverprofile=cover.out -coverpkg=./...
+	@${EXT_BIN_DIR}/gotestsum --format short-verbose -- $$(go list ./... | grep -v daemon/tests)                     -count=1 -timeout 120s --race -parallel=1 -v -coverprofile=cover.out -coverpkg=./...
+	@${EXT_BIN_DIR}/gotestsum --format short-verbose -- $$(go list ./daemon/tests/... | grep -v tests/template)      -count=1 -timeout 120s --race -parallel=1 -v -coverprofile=cover.out -coverpkg=./...
+	@${EXT_BIN_DIR}/gotestsum --format short-verbose -- github.com/${ORG}/${REPO}/daemon/tests/template-no-tls/...   -count=1 -timeout 120s --race -parallel=1 -v -coverprofile=cover.out -coverpkg=./...
+	@${EXT_BIN_DIR}/gotestsum --format short-verbose -- github.com/${ORG}/${REPO}/daemon/tests/template-with-tls/... -count=1 -timeout 120s --race -parallel=1 -v -coverprofile=cover.out -coverpkg=./...
 	
 .PHONY: test-snapshot
 test-snapshot:
@@ -215,17 +214,17 @@ write-version:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
 	@git describe --tags > ./VERSION.txt
 
-.PHONY: topaz-run-test-snapshot
-topaz-run-test-snapshot:
+.PHONY: eamerald-run-test-snapshot
+eamerald-run-test-snapshot:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
-	@echo "topaz run $$(${TOPAZ_DIST} config info | jq '.runtime.active_configuration_file')"
-	@${TOPAZ_DIST} run --container-tag=0.0.0-test-$$(git rev-parse --short HEAD)-$$(uname -m)
+	@echo "eamerald run $$(${EAMERALD_DIST} config info | jq '.runtime.active_configuration_file')"
+	@${EAMERALD_DIST} run --container-tag=0.0.0-test-$$(git rev-parse --short HEAD)-$$(uname -m)
 
-.PHONY: topaz-start-test-snapshot
-topaz-start-test-snapshot:
+.PHONY: eamerald-start-test-snapshot
+eamerald-start-test-snapshot:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
-	@echo "topaz start $$(${TOPAZ_DIST} config info | jq '.runtime.active_configuration_name')"
-	@${TOPAZ_DIST} start --container-tag=0.0.0-test-$$(git rev-parse --short HEAD)-$$(uname -m)
+	@echo "eamerald start $$(${EAMERALD_DIST} config info | jq '.runtime.active_configuration_name')"
+	@${EAMERALD_DIST} start --container-tag=0.0.0-test-$$(git rev-parse --short HEAD)-$$(uname -m)
 
 .PHONY: info
 info:
@@ -236,7 +235,7 @@ info:
 	@echo "EXT_BIN_DIR: ${EXT_BIN_DIR}"
 	@echo "EXT_TMP_DIR: ${EXT_TMP_DIR}"
 	@echo "RELEASE_TAG: ${RELEASE_TAG}"
-	@echo "TOPAZ_DIST:  ${TOPAZ_DIST}"
+	@echo "EAMERALD_DIST: ${EAMERALD_DIST}"
 	@echo "REGISTRY:    ${REGISTRY}"
 	@echo "ORG:         ${ORG}"
 	@echo "REPO:        ${REPO}"
