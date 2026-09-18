@@ -24,7 +24,6 @@ const (
 
 type Loader struct {
 	Configuration *Config
-	HasTopazDir   bool
 }
 
 var envRegex = regexp.MustCompile(`(?U:\${.*})`)
@@ -72,10 +71,6 @@ func LoadConfiguration(fileName string) (*Loader, error) {
 		return nil, err
 	}
 
-	// TOPAZ_DIR is the historical (pre-rename) single-root variable; detecting it
-	// literally, rather than via the current x.EnvEameraldDir constant, is intentional.
-	withTopazDir := strings.Contains(string(fileContents), "TOPAZ_DIR")
-
 	cfg := new(Config)
 
 	subBuf, err := SetEnvVars(string(fileContents))
@@ -96,7 +91,6 @@ func LoadConfiguration(fileName string) (*Loader, error) {
 
 	return &Loader{
 		Configuration: cfg,
-		HasTopazDir:   withTopazDir,
 	}, nil
 }
 

@@ -319,7 +319,7 @@ opa:
             min_delay_seconds: 60
             max_delay_seconds: 120
     plugins:
-      # topaz file decision logger plugin configuration
+      # eamerald file decision logger plugin configuration
       eamerald_file_decision_logger:
         enabled: false
         logger:

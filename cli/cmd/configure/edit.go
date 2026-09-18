@@ -13,7 +13,7 @@ import (
 
 type EditConfigCmd struct {
 	Name      ConfigName `arg:"" required:"" default:"${active_config}" help:"topaz config name"`
-	ConfigDir string     `flag:"" default:"${topaz_cfg_dir}" help:"path to config folder"`
+	ConfigDir string     `flag:"" default:"${eamerald_cfg_dir}" help:"path to config folder"`
 }
 
 func (cmd *EditConfigCmd) Run(ctx context.Context) error {

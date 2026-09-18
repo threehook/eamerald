@@ -39,7 +39,7 @@ type InstallTemplateCmd struct {
 	ContainerPlatform string `optional:"" default:"${container_platform}" env:"CONTAINER_PLATFORM" help:"container platform"`
 	ContainerName     string `optional:"" default:"${container_name}" env:"CONTAINER_NAME" help:"container name"`
 	ContainerHostname string `optional:"" name:"hostname" default:"" env:"CONTAINER_HOSTNAME" help:"hostname for docker to set"`
-	TemplatesURL      string `optional:"" default:"${topaz_tmpl_url}" env:"EAMERALD_TMPL_URL" help:"URL of template catalog"`
+	TemplatesURL      string `optional:"" default:"${eamerald_tmpl_url}" env:"EAMERALD_TMPL_URL" help:"URL of template catalog"`
 	ContainerVersion  string `optional:"" hidden:"" default:"" env:"CONTAINER_VERSION"`
 	ConfigName        string `optional:"" help:"set config name"`
 }
@@ -57,7 +57,7 @@ func (cmd *InstallTemplateCmd) Run(ctx context.Context, cfg *cc.Config) error {
 	}
 
 	if !cmd.Force {
-		fmt.Fprintln(os.Stderr, "Installing this template will completely reset your topaz configuration.")
+		fmt.Fprintln(os.Stderr, "Installing this template will completely reset your eamerald configuration.")
 
 		if !common.PromptYesNo("Do you want to continue?", false) {
 			return nil
@@ -103,17 +103,17 @@ func (cmd *InstallTemplateCmd) Run(ctx context.Context, cfg *cc.Config) error {
 }
 
 // installTemplate steps:
-// 1 - topaz stop - ensure topaz is not running, so we can reconfigure
-// 2 - topaz config new - generate a new configuration based on the requirements of the template
-// 3 - topaz start - start instance using new configuration
+// 1 - eamerald stop - ensure eamerald is not running, so we can reconfigure
+// 2 - eamerald config new - generate a new configuration based on the requirements of the template
+// 3 - eamerald start - start instance using new configuration
 // 4 - wait for health endpoint to be in serving state
-// 5 - topaz manifest delete --force, reset the directory store
-// 6 - topaz manifest set, deploy the manifest
-// 7 - topaz import, load IDP and domain data (in that order)
-// 8 - topaz test exec, execute assertions when part of template
-// 9 - topaz console, launch console so the user start exploring the template artifacts.
+// 5 - eamerald directory delete manifest --force, reset the directory store
+// 6 - eamerald directory set manifest, deploy the manifest
+// 7 - eamerald directory import, load IDP and domain data (in that order)
+// 8 - eamerald directory/authorizer test exec, execute assertions when part of template
+// 9 - eamerald console, launch console so the user start exploring the template artifacts.
 func (cmd *InstallTemplateCmd) installTemplate(ctx context.Context, cfg *cc.Config, tmpl *template) error {
-	topazTemplateDir := cc.GetEameraldTemplateDir()
+	eameraldTemplateDir := cc.GetEameraldTemplateDir()
 
 	cmd.Insecure = true
 	if cmd.ClientConfig().NoTLS {
@@ -121,17 +121,13 @@ func (cmd *InstallTemplateCmd) installTemplate(ctx context.Context, cfg *cc.Conf
 		cmd.Plaintext = true
 	}
 
-	// 1-3 - stop topaz, configure, start
-	if err := cmd.prepareTopaz(ctx, tmpl, cmd.ConfigName); err != nil {
+	// 1-3 - stop eamerald, configure, start
+	if err := cmd.prepareEamerald(ctx, tmpl, cmd.ConfigName); err != nil {
 		return err
 	}
 
 	// 4 - wait for health endpoint to be in serving state
 	activeConfig := config.GetConfig(cfg.Active.ConfigFile)
-	if activeConfig.HasTopazDir {
-		fmt.Fprintln(os.Stderr, "This configuration file still uses the TOPAZ_DIR environment variable.")
-		fmt.Fprintln(os.Stderr, "Please change to using the new EAMERALD_DB_DIR and EAMERALD_CERTS_DIR environment variables.")
-	}
 
 	healthCfg := &client.Config{
 		Address:        activeConfig.Configuration.APIConfig.Health.ListenAddress,
@@ -156,18 +152,18 @@ func (cmd *InstallTemplateCmd) installTemplate(ctx context.Context, cfg *cc.Conf
 	}
 
 	// 5-7 - reset directory, apply (manifest, IDP and domain data) template.
-	if err := installTemplate(cfg, tmpl, topazTemplateDir, &cmd.Config, cmd.ConfigName).Install(ctx); err != nil {
+	if err := installTemplate(cfg, tmpl, eameraldTemplateDir, &cmd.Config, cmd.ConfigName).Install(ctx); err != nil {
 		return err
 	}
 
 	// 8 - run tests
 	if !cmd.NoTests {
-		if err := installTemplate(cfg, tmpl, topazTemplateDir, &cmd.Config, cmd.ConfigName).Test(ctx); err != nil {
+		if err := installTemplate(cfg, tmpl, eameraldTemplateDir, &cmd.Config, cmd.ConfigName).Test(ctx); err != nil {
 			return err
 		}
 	}
 
-	// 9 - topaz console, launch console so the user start exploring the template artifacts
+	// 9 - eamerald console, launch console so the user start exploring the template artifacts
 	if !cmd.NoConsole {
 		command := eamerald.ConsoleCmd{
 			ConsoleAddress: "https://localhost:8080/ui/directory",
@@ -180,8 +176,8 @@ func (cmd *InstallTemplateCmd) installTemplate(ctx context.Context, cfg *cc.Conf
 	return nil
 }
 
-func (cmd *InstallTemplateCmd) prepareTopaz(ctx context.Context, tmpl *template, customName string) error {
-	// 1 - topaz stop - ensure topaz is not running, so we can reconfigure
+func (cmd *InstallTemplateCmd) prepareEamerald(ctx context.Context, tmpl *template, customName string) error {
+	// 1 - eamerald stop - ensure eamerald is not running, so we can reconfigure
 	{
 		command := &eamerald.StopCmd{
 			ContainerName: "eamerald*",
@@ -192,7 +188,7 @@ func (cmd *InstallTemplateCmd) prepareTopaz(ctx context.Context, tmpl *template,
 		}
 	}
 
-	// topaz status, output status
+	// eamerald status, output status
 	{
 		command := &eamerald.StatusCmd{}
 		if err := command.Run(ctx); err != nil {
@@ -205,7 +201,7 @@ func (cmd *InstallTemplateCmd) prepareTopaz(ctx context.Context, tmpl *template,
 		name = customName
 	}
 
-	// 2 - topaz config new - generate a new configuration based on the requirements of the template
+	// 2 - eamerald config new - generate a new configuration based on the requirements of the template
 	if !cmd.NoConfigure {
 		command := configure.NewConfigCmd{
 			Name:     configure.ConfigName(name),
@@ -218,7 +214,7 @@ func (cmd *InstallTemplateCmd) prepareTopaz(ctx context.Context, tmpl *template,
 		}
 	}
 
-	// topaz config use - activate configuration (new or existing)
+	// eamerald config use - activate configuration (new or existing)
 	{
 		use := configure.UseConfigCmd{
 			Name:      configure.ConfigName(name),
@@ -229,7 +225,7 @@ func (cmd *InstallTemplateCmd) prepareTopaz(ctx context.Context, tmpl *template,
 		}
 	}
 
-	// 3 - topaz start - start instance using new configuration
+	// 3 - eamerald start - start instance using new configuration
 	{
 		command := &eamerald.StartCmd{
 			StartRunCmd: eamerald.StartRunCmd{
@@ -250,36 +246,36 @@ func (cmd *InstallTemplateCmd) prepareTopaz(ctx context.Context, tmpl *template,
 	return nil
 }
 
-func installTemplate(cfg *cc.Config, tmpl *template, topazTemplateDir string, dscConfig *dsc.Config, customName string) *tmplInstaller {
+func installTemplate(cfg *cc.Config, tmpl *template, eameraldTemplateDir string, dscConfig *dsc.Config, customName string) *tmplInstaller {
 	return &tmplInstaller{
-		cfg:              cfg,
-		tmpl:             tmpl,
-		topazTemplateDir: topazTemplateDir,
-		dscConfig:        dscConfig,
-		customName:       customName,
+		cfg:                 cfg,
+		tmpl:                tmpl,
+		eameraldTemplateDir: eameraldTemplateDir,
+		dscConfig:           dscConfig,
+		customName:          customName,
 	}
 }
 
 type tmplInstaller struct {
-	cfg              *cc.Config
-	tmpl             *template
-	topazTemplateDir string
-	dscConfig        *dsc.Config
-	customName       string
+	cfg                 *cc.Config
+	tmpl                *template
+	eameraldTemplateDir string
+	dscConfig           *dsc.Config
+	customName          string
 }
 
 func (i *tmplInstaller) Install(ctx context.Context) error {
-	// 5 - topaz manifest delete --force, reset the directory store
+	// 5 - eamerald directory delete manifest --force, reset the directory store
 	if err := i.deleteManifest(ctx); err != nil {
 		return err
 	}
 
-	// 6 - topaz manifest set, apply the manifest
+	// 6 - eamerald directory set manifest, apply the manifest
 	if err := i.setManifest(ctx); err != nil {
 		return err
 	}
 
-	// 7 - topaz import, load IDP and domain data
+	// 7 - eamerald directory import, load IDP and domain data
 	if err := i.importData(ctx); err != nil {
 		return err
 	}
@@ -288,7 +284,7 @@ func (i *tmplInstaller) Install(ctx context.Context) error {
 }
 
 func (i *tmplInstaller) Test(ctx context.Context) error {
-	// 8 - topaz test exec, execute assertions when part of template
+	// 8 - eamerald directory/authorizer test exec, execute assertions when part of template
 	return i.runTemplateTests(ctx)
 }
 
@@ -310,7 +306,7 @@ func (i *tmplInstaller) setManifest(ctx context.Context) error {
 	}
 
 	if exists, _ := config.FileExists(manifest); !exists {
-		manifestDir := filepath.Join(i.topazTemplateDir, name, "model")
+		manifestDir := filepath.Join(i.eameraldTemplateDir, name, "model")
 
 		switch m, err := download(manifest, manifestDir); {
 		case err != nil:
@@ -334,7 +330,7 @@ func (i *tmplInstaller) importData(ctx context.Context) error {
 		name = i.customName
 	}
 
-	defaultDataDir := filepath.Join(i.topazTemplateDir, name, "data")
+	defaultDataDir := filepath.Join(i.eameraldTemplateDir, name, "data")
 
 	dataDirs := map[string]struct{}{}
 
@@ -372,7 +368,7 @@ func (i *tmplInstaller) runTemplateTests(ctx context.Context) error {
 		name = i.customName
 	}
 
-	assertionsDir := filepath.Join(i.topazTemplateDir, name, "assertions")
+	assertionsDir := filepath.Join(i.eameraldTemplateDir, name, "assertions")
 
 	tests := []string{}
 

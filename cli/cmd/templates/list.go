@@ -10,7 +10,7 @@ import (
 
 type ListTemplatesCmd struct {
 	Legacy       bool   `optional:"" default:"false" help:"use legacy templates"`
-	TemplatesURL string `optional:"" default:"${topaz_tmpl_url}" env:"EAMERALD_TMPL_URL" help:"URL of template catalog"`
+	TemplatesURL string `optional:"" default:"${eamerald_tmpl_url}" env:"EAMERALD_TMPL_URL" help:"URL of template catalog"`
 }
 
 func (cmd *ListTemplatesCmd) Run(ctx context.Context) error {

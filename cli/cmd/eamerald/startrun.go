@@ -40,7 +40,7 @@ func (cmd *StartRunCmd) run(cfg *cc.Config, mode runMode) error {
 	}
 
 	if _, err := os.Stat(cfg.Active.ConfigFile); errors.Is(err, os.ErrNotExist) {
-		return errors.Errorf("%s does not exist, please run 'topaz config new'", filepath.Join(cfg.Active.ConfigFile))
+		return errors.Errorf("%s does not exist, please run 'eamerald config new'", filepath.Join(cfg.Active.ConfigFile))
 	}
 
 	activeConfig, err := config.LoadConfiguration(cfg.Active.ConfigFile)
@@ -51,11 +51,6 @@ func (cmd *StartRunCmd) run(cfg *cc.Config, mode runMode) error {
 	cfg.Running.Config = cfg.Active.Config
 	cfg.Running.ConfigFile = cfg.Active.ConfigFile
 	cfg.Running.ContainerName = cc.ContainerName(cfg.Active.ConfigFile)
-
-	if activeConfig.HasTopazDir {
-		cc.Con().Warn().Msg("This configuration file still uses the TOPAZ_DIR environment variable.")
-		cc.Con().Msg("Please change to using the new EAMERALD_DB_DIR and EAMERALD_CERTS_DIR environment variables.")
-	}
 
 	generator := config.NewGenerator(filepath.Base(cfg.Active.ConfigFile))
 	if _, err := generator.CreateCertsDir(); err != nil {

@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-2019-09/schema#",
-    "title": "Topaz Config Schema",
-    "description": "Schema for topaz configuration files.",
+    "title": "Eamerald Config Schema",
+    "description": "Schema for eamerald configuration files.",
     "$ref": "#/definitions/Root",
     "definitions": {
         "Root": {
@@ -214,7 +214,7 @@
                     "default": "15m"
                 },
                 "expected_audience": {
-                    "description": "expected Topaz audience value, when empty audience verification is skipped",
+                    "description": "expected Eamerald audience value, when empty audience verification is skipped",
                     "type": "string",
                     "default": ""
                 }

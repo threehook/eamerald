@@ -13,7 +13,7 @@ import (
 
 type DeleteConfigCmd struct {
 	Name      ConfigName `arg:"" required:"" help:"topaz config name"`
-	ConfigDir string     `flag:"" required:"false" default:"${topaz_cfg_dir}" help:"path to config folder" `
+	ConfigDir string     `flag:"" required:"false" default:"${eamerald_cfg_dir}" help:"path to config folder" `
 }
 
 func (cmd *DeleteConfigCmd) Run(ctx context.Context) error {

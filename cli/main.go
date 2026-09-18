@@ -23,8 +23,6 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const docLink = "https://www.topaz.sh/docs/command-line-interface/topaz-cli/configuration"
-
 const (
 	rcOK  int = 0
 	rcErr int = 1
@@ -48,13 +46,6 @@ func run() int {
 
 	cliConfigFile := filepath.Join(cc.GetEameraldDir(), common.CLIConfigurationFile)
 
-	oldDBPath := filepath.Join(cc.GetEameraldDir(), "db")
-
-	warn, err := checkDBFiles(oldDBPath)
-	if err != nil {
-		return exitErr(err)
-	}
-
 	c, err := cc.NewConfig(ctx, cli.NoCheck, cliConfigFile)
 	if err != nil {
 		return exitErr(err)
@@ -62,11 +53,6 @@ func run() int {
 
 	if err := checkVersion(c); err != nil {
 		return exitErr(err)
-	}
-
-	if warn && len(os.Args) == 1 {
-		cc.Con().Warn().Msg("Detected directory db files in the old data location %q", oldDBPath)
-		cc.Con().Msg("Check the documentation on how to update your configuration:\n%s", docLink)
 	}
 
 	cwd, err := os.Getwd()
@@ -110,31 +96,31 @@ func kongParse(cfg *cc.Config, cli *cmd.CLI, cwd string) *kong.Context {
 			NoExpandSubcommands: true,
 		}),
 		kong.Vars{
-			"topaz_dir":           cc.GetEameraldDir(),
-			"topaz_certs_dir":     cc.GetEameraldCertsDir(),
-			"topaz_cfg_dir":       cc.GetEameraldCfgDir(),
-			"topaz_db_dir":        cc.GetEameraldDataDir(),
-			"topaz_decisions_dir": cc.GetEameraldDecisionsDir(),
-			"topaz_tmpl_dir":      cc.GetEameraldTemplateDir(),
-			"topaz_tmpl_url":      cc.GetEameraldTemplateURL(),
-			"container_registry":  cc.ContainerRegistry(),
-			"container_image":     cc.ContainerImage(),
-			"container_tag":       cc.ContainerTag(),
-			"container_platform":  cc.ContainerPlatform(),
-			"container_name":      cc.ContainerName(cfg.Active.ConfigFile),
-			"directory_svc":       cc.DirectorySvc(),
-			"directory_key":       cc.DirectoryKey(),
-			"directory_token":     cc.DirectoryToken(),
-			"authorizer_svc":      cc.AuthorizerSvc(),
-			"authorizer_key":      cc.AuthorizerKey(),
-			"authorizer_token":    cc.AuthorizerToken(),
-			"insecure":            strconv.FormatBool(cc.Insecure()),
-			"plaintext":           strconv.FormatBool(cc.Plaintext()),
-			"no_check":            strconv.FormatBool(cc.NoCheck()),
-			"no_color":            strconv.FormatBool(cc.NoColor()),
-			"active_config":       cfg.Active.Config,
-			"cwd":                 cwd,
-			"timeout":             cc.Timeout().String(),
+			"eamerald_dir":           cc.GetEameraldDir(),
+			"eamerald_certs_dir":     cc.GetEameraldCertsDir(),
+			"eamerald_cfg_dir":       cc.GetEameraldCfgDir(),
+			"eamerald_db_dir":        cc.GetEameraldDataDir(),
+			"eamerald_decisions_dir": cc.GetEameraldDecisionsDir(),
+			"eamerald_tmpl_dir":      cc.GetEameraldTemplateDir(),
+			"eamerald_tmpl_url":      cc.GetEameraldTemplateURL(),
+			"container_registry":     cc.ContainerRegistry(),
+			"container_image":        cc.ContainerImage(),
+			"container_tag":          cc.ContainerTag(),
+			"container_platform":     cc.ContainerPlatform(),
+			"container_name":         cc.ContainerName(cfg.Active.ConfigFile),
+			"directory_svc":          cc.DirectorySvc(),
+			"directory_key":          cc.DirectoryKey(),
+			"directory_token":        cc.DirectoryToken(),
+			"authorizer_svc":         cc.AuthorizerSvc(),
+			"authorizer_key":         cc.AuthorizerKey(),
+			"authorizer_token":       cc.AuthorizerToken(),
+			"insecure":               strconv.FormatBool(cc.Insecure()),
+			"plaintext":              strconv.FormatBool(cc.Plaintext()),
+			"no_check":               strconv.FormatBool(cc.NoCheck()),
+			"no_color":               strconv.FormatBool(cc.NoColor()),
+			"active_config":          cfg.Active.Config,
+			"cwd":                    cwd,
+			"timeout":                cc.Timeout().String(),
 		},
 	)
 
@@ -172,23 +158,6 @@ func logLevel(level int) zerolog.Level {
 	default:
 		return zerolog.Disabled
 	}
-}
-
-func checkDBFiles(topazDBDir string) (bool, error) {
-	if _, err := os.Stat(topazDBDir); os.IsNotExist(err) {
-		return false, nil
-	}
-
-	if topazDBDir == cc.GetEameraldDataDir() {
-		return false, nil
-	}
-
-	files, err := os.ReadDir(topazDBDir)
-	if err != nil {
-		return false, err
-	}
-
-	return len(files) > 0, nil
 }
 
 // check set version in defaults and suggest update if needed.

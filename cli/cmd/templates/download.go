@@ -14,7 +14,7 @@ type DownloadTemplateCmd struct {
 	Name         string `arg:"" required:"" help:"template name"`
 	Force        bool   `flag:"" short:"f" default:"false" required:"false" help:"skip confirmation prompt"`
 	Legacy       bool   `optional:"" default:"false" help:"use legacy templates"`
-	TemplatesURL string `optional:"" default:"${topaz_tmpl_url}" env:"EAMERALD_TMPL_URL" help:"URL of template catalog"`
+	TemplatesURL string `optional:"" default:"${eamerald_tmpl_url}" env:"EAMERALD_TMPL_URL" help:"URL of template catalog"`
 	ConfigName   string `optional:"" help:"set config name"`
 }
 

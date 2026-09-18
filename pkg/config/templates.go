@@ -16,10 +16,10 @@ type templateParams struct {
 	RegistryTag       string //
 }
 
-const LocalImageTemplate string = templatePreamble + opaLocalPolicyImage + topazFileDecisionLoggerPlugin +
+const LocalImageTemplate string = templatePreamble + opaLocalPolicyImage + eameraldFileDecisionLoggerPlugin +
 	adlDecisionLoggerPlugin + asertoEdgePlugin + gitPolicySourcePlugin + entraDirectorySyncPlugin
 
-const RemoteImageTemplate string = templatePreamble + opaRemotePolicyImage + topazFileDecisionLoggerPlugin +
+const RemoteImageTemplate string = templatePreamble + opaRemotePolicyImage + eameraldFileDecisionLoggerPlugin +
 	adlDecisionLoggerPlugin + asertoEdgePlugin + gitPolicySourcePlugin + entraDirectorySyncPlugin
 
 const templatePreamble string = `# yaml-language-server: $schema=https://topaz.sh/schema/config.json
@@ -376,8 +376,8 @@ opa:
     plugins:
 `
 
-const topazFileDecisionLoggerPlugin string = `
-      # topaz file decision logger plugin configuration
+const eameraldFileDecisionLoggerPlugin string = `
+      # eamerald file decision logger plugin configuration
       eamerald_file_decision_logger:
         enabled: false
         logger:

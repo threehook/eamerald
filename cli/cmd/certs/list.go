@@ -17,7 +17,7 @@ import (
 )
 
 type ListCertsCmd struct {
-	CertsDir string `flag:"" required:"false" default:"${topaz_certs_dir}" help:"path to dev certs folder" `
+	CertsDir string `flag:"" required:"false" default:"${eamerald_certs_dir}" help:"path to dev certs folder" `
 }
 
 func (cmd *ListCertsCmd) Run(ctx context.Context) error {

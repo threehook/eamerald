@@ -111,8 +111,6 @@ type Path string
 type Overrider func(*Config)
 
 // NewConfig creates the configuration by reading env & files.
-//
-//nolint:funlen
 func NewConfig(
 	configPath Path,
 	log *zerolog.Logger,
@@ -151,11 +149,6 @@ func NewConfig(
 		configLoader, err = LoadConfiguration(file)
 		if err != nil {
 			return nil, err
-		}
-
-		if configLoader.HasTopazDir {
-			log.Warn().Msg("This configuration file uses the obsolete TOPAZ_DIR environment variable.")
-			log.Warn().Msg("Please update to use the new EAMERALD_DB_DIR and EAMERALD_CERTS_DIR environment variables.")
 		}
 
 		if err := validateVersion(configLoader.Configuration.Version); err != nil {
@@ -218,7 +211,7 @@ func NewLoggerConfig(configPath Path, overrides Overrider) (*logger.Config, erro
 }
 
 func (c *Config) setupCerts(log *zerolog.Logger, certsGenerator *certs.Generator) error {
-	commonName := "topaz"
+	commonName := "eamerald"
 
 	existingFiles := []string{}
 

@@ -14,7 +14,7 @@ import (
 type RenameConfigCmd struct {
 	Name      ConfigName `arg:"" required:"" help:"topaz config name"`
 	NewName   ConfigName `arg:"" required:"" help:"topaz new config name"`
-	ConfigDir string     `flag:"" required:"false" default:"${topaz_cfg_dir}" help:"path to config folder" `
+	ConfigDir string     `flag:"" required:"false" default:"${eamerald_cfg_dir}" help:"path to config folder" `
 }
 
 func (cmd *RenameConfigCmd) Run(ctx context.Context) error {

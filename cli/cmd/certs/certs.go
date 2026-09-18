@@ -14,7 +14,7 @@ type CertsCmd struct {
 const (
 	gatewayFileName = "gateway"
 	grpcFileName    = "grpc"
-	certCommonName  = "topaz"
+	certCommonName  = "eamerald"
 )
 
 type fileListArgs struct {
