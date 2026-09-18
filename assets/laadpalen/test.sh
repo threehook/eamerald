@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runs every case in test_cases.json against a live topaz authorizer's
+# Runs every case in test_cases.json against a live eamerald authorizer's
 # request_laadpaal decision and reports pass/fail per case.
 #
 # Usage: assets/laadpalen/test.sh [authorizer-url]

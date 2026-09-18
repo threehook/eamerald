@@ -40,7 +40,7 @@ export default function App() {
       }
 
       const data = await res.json();
-      // show the real, complete Topaz response here - unmodified. This panel's
+      // show the real, complete Eamerald response here - unmodified. This panel's
       // whole purpose is showing what the API actually returned.
       setRawResponse(JSON.stringify(data, null, 2));
 
@@ -66,7 +66,7 @@ export default function App() {
       <header>
         <h1>Laadpaal aanvraag</h1>
         <p>
-          Test-GUI voor het laadpalen-voorbeeld — roept de echte PDP (Topaz authorizer) rechtstreeks
+          Test-GUI voor het laadpalen-voorbeeld — roept de echte PDP (Eamerald authorizer) rechtstreeks
           aan via <code>/api/v2/authz/query</code>.
         </p>
       </header>
@@ -78,7 +78,7 @@ export default function App() {
             de authorizer-URL
           </a>{" "}
           eenmaal rechtstreeks in een nieuwe tab en accepteer de waarschuwing, probeer het dan hier
-          opnieuw. Controleer ook of de deployment draait (<code>kubectl -n topaz get pods</code>).
+          opnieuw. Controleer ook of de deployment draait (<code>kubectl -n eamerald get pods</code>).
         </div>
       )}
 

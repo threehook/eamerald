@@ -11,7 +11,7 @@ AuthZEN-shaped decision (`{"decision": bool, "context": {"reason": string}}`).
 - `manifest.yaml` - the directory schema (department/course/diploma/adres types)
 - `laadpalen_objects.json(l)` / `laadpalen_relations.json(l)` - the example data:
   5 users, 3 departments, 1 course, 3 diplomas, 4 fixed addresses
-- `ds-load/laadpalen.json` - the same data in Topaz's combined import format
+- `ds-load/laadpalen.json` - the same data in Eamerald's combined import format
 - `gui/` - a small Vite/React app that calls the live authorizer directly and
   shows the decision + raw response
 - `test_cases.json` / `test.sh` - a checklist of expected decisions and a
