@@ -1,12 +1,12 @@
 #see https://www.topaz.sh/docs/deployment/docker-compose for instructions
 version: "3.5"
 services:
-  topaz:
+  eamerald:
     command:
       - run
       - --config-file
       - /config/local.yaml
-    container_name: topaz
+    container_name: eamerald
     environment:
       - EAMERALD_POLICIES_DIR=/policies
       - EAMERALD_CERTS_DIR=/certs
