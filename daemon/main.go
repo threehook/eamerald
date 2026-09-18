@@ -10,7 +10,7 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:           "eameraldd [flags]",
+	Use:           "mrldd [flags]",
 	SilenceErrors: true,
 	SilenceUsage:  true,
 }

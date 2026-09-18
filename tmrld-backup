@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-BIN=eamerald
+BIN=mrld-backup
 
 set -o errexit
 set -o nounset

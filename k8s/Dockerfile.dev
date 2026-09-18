@@ -1,6 +1,6 @@
-# Local dev image: builds eameraldd and eamerald-db straight from source with
-# `go build`. eamerald-db is needed by the chart's manifest init container, which
-# applies the directory manifest to the database file before eameraldd starts.
+# Local dev image: builds mrldd and mrld-db straight from source with
+# `go build`. mrld-db is needed by the chart's manifest init container, which
+# applies the directory manifest to the database file before mrldd starts.
 #
 # The repo's own ./Dockerfile expects prebuilt per-platform binaries (from a
 # goreleaser release/snapshot run) and isn't a source build. This one is for
@@ -18,8 +18,8 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /out/eameraldd ./daemon
-RUN CGO_ENABLED=0 GOOS=linux go build -o /out/eamerald-db ./db
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/mrldd ./daemon
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/mrld-db ./db
 
 FROM alpine
 
@@ -36,8 +36,8 @@ ENV EAMERALD_RUNNING_IN_CONTAINER=true
 
 WORKDIR /app
 
-COPY --from=builder /out/eameraldd /app/eameraldd
-COPY --from=builder /out/eamerald-db /app/eamerald-db
+COPY --from=builder /out/mrldd /app/mrldd
+COPY --from=builder /out/mrld-db /app/mrld-db
 
-ENTRYPOINT ["./eameraldd"]
+ENTRYPOINT ["./mrldd"]
 CMD ["run", "-c", "/config/config.yaml"]

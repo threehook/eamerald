@@ -16,7 +16,7 @@ LICENSE            := Apache-2.0
 
 GOOS               := $(shell go env GOOS)
 GOARCH             := $(shell go env GOARCH)
-EAMERALD_DIST      := ${PWD}/$(shell cat dist/artifacts.json | jq -r '.[] | select(.name == "eamerald").path')
+EAMERALD_DIST      := ${PWD}/$(shell cat dist/artifacts.json | jq -r '.[] | select(.name == "mrld").path')
 DOCKER_BUILDKIT    := 1
 
 EXT_DIR            := ${PWD}/.ext
@@ -217,13 +217,13 @@ write-version:
 .PHONY: eamerald-run-test-snapshot
 eamerald-run-test-snapshot:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
-	@echo "eamerald run $$(${EAMERALD_DIST} config info | jq '.runtime.active_configuration_file')"
+	@echo "mrld run $$(${EAMERALD_DIST} config info | jq '.runtime.active_configuration_file')"
 	@${EAMERALD_DIST} run --container-tag=0.0.0-test-$$(git rev-parse --short HEAD)-$$(uname -m)
 
 .PHONY: eamerald-start-test-snapshot
 eamerald-start-test-snapshot:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
-	@echo "eamerald start $$(${EAMERALD_DIST} config info | jq '.runtime.active_configuration_name')"
+	@echo "mrld start $$(${EAMERALD_DIST} config info | jq '.runtime.active_configuration_name')"
 	@${EAMERALD_DIST} start --container-tag=0.0.0-test-$$(git rev-parse --short HEAD)-$$(uname -m)
 
 .PHONY: info

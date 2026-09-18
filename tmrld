@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-BIN=eamerald-db
+BIN=mrld
 
 set -o errexit
 set -o nounset

@@ -24,11 +24,11 @@ ENV EAMERALD_RUNNING_IN_CONTAINER=true
 WORKDIR /app
 
 COPY \
-${TARGETPLATFORM}/eamerald \
-${TARGETPLATFORM}/eameraldd \
-${TARGETPLATFORM}/eamerald-db \
-${TARGETPLATFORM}/eamerald-backup \
+${TARGETPLATFORM}/mrld \
+${TARGETPLATFORM}/mrldd \
+${TARGETPLATFORM}/mrld-db \
+${TARGETPLATFORM}/mrld-backup \
 /app/
 
-ENTRYPOINT ["./eameraldd"]
+ENTRYPOINT ["./mrldd"]
 CMD ["run", "-c", "/config/config.yaml"]

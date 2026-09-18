@@ -18,9 +18,9 @@ before:
 
 builds:
   # https://goreleaser.com/customization/build/
-  - id: eameraldd
+  - id: mrldd
     main: ./daemon
-    binary: eameraldd
+    binary: mrldd
     goos:
       - linux
     goarch:
@@ -36,9 +36,9 @@ builds:
       - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/daemon/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
-  - id: eamerald
+  - id: mrld
     main: ./cli
-    binary: eamerald
+    binary: mrld
     goos:
       - darwin
       - linux
@@ -55,9 +55,9 @@ builds:
       - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/cli/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
-  - id: eamerald-db
+  - id: mrld-db
     main: ./db
-    binary: eamerald-db
+    binary: mrld-db
     goos:
       - linux
     goarch:
@@ -73,9 +73,9 @@ builds:
       - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/pkg/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
-  - id: eamerald-backup
+  - id: mrld-backup
     main: ./backup
-    binary: eamerald-backup
+    binary: mrld-backup
     goos:
       - linux
     goarch:
@@ -96,14 +96,14 @@ archives:
   - formats:
       - zip
     ids:
-      - eamerald
-      - eameraldd
-      - eamerald-backup
+      - mrld
+      - mrldd
+      - mrld-backup
     files:
       - LICENSE
       - README.md
     name_template: >-
-      eamerald_{{ .Os }}_{{ .Arch }}
+      mrld_{{ .Os }}_{{ .Arch }}
 
 checksum:
   # https://goreleaser.com/customization/checksum/
@@ -147,10 +147,10 @@ dockers_v2:
       - linux/arm64
 
     ids:
-      - eamerald
-      - eameraldd
-      - eamerald-db
-      - eamerald-backup
+      - mrld
+      - mrldd
+      - mrld-db
+      - mrld-backup
 
     images:
       - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_ORG }}/{{ .Env.IMAGE_REPO }}"
@@ -195,7 +195,7 @@ sboms:
       - SYFT_FILE_METADATA_CATALOGER_ENABLED=true
     artifacts: binary
     ids:
-      - eamerald
-      - eameraldd
-      - eamerald-backup
-      - eamerald-db
+      - mrld
+      - mrldd
+      - mrld-backup
+      - mrld-db

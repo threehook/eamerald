@@ -21,9 +21,9 @@ dist: dist-test
 
 builds:
   # https://goreleaser.com/customization/build/
-  - id: eameraldd
+  - id: mrldd
     main: ./daemon
-    binary: eameraldd
+    binary: mrldd
     goos:
       - linux
     goarch:
@@ -41,9 +41,9 @@ builds:
     hooks:
       post: make container-tag
 
-  - id: eamerald
+  - id: mrld
     main: ./cli
-    binary: eamerald
+    binary: mrld
     goos:
       - linux
     goarch:
@@ -59,9 +59,9 @@ builds:
       - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/pkg/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
-  - id: eamerald-db
+  - id: mrld-db
     main: ./db
-    binary: eamerald-db
+    binary: mrld-db
     goos:
       - linux
     goarch:
@@ -77,9 +77,9 @@ builds:
       - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/pkg/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
-  - id: eamerald-backup
+  - id: mrld-backup
     main: ./backup
-    binary: eamerald-backup
+    binary: mrld-backup
     goos:
       - linux
     goarch:
@@ -108,10 +108,10 @@ dockers_v2:
       - linux/amd64
 
     ids:
-      - eamerald
-      - eameraldd
-      - eamerald-db
-      - eamerald-backup
+      - mrld
+      - mrldd
+      - mrld-db
+      - mrld-backup
 
     images:
       - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_ORG }}/{{ .Env.IMAGE_REPO }}"
