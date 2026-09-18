@@ -18,7 +18,6 @@ import (
 	"github.com/threehook/eamerald/daemon/authorizer/builtins"
 	"github.com/threehook/eamerald/daemon/authorizer/builtins/az"
 	"github.com/threehook/eamerald/daemon/authorizer/builtins/ds"
-	"github.com/threehook/eamerald/daemon/authorizer/plugins/eamerald_file_decision_logger"
 	"github.com/threehook/eamerald/daemon/authorizer/plugins/edge"
 	runtime "github.com/threehook/eamerald/internal/runtime"
 	"github.com/threehook/eamerald/pkg/config"
@@ -89,7 +88,6 @@ func TestRemoteBundleV0(t *testing.T) {
 		runtime.WithBuiltin1(az.RegisterSubjectSearch(logger, builtins.AZSubjectSearch, acClient)),
 		runtime.WithBuiltin1(az.RegisterResourceSearch(logger, builtins.AZResourceSearch, acClient)),
 		runtime.WithBuiltin1(az.RegisterActionSearch(logger, builtins.AZActionSearch, acClient)),
-		runtime.WithPlugin(eamerald_file_decision_logger.PluginName, eamerald_file_decision_logger.NewFactory(ctx)),
 		runtime.WithPlugin(edge.PluginName, edge.NewPluginFactory(ctx, cfg, logger)),
 		runtime.WithRegoVersion(ast.RegoV0),
 	)
@@ -176,7 +174,6 @@ func TestRemoteBundleV1(t *testing.T) {
 		runtime.WithBuiltin1(az.RegisterSubjectSearch(logger, builtins.AZSubjectSearch, acClient)),
 		runtime.WithBuiltin1(az.RegisterResourceSearch(logger, builtins.AZResourceSearch, acClient)),
 		runtime.WithBuiltin1(az.RegisterActionSearch(logger, builtins.AZActionSearch, acClient)),
-		runtime.WithPlugin(eamerald_file_decision_logger.PluginName, eamerald_file_decision_logger.NewFactory(ctx)),
 		runtime.WithPlugin(edge.PluginName, edge.NewPluginFactory(ctx, cfg, logger)),
 		runtime.WithRegoVersion(ast.RegoV1),
 	)

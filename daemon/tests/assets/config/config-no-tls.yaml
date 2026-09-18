@@ -260,23 +260,6 @@ opa:
             min_delay_seconds: 60
             max_delay_seconds: 120
     plugins:
-      # topaz file decision logger plugin configuration
-      eamerald_file_decision_logger:
-        enabled: false
-        logger:
-          filename: '${EAMERALD_DECISIONS_DIR}/config-no-tls.json'
-          max_size: 100
-          max_age: 0
-          max_backups: 0
-          local_time: false
-          compress: false
-        policy_info:
-          policy_name: 'rebac'
-          registry_service: 'ghcr.io'
-          registry_image: 'aserto-policies/policy-rebac'
-          registry_tag: 'latest'
-          digest: ''
-          
       # aserto edge directory sync plugin configuration
       aserto_edge:
         enabled: false

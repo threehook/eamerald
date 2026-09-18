@@ -1,10 +1,9 @@
 # Eamerald configuration
 
-The main configuration for Eamerald can be divided in 3 main sections:
+The main configuration for Eamerald can be divided in 2 main sections:
 
 1. Common configuration
 2. Auth configuration - optional
-3. Eamerald File Decision Logger configuration - optional
 
 ## Eamerald configuration environment variables
 
@@ -427,23 +426,6 @@ opa:
     decision_logs:
       console: false
     plugins:
-      # eamerald file decision logger plugin configuration
-      eamerald_file_decision_logger:
-        enabled: false
-        logger:
-          filename: '${EAMERALD_DECISIONS_DIR}/my-eamerald.json'
-          max_size: 100
-          max_age: 0
-          max_backups: 0
-          local_time: false
-          compress: false
-        policy_info:
-          policy_name: 'rebac'
-          registry_service: 'ghcr.io'
-          registry_image: 'aserto-policies/policy-rebac'
-          registry_tag: 'latest'
-          digest: ''
-          
       # aserto edge directory sync plugin configuration
       aserto_edge:
         enabled: false
