@@ -19,16 +19,16 @@ RUN mkdir /config && \
 
 VOLUME ["/config", "/certs", "/db", "/decisions"]
 
-ENV TOPAZ_RUNNING_IN_CONTAINER=true
+ENV EAMERALD_RUNNING_IN_CONTAINER=true
 
 WORKDIR /app
 
 COPY \
-${TARGETPLATFORM}/topaz \
-${TARGETPLATFORM}/topazd \
-${TARGETPLATFORM}/topaz-db \
-${TARGETPLATFORM}/topaz-backup \
+${TARGETPLATFORM}/eamerald \
+${TARGETPLATFORM}/eameraldd \
+${TARGETPLATFORM}/eamerald-db \
+${TARGETPLATFORM}/eamerald-backup \
 /app/
 
-ENTRYPOINT ["./topazd"]
+ENTRYPOINT ["./eameraldd"]
 CMD ["run", "-c", "/config/config.yaml"]

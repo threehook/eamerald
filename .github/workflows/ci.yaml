@@ -68,27 +68,27 @@ jobs:
       -
         name: Unit Tests
         run: |
-          .ext/bin/gotestsum --format short-verbose -- $(go list ./... | grep -v topazd/tests) \
+          .ext/bin/gotestsum --format short-verbose -- $(go list ./... | grep -v daemon/tests) \
             -count=1 -timeout 120s -parallel=1 -v -coverprofile=cover.out -coverpkg=./...
       -
         name: Integration Tests
         run: |
-          .ext/bin/gotestsum --format short-verbose -- $(go list -tags=integration ./... | grep -v topazd/tests) \
+          .ext/bin/gotestsum --format short-verbose -- $(go list -tags=integration ./... | grep -v daemon/tests) \
             -tags=integration -count=1 -timeout 120s -parallel=1 -v -coverprofile=cover-integration.out -coverpkg=./...
       -
-        name: Tests topazd
+        name: Tests daemon
         run: |
-          .ext/bin/gotestsum --format short-verbose -- $(go list ./topazd/tests/... | grep -v tests/template) \
+          .ext/bin/gotestsum --format short-verbose -- $(go list ./daemon/tests/... | grep -v tests/template) \
             -count=1 -timeout 120s -parallel=1 -v -coverprofile=cover.out -coverpkg=./...
       -
         name: Templates Test (no-tls)
         run: |
-          .ext/bin/gotestsum --format short-verbose -- github.com/threehook/eamerald/topazd/tests/template-no-tls/... \
+          .ext/bin/gotestsum --format short-verbose -- github.com/threehook/eamerald/daemon/tests/template-no-tls/... \
             -count=1 -timeout 240s -parallel=1 -v -coverprofile=cover.out -coverpkg=./...
       -
         name: Templates Test (with-tls)
         run: |
-          .ext/bin/gotestsum --format short-verbose -- github.com/threehook/eamerald/topazd/tests/template-with-tls/... \
+          .ext/bin/gotestsum --format short-verbose -- github.com/threehook/eamerald/daemon/tests/template-with-tls/... \
             -count=1 -timeout 120s -parallel=1 -v -coverprofile=cover.out -coverpkg=./...
       -
         name: Upload code coverage
@@ -155,13 +155,13 @@ jobs:
       - 
         name: Archive deployment examples
         run: |
-          cd docs/deployments/sidecar-deployment && zip topaz_deployment_examples.zip *.yaml
+          cd docs/deployments/sidecar-deployment && zip eamerald_deployment_examples.zip *.yaml
       -
         name: Upload deployment examples
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: docs/deployments/sidecar-deployment
-          asset_name: topaz_deployment_examples.zip
+          asset_name: eamerald_deployment_examples.zip
           tag: ${{ github.ref }}
           overwrite: false

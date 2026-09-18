@@ -7,9 +7,9 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-# use the config settings from topaz CLI
-CONFIG_NAME=$(topaz config info runtime.active_configuration_name --raw)
-CONTAINER_NAME="topaz-${CONFIG_NAME}"
+# use the config settings from eamerald CLI
+CONFIG_NAME=$(eamerald config info runtime.active_configuration_name --raw)
+CONTAINER_NAME="eamerald-${CONFIG_NAME}"
 
 echo "stop config ${CONFIG_NAME}"
 

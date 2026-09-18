@@ -5,15 +5,15 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-# use the config settings from topaz CLI
-CONTAINER_REGISTRY=$(topaz config info default.container_registry --raw)
-CONTAINER_IMAGE=$(topaz config info default.container_image --raw)
-CONTAINER_TAG=$(topaz config info default.container_tag --raw)
-CONTAINER_PLATFORM=$(topaz config info default.container_platform --raw)
-CONFIG_NAME=$(topaz config info runtime.active_configuration_name --raw)
-CONTAINER_NAME="topaz-${CONFIG_NAME}"
+# use the config settings from eamerald CLI
+CONTAINER_REGISTRY=$(eamerald config info default.container_registry --raw)
+CONTAINER_IMAGE=$(eamerald config info default.container_image --raw)
+CONTAINER_TAG=$(eamerald config info default.container_tag --raw)
+CONTAINER_PLATFORM=$(eamerald config info default.container_platform --raw)
+CONFIG_NAME=$(eamerald config info runtime.active_configuration_name --raw)
+CONTAINER_NAME="eamerald-${CONFIG_NAME}"
 CONTAINER="${CONTAINER_REGISTRY}/${CONTAINER_IMAGE}:${CONTAINER_TAG}"
-LOCAL_CONFIG_FILE="${HOME}/.config/topaz/cfg/${CONFIG_NAME}"
+LOCAL_CONFIG_FILE="${HOME}/.config/eamerald/cfg/${CONFIG_NAME}"
 
 [ ! -f "${LOCAL_CONFIG_FILE}" ] && echo "Error: local config file ${LOCAL_CONFIG_FILE} not found."
 
@@ -24,10 +24,10 @@ docker run \
 --platform=linux/arm64 \
 --rm \
 --name ${CONTAINER_NAME} \
--e TOPAZ_CFG_DIR=/config \
--e TOPAZ_DB_DIR=/db \
--e TOPAZ_CERTS_DIR=/certs \
--e TOPAZ_DECISIONS_DIR=/decisions \
+-e EAMERALD_CFG_DIR=/config \
+-e EAMERALD_DB_DIR=/db \
+-e EAMERALD_CERTS_DIR=/certs \
+-e EAMERALD_DECISIONS_DIR=/decisions \
 -e GITHUB_TOKEN=${GIT_TOKEN} \
 -p 8080:8080 \
 -p 8081:8081 \
@@ -37,9 +37,9 @@ docker run \
 -p 9393:9393 \
 -p 9494:9494 \
 -p 9696:9696 \
--v ${HOME}/.config/topaz/cfg:/config:ro \
--v ${HOME}/.local/share/topaz/certs:/certs:rw \
--v ${HOME}/.local/share/topaz/db:/db:rw \
--v ${HOME}/.local/share/topaz/decision:/decisions:rw \
+-v ${HOME}/.config/eamerald/cfg:/config:ro \
+-v ${HOME}/.local/share/eamerald/certs:/certs:rw \
+-v ${HOME}/.local/share/eamerald/db:/db:rw \
+-v ${HOME}/.local/share/eamerald/decision:/decisions:rw \
 ${CONTAINER} \
 run -c /config/${CONFIG_NAME}.yaml

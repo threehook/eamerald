@@ -15,7 +15,7 @@ data:
       log_level: {{ .Values.logging.level }}
 
     directory:
-      db_path: ${TOPAZ_DB_DIR}/directory.db
+      db_path: ${EAMERALD_DB_DIR}/directory.db
       request_timeout: 5s
       seed_metadata: false
 
@@ -43,22 +43,22 @@ data:
             - https://localhost
             - https://localhost:*
             certs:
-              tls_key_path: "${TOPAZ_CERTS_DIR}/gateway.key"
-              tls_cert_path: "${TOPAZ_CERTS_DIR}/gateway.crt"
-              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/gateway-ca.crt"
+              tls_key_path: "${EAMERALD_CERTS_DIR}/gateway.key"
+              tls_cert_path: "${EAMERALD_CERTS_DIR}/gateway.crt"
+              tls_ca_cert_path: "${EAMERALD_CERTS_DIR}/gateway-ca.crt"
           grpc:
             listen_address: "0.0.0.0:{{ .Values.service.ports.consoleGRPC }}"
             certs:
-              tls_key_path: "${TOPAZ_CERTS_DIR}/grpc.key"
-              tls_cert_path: "${TOPAZ_CERTS_DIR}/grpc.crt"
-              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/grpc-ca.crt"
+              tls_key_path: "${EAMERALD_CERTS_DIR}/grpc.key"
+              tls_cert_path: "${EAMERALD_CERTS_DIR}/grpc.crt"
+              tls_ca_cert_path: "${EAMERALD_CERTS_DIR}/grpc-ca.crt"
         reader:
           grpc:
             listen_address: "0.0.0.0:{{ .Values.service.ports.directoryGRPC }}"
             certs:
-              tls_key_path: "${TOPAZ_CERTS_DIR}/grpc.key"
-              tls_cert_path: "${TOPAZ_CERTS_DIR}/grpc.crt"
-              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/grpc-ca.crt"
+              tls_key_path: "${EAMERALD_CERTS_DIR}/grpc.key"
+              tls_cert_path: "${EAMERALD_CERTS_DIR}/grpc.crt"
+              tls_ca_cert_path: "${EAMERALD_CERTS_DIR}/grpc-ca.crt"
           gateway:
             listen_address: "0.0.0.0:{{ .Values.service.ports.directoryGateway }}"
             allowed_origins:
@@ -67,9 +67,9 @@ data:
             - https://localhost
             - https://localhost:*
             certs:
-              tls_key_path: "${TOPAZ_CERTS_DIR}/gateway.key"
-              tls_cert_path: "${TOPAZ_CERTS_DIR}/gateway.crt"
-              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/gateway-ca.crt"
+              tls_key_path: "${EAMERALD_CERTS_DIR}/gateway.key"
+              tls_cert_path: "${EAMERALD_CERTS_DIR}/gateway.crt"
+              tls_ca_cert_path: "${EAMERALD_CERTS_DIR}/gateway-ca.crt"
             http: false
             read_timeout: 2s
             read_header_timeout: 2s
@@ -79,9 +79,9 @@ data:
           grpc:
             listen_address: "0.0.0.0:{{ .Values.service.ports.directoryGRPC }}"
             certs:
-              tls_key_path: "${TOPAZ_CERTS_DIR}/grpc.key"
-              tls_cert_path: "${TOPAZ_CERTS_DIR}/grpc.crt"
-              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/grpc-ca.crt"
+              tls_key_path: "${EAMERALD_CERTS_DIR}/grpc.key"
+              tls_cert_path: "${EAMERALD_CERTS_DIR}/grpc.crt"
+              tls_ca_cert_path: "${EAMERALD_CERTS_DIR}/grpc-ca.crt"
           gateway:
             listen_address: "0.0.0.0:{{ .Values.service.ports.directoryGateway }}"
             allowed_origins:
@@ -90,9 +90,9 @@ data:
             - https://localhost
             - https://localhost:*
             certs:
-              tls_key_path: "${TOPAZ_CERTS_DIR}/gateway.key"
-              tls_cert_path: "${TOPAZ_CERTS_DIR}/gateway.crt"
-              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/gateway-ca.crt"
+              tls_key_path: "${EAMERALD_CERTS_DIR}/gateway.key"
+              tls_cert_path: "${EAMERALD_CERTS_DIR}/gateway.crt"
+              tls_ca_cert_path: "${EAMERALD_CERTS_DIR}/gateway-ca.crt"
             http: false
             read_timeout: 2s
             read_header_timeout: 2s
@@ -102,9 +102,9 @@ data:
           grpc:
             listen_address: "0.0.0.0:{{ .Values.service.ports.directoryGRPC }}"
             certs:
-              tls_key_path: "${TOPAZ_CERTS_DIR}/grpc.key"
-              tls_cert_path: "${TOPAZ_CERTS_DIR}/grpc.crt"
-              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/grpc-ca.crt"
+              tls_key_path: "${EAMERALD_CERTS_DIR}/grpc.key"
+              tls_cert_path: "${EAMERALD_CERTS_DIR}/grpc.crt"
+              tls_ca_cert_path: "${EAMERALD_CERTS_DIR}/grpc-ca.crt"
           gateway:
             listen_address: "0.0.0.0:{{ .Values.service.ports.directoryGateway }}"
             allowed_origins:
@@ -113,9 +113,9 @@ data:
             - https://localhost
             - https://localhost:*
             certs:
-              tls_key_path: "${TOPAZ_CERTS_DIR}/gateway.key"
-              tls_cert_path: "${TOPAZ_CERTS_DIR}/gateway.crt"
-              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/gateway-ca.crt"
+              tls_key_path: "${EAMERALD_CERTS_DIR}/gateway.key"
+              tls_cert_path: "${EAMERALD_CERTS_DIR}/gateway.crt"
+              tls_ca_cert_path: "${EAMERALD_CERTS_DIR}/gateway-ca.crt"
             http: false
             read_timeout: 2s
             read_header_timeout: 2s
@@ -125,9 +125,9 @@ data:
           grpc:
             listen_address: "0.0.0.0:{{ .Values.service.ports.directoryGRPC }}"
             certs:
-              tls_key_path: "${TOPAZ_CERTS_DIR}/grpc.key"
-              tls_cert_path: "${TOPAZ_CERTS_DIR}/grpc.crt"
-              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/grpc-ca.crt"
+              tls_key_path: "${EAMERALD_CERTS_DIR}/grpc.key"
+              tls_cert_path: "${EAMERALD_CERTS_DIR}/grpc.crt"
+              tls_ca_cert_path: "${EAMERALD_CERTS_DIR}/grpc-ca.crt"
           gateway:
             listen_address: "0.0.0.0:{{ .Values.service.ports.directoryGateway }}"
             allowed_origins:
@@ -136,9 +136,9 @@ data:
             - https://localhost
             - https://localhost:*
             certs:
-              tls_key_path: "${TOPAZ_CERTS_DIR}/gateway.key"
-              tls_cert_path: "${TOPAZ_CERTS_DIR}/gateway.crt"
-              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/gateway-ca.crt"
+              tls_key_path: "${EAMERALD_CERTS_DIR}/gateway.key"
+              tls_cert_path: "${EAMERALD_CERTS_DIR}/gateway.crt"
+              tls_ca_cert_path: "${EAMERALD_CERTS_DIR}/gateway-ca.crt"
             http: false
             read_timeout: 2s
             read_header_timeout: 2s
@@ -148,9 +148,9 @@ data:
           grpc:
             listen_address: "0.0.0.0:{{ .Values.service.ports.directoryGRPC }}"
             certs:
-              tls_key_path: "${TOPAZ_CERTS_DIR}/grpc.key"
-              tls_cert_path: "${TOPAZ_CERTS_DIR}/grpc.crt"
-              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/grpc-ca.crt"
+              tls_key_path: "${EAMERALD_CERTS_DIR}/grpc.key"
+              tls_cert_path: "${EAMERALD_CERTS_DIR}/grpc.crt"
+              tls_ca_cert_path: "${EAMERALD_CERTS_DIR}/grpc-ca.crt"
           gateway:
             listen_address: "0.0.0.0:{{ .Values.service.ports.directoryGateway }}"
             allowed_origins:
@@ -159,9 +159,9 @@ data:
             - https://localhost
             - https://localhost:*
             certs:
-              tls_key_path: "${TOPAZ_CERTS_DIR}/gateway.key"
-              tls_cert_path: "${TOPAZ_CERTS_DIR}/gateway.crt"
-              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/gateway-ca.crt"
+              tls_key_path: "${EAMERALD_CERTS_DIR}/gateway.key"
+              tls_cert_path: "${EAMERALD_CERTS_DIR}/gateway.crt"
+              tls_ca_cert_path: "${EAMERALD_CERTS_DIR}/gateway-ca.crt"
             http: false
             read_timeout: 2s
             read_header_timeout: 2s
@@ -175,9 +175,9 @@ data:
             connection_timeout_seconds: 2
             listen_address: "0.0.0.0:{{ .Values.service.ports.authorizerGRPC }}"
             certs:
-              tls_key_path: "${TOPAZ_CERTS_DIR}/grpc.key"
-              tls_cert_path: "${TOPAZ_CERTS_DIR}/grpc.crt"
-              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/grpc-ca.crt"
+              tls_key_path: "${EAMERALD_CERTS_DIR}/grpc.key"
+              tls_cert_path: "${EAMERALD_CERTS_DIR}/grpc.crt"
+              tls_ca_cert_path: "${EAMERALD_CERTS_DIR}/grpc-ca.crt"
           gateway:
             listen_address: "0.0.0.0:{{ .Values.service.ports.authorizerGateway }}"
             allowed_origins:
@@ -186,9 +186,9 @@ data:
             - https://localhost
             - https://localhost:*
             certs:
-              tls_key_path: "${TOPAZ_CERTS_DIR}/gateway.key"
-              tls_cert_path: "${TOPAZ_CERTS_DIR}/gateway.crt"
-              tls_ca_cert_path: "${TOPAZ_CERTS_DIR}/gateway-ca.crt"
+              tls_key_path: "${EAMERALD_CERTS_DIR}/gateway.key"
+              tls_cert_path: "${EAMERALD_CERTS_DIR}/gateway.crt"
+              tls_ca_cert_path: "${EAMERALD_CERTS_DIR}/gateway-ca.crt"
             http: false
             read_timeout: 2s
             read_header_timeout: 2s

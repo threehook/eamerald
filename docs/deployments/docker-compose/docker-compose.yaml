@@ -8,10 +8,10 @@ services:
       - /config/local.yaml
     container_name: topaz
     environment:
-      - TOPAZ_POLICIES_DIR=/policies
-      - TOPAZ_CERTS_DIR=/certs
-      - TOPAZ_DB_DIR=/db
-      - TOPAZ_DECISIONS_DIR=/decisions
+      - EAMERALD_POLICIES_DIR=/policies
+      - EAMERALD_CERTS_DIR=/certs
+      - EAMERALD_DB_DIR=/db
+      - EAMERALD_DECISIONS_DIR=/decisions
       - ENTRA_TENANT_ID=${ENTRA_TENANT_ID}
       - ENTRA_CLIENT_ID=${ENTRA_CLIENT_ID}
       - ENTRA_CLIENT_SECRET=${ENTRA_CLIENT_SECRET}

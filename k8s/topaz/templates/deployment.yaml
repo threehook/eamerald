@@ -6,7 +6,7 @@ metadata:
     {{- include "topaz.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
-  # topazd's embedded directory database is a single-writer file store (BoltDB):
+  # eameraldd's embedded directory database is a single-writer file store (BoltDB):
   # a RollingUpdate would start the new Pod before the old one releases the
   # file lock on the shared PVC, and the new Pod crash-loops on open timeout.
   strategy:
@@ -27,16 +27,16 @@ spec:
         {{- include "topaz.labels" . | nindent 8 }}
     spec:
       {{- if .Values.directory.manifest.enabled }}
-      # Applying the manifest offline, before topazd starts, rather than
-      # against the running service: topaz-db writes to the database file
+      # Applying the manifest offline, before eameraldd starts, rather than
+      # against the running service: eamerald-db writes to the database file
       # directly (via an in-process directory server), so this needs no TLS
       # certs, no readiness wait, and no network. It also guarantees the model
       # exists before the first directory write - the entra sync plugin starts
-      # writing users and groups about a second after topazd becomes ready,
+      # writing users and groups about a second after eameraldd becomes ready,
       # and those writes are rejected if their object types are not defined.
       #
-      # topazd's BoltDB is single-writer, so this must not run concurrently
-      # with topazd; an init container is exactly that guarantee.
+      # eameraldd's BoltDB is single-writer, so this must not run concurrently
+      # with eameraldd; an init container is exactly that guarantee.
       initContainers:
         - name: set-manifest
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -45,9 +45,9 @@ spec:
           args:
             - |
               if [ ! -f /db/directory.db ]; then
-                ./topaz-db init /db/directory.db
+                ./eamerald-db init /db/directory.db
               fi
-              ./topaz-db set /db/directory.db /manifest/manifest.yaml
+              ./eamerald-db set /db/directory.db /manifest/manifest.yaml
           volumeMounts:
             - name: db
               mountPath: /db
@@ -56,19 +56,19 @@ spec:
               readOnly: true
       {{- end }}
       containers:
-        - name: topazd
+        - name: eameraldd
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ["./topazd"]
+          command: ["./eameraldd"]
           args: ["run", "-c", "/config/config.yaml"]
           env:
-            - name: TOPAZ_RUNNING_IN_CONTAINER
+            - name: EAMERALD_RUNNING_IN_CONTAINER
               value: "true"
-            - name: TOPAZ_DB_DIR
+            - name: EAMERALD_DB_DIR
               value: /db
-            - name: TOPAZ_CERTS_DIR
+            - name: EAMERALD_CERTS_DIR
               value: /certs
-            - name: TOPAZ_DECISIONS_DIR
+            - name: EAMERALD_DECISIONS_DIR
               value: /decisions
           {{- if .Values.entra.enabled }}
             - name: ENTRA_TENANT_ID
