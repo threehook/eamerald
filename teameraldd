@@ -8,11 +8,11 @@ set -o pipefail
 
 BIN_PATH=${PWD}/dist/${BIN}_$(go env GOOS)_$(go env GOARCH)
 
-if [[ -n $(go env GOARM64) ]] then 
+if [[ -n $(go env GOARM64) ]]; then
   BIN_PATH+="_"$(go env GOARM64)
-fi 
+fi
 
-if [[ -n $(go env GOAMD64) ]] then
+if [[ -n $(go env GOAMD64) ]]; then
   BIN_PATH+="_"$(go env GOAMD64)
 fi
 
