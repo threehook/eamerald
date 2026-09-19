@@ -37,6 +37,11 @@ K8S_RELEASE        := eamerald
 K8S_CHART          := k8s/eamerald
 K8S_DEV_IMAGE      := eamerald:dev
 
+# MANIFEST=<path>: the directory model to deploy.
+# DATA="<path> <path>": directory data files to import once deployed.
+MANIFEST           ?=
+DATA               ?=
+
 OBS_NAMESPACE      := observability
 OBS_RELEASE        := observability
 OBS_CHART          := k8s/observability
@@ -98,9 +103,19 @@ k8s-build:
 	@docker build -f k8s/Dockerfile.dev -t ${K8S_DEV_IMAGE} .
 
 .PHONY: k8s-install
-k8s-install:
+k8s-install: require-manifest
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
-	@helm upgrade --install ${K8S_RELEASE} ${K8S_CHART} -n ${K8S_NAMESPACE} --create-namespace
+	@helm upgrade --install ${K8S_RELEASE} ${K8S_CHART} -n ${K8S_NAMESPACE} --create-namespace \
+		--set-file directory.manifest.content=$(MANIFEST)
+
+# the chart cannot render without a directory model: an init container applies
+# it before eameraldd starts, and a directory without one rejects every write.
+.PHONY: require-manifest
+require-manifest:
+	@if [ -z "$(MANIFEST)" ]; then \
+		echo -e "$(ERR_COLOR)MANIFEST is required, e.g. MANIFEST=assets/laadpalen/manifest.yaml or MANIFEST=assets/todo/manifest.yaml$(NO_COLOR)"; \
+		exit 1; \
+	fi
 
 # k8s-deploy is the recommended way to iterate: it builds under a fresh,
 # unique tag every run and passes it explicitly to Helm, rather than reusing
@@ -110,14 +125,26 @@ k8s-install:
 # for a registry-less local image), a static tag means a rebuild can silently
 # never reach the running Pod. A unique tag sidesteps that by construction.
 .PHONY: k8s-deploy
-k8s-deploy:
+k8s-deploy: require-manifest
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
+	@echo "deploying with MANIFEST=$(MANIFEST) - wiping the existing directory data" \
+	     "first, since it may not be valid under the new model (see internal/eds's" \
+	     "'object/relation type in use' checks)"
+	@kubectl -n ${K8S_NAMESPACE} scale deployment/${K8S_RELEASE} --replicas=0 2>/dev/null || true
+	@kubectl -n ${K8S_NAMESPACE} wait --for=delete pod -l app.kubernetes.io/name=eamerald --timeout=60s 2>/dev/null || true
+	@kubectl -n ${K8S_NAMESPACE} delete pvc ${K8S_RELEASE}-db --ignore-not-found
 	@TAG=dev-$$(git rev-parse --short HEAD)-$$(date +%s); \
 	echo "building eamerald:$$TAG"; \
 	docker build -f k8s/Dockerfile.dev -t eamerald:$$TAG . && \
-	helm upgrade --install ${K8S_RELEASE} ${K8S_CHART} -n ${K8S_NAMESPACE} --create-namespace --reuse-values --set image.tag=$$TAG && \
+	helm upgrade --install ${K8S_RELEASE} ${K8S_CHART} -n ${K8S_NAMESPACE} --create-namespace --reuse-values \
+		--set image.tag=$$TAG \
+		--set-file directory.manifest.content=$(MANIFEST) && \
 	kubectl -n ${K8S_NAMESPACE} rollout restart deployment/${K8S_RELEASE}
 	@kubectl -n ${K8S_NAMESPACE} rollout status deployment/${K8S_RELEASE}
+	@if [ -n "$(DATA)" ]; then \
+		echo "importing data: $(DATA)"; \
+		cat $(DATA) | go run ./cli directory import --stdin -H localhost:9292 --insecure; \
+	fi
 
 .PHONY: k8s-uninstall
 k8s-uninstall:
@@ -156,20 +183,10 @@ k8s-logs:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
 	@kubectl -n ${K8S_NAMESPACE} logs -f deployment/${K8S_RELEASE}
 
-# applies the laadpalen example's manifest and data on top of an already
-# generic eamerald deployment, without touching the chart's own manifest
-# (k8s/eamerald/files/manifest.yaml stays the generic starter model - this is
-# additive, layered on via the directory API). Deploys eamerald first only if
-# it isn't already running.
-.PHONY: laadpalen-deploy
-laadpalen-deploy:
-	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
-	@if [ "$$(kubectl -n ${K8S_NAMESPACE} get deployment ${K8S_RELEASE} -o jsonpath='{.status.readyReplicas}' 2>/dev/null)" != "1" ]; then \
-		$(MAKE) k8s-deploy; \
-	fi
-	@go run ./cli directory set manifest assets/laadpalen/manifest.yaml -H localhost:9292 --insecure
-	@cat assets/laadpalen/laadpalen_objects.jsonl assets/laadpalen/laadpalen_relations.jsonl | go run ./cli directory import --stdin -H localhost:9292 --insecure
-	@echo "laadpalen manifest and data loaded - run 'make laadpalen-gui' to start the frontend"
+# laadpalen deploys via k8s-deploy like every other manifest - see
+# assets/laadpalen/README.md:
+#   make k8s-deploy MANIFEST=assets/laadpalen/manifest.yaml \
+#     DATA="assets/laadpalen/laadpalen_objects.jsonl assets/laadpalen/laadpalen_relations.jsonl"
 
 .PHONY: laadpalen-gui
 laadpalen-gui:
@@ -177,7 +194,8 @@ laadpalen-gui:
 	@cd assets/laadpalen/gui && npm install && npm run dev
 
 # checks every case in assets/laadpalen/test_cases.json against a running
-# authorizer's request_laadpaal decision (see: make laadpalen-deploy).
+# authorizer's request_laadpaal decision (see assets/laadpalen/README.md for
+# how to deploy with that model first).
 .PHONY: laadpalen-test
 laadpalen-test:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"

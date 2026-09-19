@@ -16,17 +16,14 @@ spec:
       {{- include "eamerald.labels" . | nindent 6 }}
   template:
     metadata:
-      {{- if .Values.directory.manifest.enabled }}
       annotations:
-        # Roll the Pod when the manifest changes, so the init container
-        # re-applies it. Without this, editing files/manifest.yaml would
+        # Roll the Pod when directory.manifest.content changes, so the init
+        # container re-applies it. Without this, a manifest change would
         # update the ConfigMap but leave the running directory untouched.
-        checksum/manifest: {{ .Files.Get "files/manifest.yaml" | sha256sum }}
-      {{- end }}
+        checksum/manifest: {{ .Values.directory.manifest.content | sha256sum }}
       labels:
         {{- include "eamerald.labels" . | nindent 8 }}
     spec:
-      {{- if .Values.directory.manifest.enabled }}
       # Applying the manifest offline, before eameraldd starts, rather than
       # against the running service: eamerald-db writes to the database file
       # directly (via an in-process directory server), so this needs no TLS
@@ -54,7 +51,6 @@ spec:
             - name: manifest
               mountPath: /manifest
               readOnly: true
-      {{- end }}
       containers:
         - name: eameraldd
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -138,11 +134,9 @@ spec:
         - name: config
           configMap:
             name: {{ .Release.Name }}-config
-        {{- if .Values.directory.manifest.enabled }}
         - name: manifest
           configMap:
             name: {{ .Release.Name }}-manifest
-        {{- end }}
         - name: decisions
           emptyDir: {}
         {{- if .Values.persistence.enabled }}

@@ -57,17 +57,15 @@ persistence:
 logging:
   level: info
 
-# The directory manifest defines the authorization model: object types,
-# relations, and permissions. Edit k8s/eamerald/files/manifest.yaml to change it;
-# that file is this deployment's source of truth, applied to the database by
-# an init container on every Pod start.
-#
-# Disable only if you manage the manifest out-of-band (e.g. by hand via
-# `eamerald directory set manifest`), accepting that the model then lives solely
-# as state in the database PVC and is not reproducible from this chart.
+# The directory manifest: object types, relations, and permissions.
 directory:
   manifest:
-    enabled: true
+    # The directory model: object types, relations and permissions.
+    # Required. Set it with `make k8s-deploy MANIFEST=<path>`.
+    #
+    # It is re-applied on every pod start. A changed model can clash with
+    # existing data, so k8s-deploy wipes the data volume first.
+    content: ""
 
 # microsoft entra id (azure ad) directory sync plugin. The client secret is
 # never set here: create it yourself as a Kubernetes Secret first, e.g.

@@ -42,22 +42,22 @@ and the rule's `{"decision": ..., "context": ...}` return value *is* the
 response body. Resource properties arrive flattened, which is why the policy
 reads `input.resource.postcode` and not `input.resource.properties.postcode`.
 
-This matters beyond tidiness: decisions asked for this way are written to the
-Authorization Decision Log, and decisions asked for over the generic
-`/api/v2/authz/query` endpoint are not — see `internal/adl/adl.md`.
+This matters beyond tidiness: it's what every decision goes through the
+Authorization Decision Log by - see `internal/adl/adl.md`.
 
 ## Running it
 
-Deploy first:
+Deploy first, the same way as any other eamerald manifest - `MANIFEST` and
+`DATA` name this one:
 
 ```
-make laadpalen-deploy   # deploys eamerald to k8s if not already running, then
-                         # applies this manifest and data on top
+make k8s-deploy MANIFEST=assets/laadpalen/manifest.yaml \
+  DATA="assets/laadpalen/laadpalen_objects.jsonl assets/laadpalen/laadpalen_relations.jsonl"
 ```
 
-`laadpalen-deploy` is additive - it layers this schema and data onto an
-already-running eamerald via the directory API, leaving the chart's own manifest
-(`k8s/eamerald/files/manifest.yaml`) as the generic starter model.
+Every `make k8s-deploy` states its own `MANIFEST`, and applying one wipes the
+deployment's existing directory data first, since old data may not be valid
+under a different model.
 
 From there, `laadpalen-gui` and `laadpalen-test` are two independent ways of
 using that same deployment - neither depends on the other, and you can run
