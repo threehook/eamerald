@@ -37,6 +37,10 @@ K8S_RELEASE        := eamerald
 K8S_CHART          := k8s/eamerald
 K8S_DEV_IMAGE      := eamerald:dev
 
+OBS_NAMESPACE      := observability
+OBS_RELEASE        := observability
+OBS_CHART          := k8s/observability
+
 .DEFAULT_GOAL      := build
 
 export TESTCONTAINERS_RYUK_DISABLED=$(shell docker context inspect --format '{{.Endpoints.docker.Host}}' 2>/dev/null | grep -q ".colima" && echo "true" || echo "false")
@@ -119,6 +123,28 @@ k8s-deploy:
 k8s-uninstall:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
 	@helm uninstall ${K8S_RELEASE} -n ${K8S_NAMESPACE}
+
+# installs Loki, Alloy and Grafana, and points the running eamerald's ADL
+# logger at Alloy so decision records start being exported over OTLP.
+.PHONY: k8s-observability-install
+k8s-observability-install:
+	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
+	@helm upgrade --install ${OBS_RELEASE} ${OBS_CHART} -n ${OBS_NAMESPACE} --create-namespace --wait
+	@helm upgrade --install ${K8S_RELEASE} ${K8S_CHART} -n ${K8S_NAMESPACE} --create-namespace --reuse-values \
+		--set adlDecisionLogger.otlp.endpoint=alloy.${OBS_NAMESPACE}.svc.cluster.local:4317
+	@kubectl -n ${K8S_NAMESPACE} rollout status deployment/${K8S_RELEASE}
+
+.PHONY: k8s-observability-uninstall
+k8s-observability-uninstall:
+	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
+	@helm uninstall ${OBS_RELEASE} -n ${OBS_NAMESPACE}
+
+# opens Grafana on http://localhost:3000; ADL records are in Explore, under
+# the Loki datasource, as {service_name="eamerald"}.
+.PHONY: k8s-grafana
+k8s-grafana:
+	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
+	@kubectl -n ${OBS_NAMESPACE} port-forward svc/grafana 3000:3000
 
 .PHONY: k8s-status
 k8s-status:

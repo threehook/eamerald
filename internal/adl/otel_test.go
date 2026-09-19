@@ -38,10 +38,10 @@ func TestNewOTelState_BuildsAndShutsDownCleanly(t *testing.T) {
 	// No real collector needs to be listening: otlploggrpc.New dials lazily,
 	// so construction and an immediate shutdown must both succeed without
 	// ever needing a reachable endpoint.
-	state, err := newOTelState(t.Context(), OTLPConfig{
+	state, err := newOTelState(t.Context(), Config{OTLP: OTLPConfig{
 		Endpoint: testOTLPEndpoint,
 		Insecure: true,
-	})
+	}})
 	require.NoError(t, err)
 	require.NotNil(t, state)
 
@@ -62,10 +62,10 @@ func TestOTelState_Emit_DoesNotErrorWithoutCollector(t *testing.T) {
 	// which shuts down with nothing queued; a flush with a record actually
 	// queued legitimately times out against an unreachable collector, which
 	// is exactly why Close logs that error rather than treating it as fatal.)
-	state, err := newOTelState(t.Context(), OTLPConfig{
+	state, err := newOTelState(t.Context(), Config{OTLP: OTLPConfig{
 		Endpoint: testOTLPEndpoint,
 		Insecure: true,
-	})
+	}})
 	require.NoError(t, err)
 
 	logger := &Logger{}

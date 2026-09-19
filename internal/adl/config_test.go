@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel/sdk/resource"
 )
 
 func TestConfig_Outputs_DefaultsToBothWhenUnset(t *testing.T) {
@@ -96,6 +97,34 @@ func TestConfigFromPlugins_RejectsMistypedConfig(t *testing.T) {
 	_, err := ConfigFromPlugins(map[string]any{ConfigKey: "not a config object"})
 
 	require.Error(t, err)
+}
+
+// Collectors label OTLP streams by service.name, so a PDP that never
+// configured a resource must still land in a named stream rather than in
+// everyone else's "unknown_service".
+func TestOTelResource_DefaultsServiceName(t *testing.T) {
+	attrs := attributeMap(otelResource(nil))
+
+	assert.Equal(t, defaultServiceName, attrs[attrServiceName])
+}
+
+func TestOTelResource_CarriesTheADLResource(t *testing.T) {
+	attrs := attributeMap(otelResource(map[string]string{
+		attrServiceName: "pdp-laadpalen",
+		"instance_id":   "eamerald-0",
+	}))
+
+	assert.Equal(t, "pdp-laadpalen", attrs[attrServiceName])
+	assert.Equal(t, "eamerald-0", attrs["instance_id"])
+}
+
+func attributeMap(res *resource.Resource) map[string]string {
+	attrs := map[string]string{}
+	for _, kv := range res.Attributes() {
+		attrs[string(kv.Key)] = kv.Value.AsString()
+	}
+
+	return attrs
 }
 
 // Running one PDP per policy is only useful if their records can be told

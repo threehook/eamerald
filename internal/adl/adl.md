@@ -107,6 +107,39 @@ If `otlp` is selected but `otlp.endpoint` is empty, or the exporter fails to
 initialize, otlp output is skipped for that run (logged as an error) —
 stdout output, if also selected, is unaffected.
 
+The OTLP export carries the `resource` map as OTLP resource attributes as
+well as inside the record body, so a collector can label and route records
+per PDP without parsing them. `service.name` defaults to `eamerald` when the
+deployment did not set it, because collectors key off it — Loki turns it into
+the stream's `service_name` label, and an unset one lands every PDP in the
+same `unknown_service` stream.
+
+### Shipping records to Loki
+
+`k8s/observability` installs Loki, Grafana Alloy and Grafana for a
+development cluster. Alloy receives the records over OTLP and forwards them
+to Loki's native OTLP endpoint; Grafana comes with Loki provisioned:
+
+```sh
+make k8s-observability-install   # installs the stack and points eamerald at Alloy
+make k8s-grafana                 # http://localhost:3000, admin/admin
+```
+
+Keep `stdout` on alongside `otlp`. The OTLP exporter batches, so a collector
+outage loses whatever is still queued, and the pod log stays the durable
+trail the spec asks for. Alloy scrapes pod logs too, and drops the ADL lines
+from that path so a decision is not stored twice — the OTLP copy is the one
+with its labels and trace correlation intact.
+
+In Grafana's Explore, ADL records are their own stream, with the `resource`
+entries and the trace IDs queryable as structured metadata:
+
+```logql
+{service_name="eamerald"}                                              # every record
+{service_name="eamerald"} | json | body_adl_core_response_decision="false"  # denials
+{service_name="eamerald"} | instance_id="eamerald-5ff55547f-6rp5c"     # one PDP
+```
+
 ## Field mapping
 
 | ADL field | Source |

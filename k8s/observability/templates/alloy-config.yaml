@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alloy
+  labels:
+    app.kubernetes.io/name: alloy
+data:
+  config.alloy: |
+    logging {
+      level  = "info"
+      format = "logfmt"
+    }
+
+    // ---------------------------------------------------------------- ADL
+    // eamerald exports ADL records as OTLP logs: the whole record as the log
+    // body, plus the producer identity as resource attributes and the
+    // decision's trace and span IDs as native OTLP correlation fields.
+    otelcol.receiver.otlp "adl" {
+      grpc {
+        endpoint = "0.0.0.0:4317"
+      }
+
+      output {
+        logs = [otelcol.processor.batch.adl.input]
+      }
+    }
+
+    otelcol.processor.batch "adl" {
+      output {
+        logs = [otelcol.exporter.otlphttp.loki.input]
+      }
+    }
+
+    // Loki ingests OTLP over HTTP only, at /otlp/v1/logs, which the exporter
+    // appends to this base endpoint itself. It turns the service.name
+    // resource attribute into the stream's service_name label and keeps the
+    // remaining resource attributes as structured metadata, so records stay
+    // attributable to the PDP that wrote them.
+    otelcol.exporter.otlphttp "loki" {
+      client {
+        endpoint = "http://loki:3100/otlp"
+      }
+    }
+
+    // --------------------------------------------------------- pod logs
+    discovery.kubernetes "pods" {
+      role = "pod"
+      {{- with .Values.alloy.scrapeNamespaces }}
+
+      namespaces {
+        names = {{ toJson . }}
+      }
+      {{- end }}
+    }
+
+    discovery.relabel "pods" {
+      targets = discovery.kubernetes.pods.targets
+
+      rule {
+        source_labels = ["__meta_kubernetes_namespace"]
+        target_label  = "namespace"
+      }
+
+      rule {
+        source_labels = ["__meta_kubernetes_pod_name"]
+        target_label  = "pod"
+      }
+
+      rule {
+        source_labels = ["__meta_kubernetes_pod_container_name"]
+        target_label  = "container"
+      }
+
+      rule {
+        source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
+        separator     = "/"
+        target_label  = "job"
+      }
+    }
+
+    loki.source.kubernetes "pods" {
+      targets    = discovery.relabel.pods.output
+      forward_to = [loki.process.pods.receiver]
+    }
+
+    loki.process "pods" {
+      // eamerald writes each ADL record to stdout as well, as the durable
+      // trail that survives a collector outage. Those lines are dropped
+      // here so the same decision is not stored twice: the OTLP copy above
+      // is the one with its labels and trace correlation intact.
+      stage.drop {
+        expression          = `"event_name":"adl\.`
+        drop_counter_reason = "adl_record_ingested_via_otlp"
+      }
+
+      forward_to = [loki.write.loki.receiver]
+    }
+
+    loki.write "loki" {
+      endpoint {
+        url = "http://loki:3100/loki/api/v1/push"
+      }
+    }

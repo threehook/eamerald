@@ -1,0 +1,6 @@
+apiVersion: v2
+name: observability
+description: Loki, Grafana Alloy and Grafana, for shipping and viewing eamerald's ADL records
+type: application
+version: 0.1.0
+appVersion: "3.7.8"

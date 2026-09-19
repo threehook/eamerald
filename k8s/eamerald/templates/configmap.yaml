@@ -231,6 +231,14 @@ data:
           # logius adl level 1 decision logger plugin configuration
           adl_decision_logger:
             enabled: true
+          {{- with .Values.adlDecisionLogger.output }}
+            output: {{ . | quote }}
+          {{- end }}
+          {{- with .Values.adlDecisionLogger.otlp.endpoint }}
+            otlp:
+              endpoint: {{ . | quote }}
+              insecure: {{ $.Values.adlDecisionLogger.otlp.insecure }}
+          {{- end }}
           {{- with .Values.adlDecisionLogger.resource }}
             resource:
               {{- toYaml . | nindent 14 }}

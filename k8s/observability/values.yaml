@@ -1,0 +1,44 @@
+# Loki, Grafana Alloy and Grafana, sized for a single-node development
+# cluster (docker-desktop, kind, minikube).
+#
+# Alloy receives eamerald's ADL records over OTLP and forwards them to Loki's
+# native OTLP endpoint, and separately scrapes pod logs for everything else.
+# Grafana comes with Loki already provisioned as a datasource.
+#
+# The three components use fixed names - `loki`, `alloy`, `grafana` - rather
+# than release-prefixed ones, so that the OTLP endpoint you configure on
+# eamerald stays the same whatever you call the release. Install one release
+# of this chart per namespace.
+
+loki:
+  image: grafana/loki:3.7.8
+
+  # How long records are kept before the compactor deletes them. ADL records
+  # are compliance evidence, so pick this to match your retention obligation
+  # rather than your disk.
+  retention: 744h # 31 days
+
+  persistence:
+    size: 5Gi
+    # Empty uses the cluster's default StorageClass.
+    storageClass: ""
+
+alloy:
+  image: grafana/alloy:v1.19.2
+
+  # Namespaces whose pod logs are scraped. Empty means all namespaces, which
+  # on a shared cluster is a lot of log volume for no added ADL coverage.
+  #
+  # ADL records are excluded from this path - they arrive over OTLP, already
+  # structured - so this only collects eamerald's ordinary application logs.
+  scrapeNamespaces:
+    - eamerald
+
+grafana:
+  image: grafana/grafana:13.2.2
+
+  # Set explicitly so Grafana does not demand a password change on first
+  # login. This stack has no ingress and is reached by port-forward; give it
+  # a real password before exposing it anywhere.
+  adminUser: admin
+  adminPassword: admin

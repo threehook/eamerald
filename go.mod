@@ -15,7 +15,6 @@ require (
 	github.com/aserto-dev/go-directory v0.34.2
 	github.com/aserto-dev/go-topaz-ui v0.1.26
 	github.com/aserto-dev/logger v0.0.9
-	github.com/aserto-dev/openapi-authorizer v0.20.6
 	github.com/aserto-dev/openapi-directory v0.33.5
 	github.com/authzen/access.go v1.0.1
 	github.com/cli/browser v1.3.0
@@ -39,7 +38,6 @@ require (
 	github.com/lestrrat-go/jwx/v4 v4.5.0
 	github.com/magefile/mage v1.17.2
 	github.com/mattn/go-isatty v0.0.24
-	github.com/mennanov/fmutils v0.4.1
 	github.com/microsoft/kiota-abstractions-go v1.9.4
 	github.com/microsoft/kiota-http-go v1.5.6
 	github.com/microsoftgraph/msgraph-sdk-go v1.102.0
@@ -66,6 +64,7 @@ require (
 	go.opentelemetry.io/otel v1.46.0
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.22.0
 	go.opentelemetry.io/otel/log v0.22.0
+	go.opentelemetry.io/otel/sdk v1.46.0
 	go.opentelemetry.io/otel/sdk/log v0.22.0
 	go.opentelemetry.io/otel/trace v1.46.0
 	golang.org/x/crypto v0.57.0
@@ -214,7 +213,6 @@ require (
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.71.0 // indirect
 	go.opentelemetry.io/otel/metric v1.46.0 // indirect
-	go.opentelemetry.io/otel/sdk v1.46.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.11.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect

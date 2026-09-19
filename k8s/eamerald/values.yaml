@@ -84,11 +84,26 @@ entra:
   groupObjectType: "group"
   memberRelation: "member"
 
-# logius adl level 1 decision logger plugin: writes one JSON line per
-# authorization decision to stdout, for scraping by a log-shipping agent
-# (e.g. Grafana Alloy) into Loki.
+# logius adl level 1 decision logger plugin: emits one record per
+# authorization decision, to stdout as a JSON line and/or over OTLP.
 adlDecisionLogger:
   enabled: true
+
+  # Where records go: "stdout", "otlp", or both comma-separated. Empty means
+  # both. Keep stdout on even when exporting over OTLP: the OTLP exporter
+  # batches, so a collector outage loses records, and the pod log is the
+  # durable trail the spec asks for.
+  output: "stdout,otlp"
+
+  # OTLP log export, e.g. into the Grafana Alloy of the k8s/observability
+  # chart, which forwards to Loki. Records carry their producer identity as
+  # OTLP resource attributes, so each PDP lands in its own Loki stream.
+  #
+  # Leave endpoint empty to skip OTLP export entirely; startup then logs
+  # that it was skipped rather than failing.
+  otlp:
+    endpoint: ""   # e.g. "alloy.observability.svc.cluster.local:4317"
+    insecure: true # in-cluster collector, no TLS
 
   # Producer identity, emitted as the `resource` field of every record. The
   # ADL spec requires this to be set whenever records are aggregated outside

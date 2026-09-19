@@ -1,0 +1,32 @@
+Loki, Alloy and Grafana are installed in namespace {{ .Release.Namespace }}.
+
+1. Point eamerald's ADL logger at Alloy, so records are exported over OTLP:
+
+     helm upgrade --install eamerald k8s/eamerald -n eamerald --reuse-values \
+       --set adlDecisionLogger.otlp.endpoint=alloy.{{ .Release.Namespace }}.svc.cluster.local:4317
+
+2. Open Grafana:
+
+     kubectl port-forward -n {{ .Release.Namespace }} svc/grafana 3000:3000
+
+   Log in at http://localhost:3000 as {{ .Values.grafana.adminUser }}, then go to
+   Explore. Loki is already set up as the default datasource.
+
+3. Query the ADL records. They arrive as their own stream, labelled by the
+   producer identity in the record's `resource` field:
+
+     {service_name="eamerald"}
+
+   Everything that record carries is queryable from the JSON body, e.g. only
+   the denied decisions:
+
+     {service_name="eamerald"} | json | body_adl_core_response_decision="false"
+
+   or one endpoint's records:
+
+     {service_name="eamerald"} | json | event_name="adl.access_evaluation"
+
+   eamerald's ordinary application logs are in a separate stream, with the
+   ADL lines dropped from it because they are already ingested over OTLP:
+
+     {namespace="eamerald"}
