@@ -10,7 +10,6 @@ import (
 	"time"
 
 	cerr "github.com/aserto-dev/errors"
-	az2 "github.com/aserto-dev/go-authorizer/aserto/authorizer/v2"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	dsa "github.com/authzen/access.go/api/access/v1"
 	"github.com/threehook/eamerald/cli/cc"
@@ -18,7 +17,6 @@ import (
 	dsc "github.com/threehook/eamerald/cli/clients/directory"
 
 	"github.com/pkg/errors"
-	"github.com/samber/lo"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -214,8 +212,6 @@ func setCheckType(ctx context.Context, checkType CheckType, reqVersion int, runn
 	switch {
 	case checkType == Check && reqVersion == 3:
 		result = checkV3(ctx, runner.dsClient, msg.GetFields()[CheckTypeMapStr[checkType]])
-	case checkType == CheckDecision:
-		result = checkDecisionV2(ctx, runner.azClient, msg.GetFields()[CheckTypeMapStr[checkType]])
 	case checkType == Evaluation:
 		result = evaluationV1(ctx, runner.dsClient, msg.GetFields()[CheckTypeMapStr[checkType]])
 	case checkType == AuthorizerEvaluation:
@@ -284,44 +280,6 @@ func checkV3(ctx context.Context, c *dsc.Client, msg *structpb.Value) *CheckResu
 		Duration: duration,
 		Err:      err,
 		Str:      checkStringV3(&req),
-	}
-}
-
-func checkDecisionV2(ctx context.Context, c *azc.Client, msg *structpb.Value) *CheckResult {
-	if c == nil {
-		return &CheckResult{
-			Outcome:  false,
-			Duration: 0,
-			Err:      ErrSkippedAuthorizerAssertion,
-			Str:      skipped,
-		}
-	}
-
-	var req az2.IsRequest
-	if err := UnmarshalReq(msg, &req); err != nil {
-		return &CheckResult{Err: err}
-	}
-
-	start := time.Now()
-
-	resp, err := c.Authorizer.Is(ctx, &req)
-
-	duration := time.Since(start)
-
-	if err != nil {
-		return &CheckResult{
-			Outcome:  false,
-			Duration: duration,
-			Err:      err,
-			Str:      checkDecisionStringV2(&req),
-		}
-	}
-
-	return &CheckResult{
-		Outcome:  lo.Ternary(err != nil, false, resp.GetDecisions()[0].GetIs()),
-		Duration: duration,
-		Err:      err,
-		Str:      checkDecisionStringV2(&req),
 	}
 }
 
@@ -394,14 +352,6 @@ func checkStringV3(req *dsr.CheckRequest) string {
 		req.GetObjectType(), req.GetObjectId(),
 		req.GetRelation(),
 		req.GetSubjectType(), req.GetSubjectId(),
-	)
-}
-
-func checkDecisionStringV2(req *az2.IsRequest) string {
-	return fmt.Sprintf("%s/%s:%s",
-		req.GetPolicyContext().GetPath(),
-		req.GetPolicyContext().GetDecisions()[0],
-		req.GetIdentityContext().GetIdentity(),
 	)
 }
 

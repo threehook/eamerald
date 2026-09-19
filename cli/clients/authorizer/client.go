@@ -8,7 +8,6 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 
-	az2 "github.com/aserto-dev/go-authorizer/aserto/authorizer/v2"
 	dsa "github.com/authzen/access.go/api/access/v1"
 	"github.com/threehook/eamerald/cli/clients"
 )
@@ -26,16 +25,14 @@ type Config struct {
 var _ clients.Config = &Config{}
 
 type Client struct {
-	conn       *grpc.ClientConn
-	Authorizer az2.AuthorizerClient
-	Access     dsa.AccessClient
+	conn   *grpc.ClientConn
+	Access dsa.AccessClient
 }
 
 func New(conn *grpc.ClientConn) *Client {
 	return &Client{
-		conn:       conn,
-		Authorizer: az2.NewAuthorizerClient(conn),
-		Access:     dsa.NewAccessClient(conn),
+		conn:   conn,
+		Access: dsa.NewAccessClient(conn),
 	}
 }
 

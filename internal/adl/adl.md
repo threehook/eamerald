@@ -25,7 +25,6 @@ OTLP exporters:
 | `POST /access/v1/search/subject` | `adl.search_subject` |
 | `POST /access/v1/search/resource` | `adl.search_resource` |
 | `POST /access/v1/search/action` | `adl.search_action` |
-| `POST /api/v2/authz/is` | `adl.access_evaluation` or `adl.access_evaluations` |
 
 Each AuthZEN route has its own typed logger method, so `event_name` follows
 the endpoint that handled the decision rather than being inferred from the
@@ -67,36 +66,8 @@ than binding to whichever package the policy store happened to list first —
 that choice is not stable across restarts, and an authorization endpoint that
 silently changes which policy it evaluates is worse than one that errors.
 
-This is scoped to the Access API. `Is()` and `Query()` take a policy path per
-request and keep working against a multi-policy bundle, so a bundle that is
-ambiguous for the Access API only produces a startup warning, not a startup
-failure.
-
-`Is()` is not an AuthZEN endpoint, so it is recorded under the AuthZEN model
-its information model corresponds to, as the spec directs for OPA-style
-direct calls: one requested decision is an Access Evaluation, a list of them
-is an Access Evaluations call against a single subject and resource.
-
-### What is not logged
-
-The authorizer's `Query()`, `DecisionTree()` and `Compile()` produce no
-records.
-
-This is not because they are not AuthZEN endpoints. The standard's scope is
-"any authorization decision representable in the AuthZEN information model,
-regardless of the wire protocol by which the decision is delivered" — so the
-test is the shape of the decision, not the route it arrived on. `Compile()`
-returns residual queries from partial evaluation, which is genuinely not
-representable. `Query()` and `DecisionTree()` return arbitrary Rego results,
-of which *some* are decisions and most are introspection, and nothing in the
-request distinguishes the two.
-
-So a decision that must be logged has to be asked for somewhere its shape is
-known. That is what the authorizer's Access API is for: a rule returning
-`{"decision": bool, "context": {...}}` is an Access Evaluation, and asking
-for it over `/access/v1/evaluation` rather than `Query()` is what brings it
-into scope. A policy decision still served over `Query()` is not logged and
-is not compliant.
+The Access API is the authorizer's only decision-making endpoint, so every
+decision is in scope for ADL by construction.
 
 Because the logger is shared with the directory, which has no OPA runtime,
 it is not an OPA plugin. The `adl_decision_logger` plugin name is still
@@ -152,29 +123,16 @@ stdout output, if also selected, is unaffected.
 
 ### Authorizer specifics
 
-`Is()` takes Topaz-shaped input, which is translated to the AuthZEN model in
-`daemon/authorizer/impl/adl.go`:
+The authorizer's Access API records the request the caller sent, with two
+adjustments:
 
-- **Subject** is the directory user the identity resolved to, so its type and
-  id are what the policy was evaluated against. For `IDENTITY_TYPE_JWT` the
-  identity value is the bearer token itself, which is never written to the
-  log: if a record is produced before resolution completed, the subject id is
-  left empty rather than leaking a live credential.
-- **Resource** type and id are lifted out of the resource context under the
-  `resource_context` keys, since AuthZEN requires a resource type and a Topaz
-  resource context has no fixed schema. The whole context is kept as the
-  resource properties either way.
-- **Context** carries `policy_path`. AuthZEN has no field for it — the API
-  assumes one PDP evaluates one policy — but Topaz takes a policy path per
-  request, so without it a record cannot be tied back to the rule that
-  decided.
-
-The authorizer's Access API records the request the caller sent, with the
-same two adjustments: `policy_path` is added to the context (holding the
-package root the action was resolved against), and the subject is replaced by
-what the identity resolved to. Subject *properties* are dropped rather than
-logged, because `subject.properties.jwt` is how a caller hands the PDP a
-bearer token.
+- **Subject** is replaced by the directory user the identity resolved to, not
+  the caller's own properties: `subject.properties.jwt` is how a caller hands
+  the PDP a bearer token, and that must never reach the log.
+- **Context** gains `policy_path`, holding the package root the action was
+  resolved against - AuthZEN has no field for it, since the API assumes one
+  PDP evaluates one policy, but without it a record can't be tied back to the
+  rule that decided.
 
 ## Known deviations
 

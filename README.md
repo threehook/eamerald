@@ -182,28 +182,17 @@ Feel free to play around with the Eamerald console! Or follow the next few steps
 
 To verify that Eamerald is running with the right policy image, you can issue a `curl` call to interact with the REST API.
 
-This API call retrieves the set of policies that Eamerald has loaded:
-
-```console
-$ curl -k https://localhost:8383/api/v2/policies
-```
-
 ### Issue an authorization request
 
-Issue an authorization request using the `is` REST API to verify that the user Rick is allowed to GET the list of todos:
+Issue an authorization request using the AuthZEN Access Evaluation API to verify that the user Rick is allowed to GET the list of todos (with `opa.policy_root: todoApp.GET.todos` configured, since that bundle has more than one policy root):
 
 ```console
-$ curl -k -X POST 'https://localhost:8383/api/v2/authz/is' \
+$ curl -k -X POST 'https://localhost:8383/access/v1/evaluation' \
 -H 'Content-Type: application/json' \
 -d '{
-     "identity_context": {
-          "type": "IDENTITY_TYPE_SUB",
-          "identity": "rick@the-citadel.com"
-     },
-     "policy_context": {
-          "path": "todoApp.GET.todos",
-          "decisions": ["allowed"]
-     }
+     "subject": {"type": "user", "id": "rick@the-citadel.com"},
+     "action": {"name": "allowed"},
+     "resource": {"type": "todos"}
 }'
 ```
 

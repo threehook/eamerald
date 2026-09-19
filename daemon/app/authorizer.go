@@ -2,10 +2,7 @@ package app
 
 import (
 	"context"
-	"net/http"
 
-	authz "github.com/aserto-dev/go-authorizer/aserto/authorizer/v2"
-	azOpenAPI "github.com/aserto-dev/openapi-authorizer/publish/authorizer"
 	dsa "github.com/authzen/access.go/api/access/v1"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/threehook/eamerald/daemon/authorizer/impl"
@@ -79,8 +76,6 @@ func (e *Authorizer) AvailableServices() []string {
 
 func (e *Authorizer) GetGRPCRegistrations(services ...string) builder.GRPCRegistrations {
 	return func(server *grpc.Server) {
-		authz.RegisterAuthorizerServer(server, e.AuthorizerServer)
-
 		if e.servesAccessAPI(services...) {
 			dsa.RegisterAccessServer(server, e.AccessServer)
 		}
@@ -89,18 +84,8 @@ func (e *Authorizer) GetGRPCRegistrations(services ...string) builder.GRPCRegist
 
 func (e *Authorizer) GetGatewayRegistration(port string, services ...string) builder.HandlerRegistrations {
 	return func(ctx context.Context, mux *runtime.ServeMux, grpcEndpoint string, opts []grpc.DialOption) error {
-		if err := authz.RegisterAuthorizerHandlerFromEndpoint(ctx, mux, grpcEndpoint, opts); err != nil {
-			return err
-		}
-
 		if e.servesAccessAPI(services...) {
 			if err := dsa.RegisterAccessHandlerFromEndpoint(ctx, mux, grpcEndpoint, opts); err != nil {
-				return err
-			}
-		}
-
-		if len(services) > 0 {
-			if err := mux.HandlePath(http.MethodGet, authorizerOpenAPISpec, azOpenAPIHandler); err != nil {
 				return err
 			}
 		}
@@ -138,12 +123,4 @@ func (e *Authorizer) servesAccessAPI(services ...string) bool {
 		Msg("authorizer and reader share a grpc address; serving the access api from the directory")
 
 	return false
-}
-
-const (
-	authorizerOpenAPISpec string = "/authorizer/openapi.json"
-)
-
-func azOpenAPIHandler(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
-	azOpenAPI.OpenApiHandler(w, r)
 }

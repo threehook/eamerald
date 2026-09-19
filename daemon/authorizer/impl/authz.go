@@ -2,32 +2,27 @@ package impl
 
 import (
 	"context"
-	goruntime "runtime"
 	"time"
 
-	"github.com/aserto-dev/go-authorizer/aserto/authorizer/v2"
 	"github.com/aserto-dev/go-authorizer/pkg/aerr"
 	"github.com/threehook/eamerald/internal/adl"
 	"github.com/threehook/eamerald/internal/runtime"
 
 	"github.com/threehook/eamerald/daemon/authorizer/resolvers"
-	"github.com/threehook/eamerald/daemon/version"
 	"github.com/threehook/eamerald/pkg/config"
 
-	"github.com/open-policy-agent/opa/v1/server/types"
 	"github.com/rs/zerolog"
 )
 
 const (
 	InputUser     string = "user"
 	InputIdentity string = "identity"
-	InputPolicy   string = "policy"
 	InputResource string = "resource"
 
 	// InputSubject, InputAction and InputContext are the elements of the
 	// AuthZEN information model set by the Access API. InputResource is
-	// shared with Is() and Query(): an AuthZEN resource flattens onto the
-	// same input.resource that a Topaz resource context does.
+	// shared with it: an AuthZEN resource flattens onto the same
+	// input.resource a Topaz resource context used.
 	InputSubject string = "subject"
 	InputAction  string = "action"
 	InputContext string = "context"
@@ -41,10 +36,9 @@ type AuthorizerServer struct {
 	resolver    *resolvers.Resolvers
 	adl         *adl.Logger
 
-	// preparedQueries memoizes the rego.PreparedEvalQuery values produced
-	// for each (policy path, decisions) tuple seen via Is(). Without this
-	// cache every Is() call re-parses + re-plans the same Rego query and
-	// serializes goroutines on the OPA compiler's internal structures.
+	// preparedQueries memoizes the rego.PreparedEvalQuery values produced for
+	// each (policy path, decisions) tuple the Access API evaluates, plus the
+	// loaded bundle's policy roots (see prepared_query_cache.go).
 	preparedQueries *preparedQueryCache
 }
 
@@ -84,20 +78,6 @@ func NewAuthorizerServer(
 	}, nil
 }
 
-func (s *AuthorizerServer) Info(ctx context.Context, req *authorizer.InfoRequest) (*authorizer.InfoResponse, error) {
-	buildVersion := version.GetInfo()
-
-	res := &authorizer.InfoResponse{
-		Version: buildVersion.Version,
-		Commit:  buildVersion.Commit,
-		Date:    buildVersion.Date,
-		Os:      goruntime.GOOS,
-		Arch:    goruntime.GOARCH,
-	}
-
-	return res, nil
-}
-
 func (s *AuthorizerServer) getRuntime(ctx context.Context) (*runtime.Runtime, error) {
 	rt, err := s.resolver.GetRuntimeResolver().GetRuntime(ctx)
 	if err != nil {
@@ -105,21 +85,4 @@ func (s *AuthorizerServer) getRuntime(ctx context.Context) (*runtime.Runtime, er
 	}
 
 	return rt, err
-}
-
-func traceLevelToExplainModeV2(t authorizer.TraceLevel) types.ExplainModeV1 {
-	switch t {
-	case authorizer.TraceLevel_TRACE_LEVEL_UNKNOWN:
-		return types.ExplainOffV1
-	case authorizer.TraceLevel_TRACE_LEVEL_OFF:
-		return types.ExplainOffV1
-	case authorizer.TraceLevel_TRACE_LEVEL_FULL:
-		return types.ExplainFullV1
-	case authorizer.TraceLevel_TRACE_LEVEL_NOTES:
-		return types.ExplainNotesV1
-	case authorizer.TraceLevel_TRACE_LEVEL_FAILS:
-		return types.ExplainFailsV1
-	default:
-		return types.ExplainOffV1
-	}
 }

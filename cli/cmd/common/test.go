@@ -35,14 +35,12 @@ type CheckType int
 const (
 	CheckUnknown CheckType = iota
 	Check
-	CheckDecision
 	Evaluation
 	AuthorizerEvaluation
 )
 
 const (
 	CheckStr                string = "check"
-	CheckDecisionStr        string = "check_decision"
 	EvaluationStr           string = "evaluation"
 	AuthorizerEvaluationStr string = "authorizer_evaluation"
 )
@@ -56,14 +54,12 @@ type CheckResult struct {
 
 var CheckTypeMap = map[string]CheckType{
 	CheckStr:                Check,
-	CheckDecisionStr:        CheckDecision,
 	EvaluationStr:           Evaluation,
 	AuthorizerEvaluationStr: AuthorizerEvaluation,
 }
 
 var CheckTypeMapStr = map[CheckType]string{
 	Check:                CheckStr,
-	CheckDecision:        CheckDecisionStr,
 	Evaluation:           EvaluationStr,
 	AuthorizerEvaluation: AuthorizerEvaluationStr,
 }
