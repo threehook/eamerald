@@ -113,7 +113,7 @@ func (s *AuthorizerServer) querySetInput(ctx context.Context, req *authorizer.Qu
 		}
 	}
 
-	if err := s.resolveIdentityContext(ctx, req.GetIdentityContext(), input); err != nil {
+	if _, err := s.resolveIdentityContext(ctx, req.GetIdentityContext(), input); err != nil {
 		return nil, err
 	}
 

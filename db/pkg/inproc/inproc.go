@@ -27,7 +27,7 @@ func NewServer(ctx context.Context, logger *zerolog.Logger, cfg *directory.Confi
 
 	dsLogger := logger.With().Str("component", "ds").Logger()
 
-	inProcDirectory, err := eds.New(ctx, cfg, &dsLogger)
+	inProcDirectory, err := eds.New(ctx, cfg, &dsLogger, nil)
 	if err != nil {
 		logger.Error().Err(err).Msg("failed to start edge directory server")
 	}

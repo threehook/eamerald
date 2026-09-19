@@ -90,6 +90,15 @@ entra:
 adlDecisionLogger:
   enabled: true
 
+  # Producer identity, emitted as the `resource` field of every record. The
+  # ADL spec requires this to be set whenever records are aggregated outside
+  # the producing organisation, so that each record can be attributed
+  # unambiguously to the PDP that wrote it. E.g.:
+  #   resource:
+  #     service.name: eamerald
+  #     deployment.environment: production
+  resource: {}
+
 # git policy source plugin: tracks a policy bundle directly from a git repo.
 # This is the only policy source this chart configures; there is no OCI/ghcr
 # bundle fallback. Only public-repo (unauthenticated HTTPS) fields are

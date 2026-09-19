@@ -11,11 +11,12 @@ import (
 	"github.com/threehook/eamerald/daemon/authorizer/builtins"
 	"github.com/threehook/eamerald/daemon/authorizer/builtins/az"
 	"github.com/threehook/eamerald/daemon/authorizer/builtins/ds"
-	"github.com/threehook/eamerald/daemon/authorizer/plugins/adl_decision_logger"
 	"github.com/threehook/eamerald/daemon/authorizer/plugins/edge"
 	"github.com/threehook/eamerald/daemon/authorizer/plugins/entra"
 	"github.com/threehook/eamerald/daemon/authorizer/plugins/git"
+	"github.com/threehook/eamerald/daemon/authorizer/plugins/noop"
 	"github.com/threehook/eamerald/daemon/authorizer/resolvers"
+	"github.com/threehook/eamerald/internal/adl"
 	"github.com/threehook/eamerald/internal/runtime"
 	"github.com/threehook/eamerald/pkg/config"
 	"google.golang.org/grpc"
@@ -59,7 +60,11 @@ func NewRuntimeResolver(
 		runtime.WithBuiltin1(az.RegisterActionSearch(logger, builtins.AZActionSearch, acClient)),
 
 		// plugins
-		runtime.WithPlugin(adl_decision_logger.PluginName, adl_decision_logger.NewFactory(logger.WithContext(ctx))),
+		// ADL records are written by internal/adl, shared with the directory's
+		// AuthZEN Access API, which has no OPA runtime to host a plugin. The
+		// key is registered here only so OPA accepts the
+		// opa.config.plugins.adl_decision_logger block that configures it.
+		runtime.WithPlugin(adl.ConfigKey, noop.NewPluginFactory(adl.ConfigKey)),
 		runtime.WithPlugin(edge.PluginName, edge.NewPluginFactory(ctx, cfg, logger)),
 		runtime.WithPlugin(git.PluginName, git.NewPluginFactory(ctx, logger)),
 		runtime.WithPlugin(entra.PluginName, entra.NewPluginFactory(ctx, logger, dsConn)),

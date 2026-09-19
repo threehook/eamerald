@@ -22,6 +22,30 @@ separate `opa-policies` GitHub repo, which the chart's git policy-source
 plugin polls automatically. This directory owns the schema and the example
 data that policy runs against.
 
+## How the decision is requested
+
+Over the AuthZEN Access Evaluation API, which the authorizer serves from the
+policy engine:
+
+```
+POST https://localhost:8383/access/v1/evaluation
+
+{
+  "subject":  {"type": "user", "id": "jerry@example.com"},
+  "action":   {"name": "request_laadpaal"},
+  "resource": {"type": "adres", "properties": {"postcode": "1111BB", "huisnummer": 2}}
+}
+```
+
+The action names the rule, so this evaluates `data.authz.request_laadpaal`,
+and the rule's `{"decision": ..., "context": ...}` return value *is* the
+response body. Resource properties arrive flattened, which is why the policy
+reads `input.resource.postcode` and not `input.resource.properties.postcode`.
+
+This matters beyond tidiness: decisions asked for this way are written to the
+Authorization Decision Log, and decisions asked for over the generic
+`/api/v2/authz/query` endpoint are not — see `internal/adl/adl.md`.
+
 ## Running it
 
 Deploy first:
@@ -67,7 +91,7 @@ deployment.
 
 Concretely: `test.sh` reads `test_cases.json` (a fixed set of
 user/postcode/huisnummer combinations and their expected `decision`/`reason`)
-and sends each one as a real `POST /api/v2/authz/query` to a real, running
+and sends each one as a real `POST /access/v1/evaluation` to a real, running
 authorizer. It exercises the actual directory data, the actual git-sourced
 Rego policy fetched from `opa-policies`, and the actual network path a real
 caller would use - which is exactly why it lives here, run on demand, rather

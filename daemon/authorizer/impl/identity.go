@@ -17,15 +17,21 @@ import (
 
 const identityResolutionTimeout = 60 * time.Second
 
-// resolveIdentityContext.
-func (s *AuthorizerServer) resolveIdentityContext(ctx context.Context, identityContext *api.IdentityContext, input map[string]any) error {
+// resolveIdentityContext resolves the identity context into the Rego input
+// and returns the directory user it resolved to, when there is one. The user
+// object is what the Authorization Decision Log records as the AuthZEN
+// subject: for IDENTITY_TYPE_JWT the identity value is the bearer token
+// itself, which must never reach the log.
+func (s *AuthorizerServer) resolveIdentityContext(
+	ctx context.Context, identityContext *api.IdentityContext, input map[string]any,
+) (*dsc.Object, error) {
 	if identityContext == nil {
-		return aerr.ErrInvalidArgument.Msg("identity context not set")
+		return nil, aerr.ErrInvalidArgument.Msg("identity context not set")
 	}
 
 	// nothing to resolve when identity type equals IdentityType_IDENTITY_TYPE_NONE.
 	if identityContext.GetType() == api.IdentityType_IDENTITY_TYPE_NONE {
-		return nil
+		return nil, nil
 	}
 
 	// context control timeout for end-to-end identity (JWT when used) and directory identity to  user resolution.
@@ -38,25 +44,25 @@ func (s *AuthorizerServer) resolveIdentityContext(ctx context.Context, identityC
 	// Step 2: resolve identity from identity context
 	identity, err := s.resolveSubjectFromIdentityContext(ctx, identityContext)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// if IDENTITY_TYPE_MANUAL, there resulting user object is an empty JSON object.
 	if identityContext.GetType() == api.IdentityType_IDENTITY_TYPE_MANUAL {
 		input[InputUser] = pb.NewStruct()
-		return nil
+		return nil, nil
 	}
 
 	// Step 3: resolve user from identity.
 	user, err := s.resolveUserFromSubject(ctx, identity)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Step 4: add user object to input.user.
 	input[InputUser] = grpcc.ProtoToAny(user)
 
-	return nil
+	return user, nil
 }
 
 func (s *AuthorizerServer) resolveSubjectFromIdentityContext(ctx context.Context, identityContext *api.IdentityContext) (string, error) {

@@ -1,10 +1,11 @@
 //nolint:testpackage // withSpanContext/newOTelState/otelState are unexported and only need to be verified from within the package.
-package adl_decision_logger
+package adl
 
 import (
 	"context"
 	"testing"
 
+	dsa "github.com/authzen/access.go/api/access/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/threehook/eamerald/internal/header"
@@ -38,7 +39,7 @@ func TestNewOTelState_BuildsAndShutsDownCleanly(t *testing.T) {
 	// so construction and an immediate shutdown must both succeed without
 	// ever needing a reachable endpoint.
 	state, err := newOTelState(t.Context(), OTLPConfig{
-		Endpoint: "localhost:4317",
+		Endpoint: testOTLPEndpoint,
 		Insecure: true,
 	})
 	require.NoError(t, err)
@@ -60,16 +61,16 @@ func TestOTelState_Emit_DoesNotErrorWithoutCollector(t *testing.T) {
 	// different story - see TestNewOTelState_BuildsAndShutsDownCleanly,
 	// which shuts down with nothing queued; a flush with a record actually
 	// queued legitimately times out against an unreachable collector, which
-	// is exactly why plugin.go's Stop logs that error rather than treating
-	// it as fatal.)
+	// is exactly why Close logs that error rather than treating it as fatal.)
 	state, err := newOTelState(t.Context(), OTLPConfig{
-		Endpoint: "localhost:4317",
+		Endpoint: testOTLPEndpoint,
 		Insecure: true,
 	})
 	require.NoError(t, err)
 
+	logger := &Logger{}
 	tc := testTraceContext()
-	record := buildRecord(tc, testRequest(), nil)
+	record := logger.record(tc, EventAccessEvaluation, &dsa.EvaluationRequest{}, &dsa.EvaluationResponse{}, nil)
 
 	assert.NoError(t, state.emit(t.Context(), tc, record))
 }

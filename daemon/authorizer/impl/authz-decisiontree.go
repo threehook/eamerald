@@ -150,7 +150,7 @@ func (*AuthorizerServer) decisionTreeVerifyRequest(req *authorizer.DecisionTreeR
 func (s *AuthorizerServer) decisionTreeSetInput(ctx context.Context, req *authorizer.DecisionTreeRequest) (map[string]any, error) {
 	input := map[string]any{}
 
-	if err := s.resolveIdentityContext(ctx, req.GetIdentityContext(), input); err != nil {
+	if _, err := s.resolveIdentityContext(ctx, req.GetIdentityContext(), input); err != nil {
 		return nil, err
 	}
 

@@ -13,6 +13,7 @@ import (
 	dsw "github.com/aserto-dev/go-directory/aserto/directory/writer/v3"
 	dsa "github.com/authzen/access.go/api/access/v1"
 
+	"github.com/threehook/eamerald/internal/adl"
 	"github.com/threehook/eamerald/internal/eds/pkg/bdb"
 	"github.com/threehook/eamerald/internal/eds/pkg/bdb/migrations/migrate"
 	"github.com/threehook/eamerald/internal/eds/pkg/datasync"
@@ -62,17 +63,17 @@ func Get() (*Directory, error) {
 	return nil, status.Error(codes.Internal, "directory not initialized")
 }
 
-func New(ctx context.Context, config *Config, logger *zerolog.Logger) (*Directory, error) {
+func New(ctx context.Context, config *Config, logger *zerolog.Logger, adlLogger *adl.Logger) (*Directory, error) {
 	var err error
 
 	once.Do(func() {
-		directory, err = newDirectory(ctx, config, logger)
+		directory, err = newDirectory(ctx, config, logger, adlLogger)
 	})
 
 	return directory, err
 }
 
-func newDirectory(_ context.Context, config *Config, logger *zerolog.Logger) (*Directory, error) {
+func newDirectory(_ context.Context, config *Config, logger *zerolog.Logger, adlLogger *adl.Logger) (*Directory, error) {
 	newLogger := logger.With().Str("component", "directory").Logger()
 
 	cfg := bdb.Config{
@@ -116,7 +117,7 @@ func newDirectory(_ context.Context, config *Config, logger *zerolog.Logger) (*D
 	exporter3 := v3.NewExporter(logger, store)
 	importer3 := v3.NewImporter(logger, store)
 
-	access1 := v3.NewAccess(logger, reader3)
+	access1 := v3.NewAccess(logger, reader3, adlLogger)
 
 	dir := &Directory{
 		config:    config,

@@ -326,6 +326,10 @@ opa:
         otlp:
           endpoint: 'localhost:4317'  # otlp/gRPC collector address, e.g. a Grafana Alloy receiver
           insecure: true               # disable TLS - typical for a same-cluster/sidecar collector
+        resource: {}                   # producer identity, e.g. {service.name: eamerald}. REQUIRED when records are aggregated across organisations.
+        resource_context:              # keys read from an authorizer resource context to fill the AuthZEN resource
+          type_key: 'object_type'
+          id_key: 'object_id'
 
       # aserto edge directory sync plugin configuration
       aserto_edge:

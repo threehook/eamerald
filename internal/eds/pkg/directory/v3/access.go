@@ -7,27 +7,106 @@ import (
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	dsa "github.com/authzen/access.go/api/access/v1"
 	"github.com/rs/zerolog"
+	"github.com/threehook/eamerald/internal/adl"
 )
 
 type Access struct {
 	logger *zerolog.Logger
 	reader *Reader
+	adl    *adl.Logger
 }
 
 var _ dsa.AccessServer = (*Access)(nil)
 
-func NewAccess(logger *zerolog.Logger, reader *Reader) *Access {
+func NewAccess(logger *zerolog.Logger, reader *Reader, adlLogger *adl.Logger) *Access {
 	return &Access{
 		logger: logger,
 		reader: reader,
+		adl:    adlLogger,
 	}
 }
+
+// Each endpoint below evaluates the request and then writes exactly one
+// Authorization Decision Log record for the call, under the event name of
+// the AuthZEN API it implements.
 
 // Evaluation access check.
 //
 // The Access Evaluation API defines the message exchange pattern between a client (PEP)
 // and an authorization service (PDP) for executing a single access evaluation.
 func (s *Access) Evaluation(ctx context.Context, req *dsa.EvaluationRequest) (*dsa.EvaluationResponse, error) {
+	resp, err := s.evaluation(ctx, req)
+
+	return resp, s.adlError(err, s.adl.Evaluation(ctx, req, resp, err))
+}
+
+// Evaluations access check.
+//
+// The Access Evaluations API defines the message exchange pattern between a client (PEP)
+// and an authorization service (PDP) for evaluating multiple access evaluations within
+// the scope of a single message exchange (also known as "boxcarring" requests).
+func (s *Access) Evaluations(ctx context.Context, req *dsa.EvaluationsRequest) (*dsa.EvaluationsResponse, error) {
+	resp, err := s.evaluations(ctx, req)
+
+	return resp, s.adlError(err, s.adl.Evaluations(ctx, req, resp, err))
+}
+
+// SubjectSearch
+//
+// The Subject Search API defines the message exchange pattern between a client (PEP) and an authorization service (PDP)
+// for returning all of the subjects that match the search criteria.
+//
+// The Subject Search API is based on the Access Evaluation information model, but omits the Subject ID.
+func (s *Access) SubjectSearch(ctx context.Context, req *dsa.SubjectSearchRequest) (*dsa.SubjectSearchResponse, error) {
+	resp, err := s.subjectSearch(ctx, req)
+
+	return resp, s.adlError(err, s.adl.SubjectSearch(ctx, req, resp, err))
+}
+
+// ResourceSearch
+//
+// The Resource Search API defines the message exchange pattern between a client (PEP) and an authorization service (PDP)
+// for returning all of the resources that match the search criteria.
+//
+// The Resource Search API is based on the Access Evaluation information model, but omits the Resource ID.
+func (s *Access) ResourceSearch(
+	ctx context.Context, req *dsa.ResourceSearchRequest,
+) (*dsa.ResourceSearchResponse, error) {
+	resp, err := s.resourceSearch(ctx, req)
+
+	return resp, s.adlError(err, s.adl.ResourceSearch(ctx, req, resp, err))
+}
+
+// ActionSearch
+//
+// The Action Search API defines the message exchange pattern between a client (PEP) and an authorization service (PDP)
+// for returning all of the actions that match the search criteria.
+//
+// The Action Search API is based on the Access Evaluation information model.
+func (s *Access) ActionSearch(ctx context.Context, req *dsa.ActionSearchRequest) (*dsa.ActionSearchResponse, error) {
+	resp, err := s.actionSearch(ctx, req)
+
+	return resp, s.adlError(err, s.adl.ActionSearch(ctx, req, resp, err))
+}
+
+// adlError decides what a handler returns when writing the Authorization
+// Decision Log record failed. A genuine evaluation error always wins - it
+// must not be masked by a logging failure - but an otherwise successful
+// evaluation fails, so that no decision reaches a PEP without a log record.
+func (s *Access) adlError(evalErr, logErr error) error {
+	if logErr == nil {
+		return evalErr
+	}
+
+	if evalErr != nil {
+		s.logger.Error().Err(logErr).Msg("failed to write adl decision record")
+		return evalErr
+	}
+
+	return logErr
+}
+
+func (s *Access) evaluation(ctx context.Context, req *dsa.EvaluationRequest) (*dsa.EvaluationResponse, error) {
 	resp, err := s.reader.Check(ctx, extractCheck(req))
 	if err != nil {
 		return &dsa.EvaluationResponse{}, err
@@ -39,31 +118,7 @@ func (s *Access) Evaluation(ctx context.Context, req *dsa.EvaluationRequest) (*d
 	}, nil
 }
 
-func extractCheck(req *dsa.EvaluationRequest) *dsr.CheckRequest {
-	checkReq := &dsr.CheckRequest{}
-	if res := req.GetResource(); res != nil {
-		checkReq.ObjectType = res.GetType()
-		checkReq.ObjectId = res.GetId()
-	}
-
-	if act := req.GetAction(); act != nil {
-		checkReq.Relation = act.GetName()
-	}
-
-	if sub := req.GetSubject(); sub != nil {
-		checkReq.SubjectType = sub.GetType()
-		checkReq.SubjectId = sub.GetId()
-	}
-
-	return checkReq
-}
-
-// Evaluations access check.
-//
-// The Access Evaluations API defines the message exchange pattern between a client (PEP)
-// and an authorization service (PDP) for evaluating multiple access evaluations within
-// the scope of a single message exchange (also known as "boxcarring" requests).
-func (s *Access) Evaluations(ctx context.Context, req *dsa.EvaluationsRequest) (*dsa.EvaluationsResponse, error) {
+func (s *Access) evaluations(ctx context.Context, req *dsa.EvaluationsRequest) (*dsa.EvaluationsResponse, error) {
 	defCheck, checks := extractChecks(req)
 
 	checksResp, err := s.reader.Checks(ctx, &dsr.ChecksRequest{Default: defCheck, Checks: checks})
@@ -76,57 +131,9 @@ func (s *Access) Evaluations(ctx context.Context, req *dsa.EvaluationsRequest) (
 	}, nil
 }
 
-func extractChecks(req *dsa.EvaluationsRequest) (*dsr.CheckRequest, []*dsr.CheckRequest) {
-	check := &dsr.CheckRequest{}
-
-	if sub := req.GetSubject(); sub != nil {
-		check.SubjectType = sub.GetType()
-		check.SubjectId = sub.GetId()
-	}
-
-	if act := req.GetAction(); act != nil {
-		check.Relation = act.GetName()
-	}
-
-	if res := req.GetResource(); res != nil {
-		check.ObjectType = res.GetType()
-		check.ObjectId = res.GetId()
-	}
-
-	checks := make([]*dsr.CheckRequest, len(req.GetEvaluations()))
-
-	for k, v := range req.GetEvaluations() {
-		c := extractCheck(v)
-		checks[k] = c
-	}
-
-	return check, checks
-}
-
-func extractDecisions(resp *dsr.ChecksResponse) []*dsa.EvaluationResponse {
-	evaluations := make([]*dsa.EvaluationResponse, len(resp.GetChecks()))
-
-	for k, v := range resp.GetChecks() {
-		e := &dsa.EvaluationResponse{}
-		e.Decision = v.GetCheck()
-
-		if v.GetContext() != nil {
-			e.Context = v.GetContext()
-		}
-
-		evaluations[k] = e
-	}
-
-	return evaluations
-}
-
-// SubjectSearch
-//
-// The Subject Search API defines the message exchange pattern between a client (PEP) and an authorization service (PDP)
-// for returning all of the subjects that match the search criteria.
-//
-// The Subject Search API is based on the Access Evaluation information model, but omits the Subject ID.
-func (s *Access) SubjectSearch(ctx context.Context, req *dsa.SubjectSearchRequest) (*dsa.SubjectSearchResponse, error) {
+func (s *Access) subjectSearch(
+	ctx context.Context, req *dsa.SubjectSearchRequest,
+) (*dsa.SubjectSearchResponse, error) {
 	resp := &dsa.SubjectSearchResponse{
 		Results: []*dsa.Subject{},
 		Page:    &dsa.PaginationResponse{},
@@ -148,34 +155,9 @@ func (s *Access) SubjectSearch(ctx context.Context, req *dsa.SubjectSearchReques
 	return resp, nil
 }
 
-func extractSubjectSearch(req *dsa.SubjectSearchRequest) *dsr.GetGraphRequest {
-	resp := &dsr.GetGraphRequest{}
-	if res := req.GetResource(); res != nil {
-		resp.ObjectType = res.GetType()
-		resp.ObjectId = res.GetId()
-	}
-
-	if act := req.GetAction(); act != nil {
-		resp.Relation = act.GetName()
-	}
-
-	if sub := req.GetSubject(); sub != nil {
-		resp.SubjectType = sub.GetType()
-	}
-
-	resp.SubjectId = ""       // OMITTED
-	resp.SubjectRelation = "" // OMITTED
-
-	return resp
-}
-
-// ResourceSearch
-//
-// The Resource Search API defines the message exchange pattern between a client (PEP) and an authorization service (PDP)
-// for returning all of the resources that match the search criteria.
-//
-// The Resource Search API is based on the Access Evaluation information model, but omits the Resource ID.
-func (s *Access) ResourceSearch(ctx context.Context, req *dsa.ResourceSearchRequest) (*dsa.ResourceSearchResponse, error) {
+func (s *Access) resourceSearch(
+	ctx context.Context, req *dsa.ResourceSearchRequest,
+) (*dsa.ResourceSearchResponse, error) {
 	resp := &dsa.ResourceSearchResponse{
 		Results: []*dsa.Resource{},
 		Page:    &dsa.PaginationResponse{},
@@ -198,34 +180,7 @@ func (s *Access) ResourceSearch(ctx context.Context, req *dsa.ResourceSearchRequ
 	return resp, nil
 }
 
-func extractResourceSearch(req *dsa.ResourceSearchRequest) *dsr.GetGraphRequest {
-	resp := &dsr.GetGraphRequest{}
-	if res := req.GetResource(); res != nil {
-		resp.ObjectType = res.GetType()
-	}
-
-	if act := req.GetAction(); act != nil {
-		resp.Relation = act.GetName()
-	}
-
-	if sub := req.GetSubject(); sub != nil {
-		resp.SubjectType = sub.GetType()
-		resp.SubjectId = sub.GetId()
-	}
-
-	resp.ObjectId = ""        // OMITTED
-	resp.SubjectRelation = "" // OMITTED
-
-	return resp
-}
-
-// ActionSearch
-//
-// The Action Search API defines the message exchange pattern between a client (PEP) and an authorization service (PDP)
-// for returning all of the actions that match the search criteria.
-//
-// The Action Search API is based on the Access Evaluation information model.
-func (s *Access) ActionSearch(ctx context.Context, req *dsa.ActionSearchRequest) (*dsa.ActionSearchResponse, error) {
+func (s *Access) actionSearch(ctx context.Context, req *dsa.ActionSearchRequest) (*dsa.ActionSearchResponse, error) {
 	resp := &dsa.ActionSearchResponse{
 		Results: []*dsa.Action{},
 		Page:    &dsa.PaginationResponse{},
@@ -283,6 +238,111 @@ func (s *Access) ActionSearch(ctx context.Context, req *dsa.ActionSearchRequest)
 	}
 
 	return resp, nil
+}
+
+func extractCheck(req *dsa.EvaluationRequest) *dsr.CheckRequest {
+	checkReq := &dsr.CheckRequest{}
+	if res := req.GetResource(); res != nil {
+		checkReq.ObjectType = res.GetType()
+		checkReq.ObjectId = res.GetId()
+	}
+
+	if act := req.GetAction(); act != nil {
+		checkReq.Relation = act.GetName()
+	}
+
+	if sub := req.GetSubject(); sub != nil {
+		checkReq.SubjectType = sub.GetType()
+		checkReq.SubjectId = sub.GetId()
+	}
+
+	return checkReq
+}
+
+func extractChecks(req *dsa.EvaluationsRequest) (*dsr.CheckRequest, []*dsr.CheckRequest) {
+	check := &dsr.CheckRequest{}
+
+	if sub := req.GetSubject(); sub != nil {
+		check.SubjectType = sub.GetType()
+		check.SubjectId = sub.GetId()
+	}
+
+	if act := req.GetAction(); act != nil {
+		check.Relation = act.GetName()
+	}
+
+	if res := req.GetResource(); res != nil {
+		check.ObjectType = res.GetType()
+		check.ObjectId = res.GetId()
+	}
+
+	checks := make([]*dsr.CheckRequest, len(req.GetEvaluations()))
+
+	for k, v := range req.GetEvaluations() {
+		c := extractCheck(v)
+		checks[k] = c
+	}
+
+	return check, checks
+}
+
+func extractDecisions(resp *dsr.ChecksResponse) []*dsa.EvaluationResponse {
+	evaluations := make([]*dsa.EvaluationResponse, len(resp.GetChecks()))
+
+	for k, v := range resp.GetChecks() {
+		e := &dsa.EvaluationResponse{}
+		e.Decision = v.GetCheck()
+
+		if v.GetContext() != nil {
+			e.Context = v.GetContext()
+		}
+
+		evaluations[k] = e
+	}
+
+	return evaluations
+}
+
+func extractSubjectSearch(req *dsa.SubjectSearchRequest) *dsr.GetGraphRequest {
+	resp := &dsr.GetGraphRequest{}
+	if res := req.GetResource(); res != nil {
+		resp.ObjectType = res.GetType()
+		resp.ObjectId = res.GetId()
+	}
+
+	if act := req.GetAction(); act != nil {
+		resp.Relation = act.GetName()
+	}
+
+	if sub := req.GetSubject(); sub != nil {
+		resp.SubjectType = sub.GetType()
+	}
+
+	resp.SubjectId = ""       // OMITTED
+	resp.SubjectRelation = "" // OMITTED
+
+	return resp
+}
+
+func extractResourceSearch(req *dsa.ResourceSearchRequest) *dsr.GetGraphRequest {
+	resp := &dsr.GetGraphRequest{}
+	if res := req.GetResource(); res != nil {
+		resp.ObjectType = res.GetType()
+	}
+
+	if act := req.GetAction(); act != nil {
+		resp.Relation = act.GetName()
+	}
+
+	if sub := req.GetSubject(); sub != nil {
+		resp.SubjectType = sub.GetType()
+		resp.SubjectId = sub.GetId()
+	}
+
+	resp.ObjectId = ""        // OMITTED
+	resp.SubjectRelation = "" // OMITTED
+
+	return resp
 }
 
 func extractActionSearch(req *dsa.ActionSearchRequest) *dsr.GetGraphRequest {

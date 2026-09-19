@@ -116,7 +116,7 @@ func (s *AuthorizerServer) compileSetInput(ctx context.Context, req *authorizer.
 		input[InputResource] = req.GetResourceContext()
 	}
 
-	if err := s.resolveIdentityContext(ctx, req.GetIdentityContext(), input); err != nil {
+	if _, err := s.resolveIdentityContext(ctx, req.GetIdentityContext(), input); err != nil {
 		return nil, err
 	}
 

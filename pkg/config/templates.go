@@ -384,6 +384,10 @@ const adlDecisionLoggerPlugin string = `
         otlp:
           endpoint: ''               # otlp/gRPC collector address, e.g. a Grafana Alloy receiver: localhost:4317
           insecure: true             # disable TLS - typical for a same-cluster/sidecar collector
+        resource: {}                 # producer identity, e.g. {service.name: eamerald}. REQUIRED when records are aggregated across organisations.
+        resource_context:            # keys read from an authorizer resource context to fill the AuthZEN resource
+          type_key: 'object_type'
+          id_key: 'object_id'
 `
 
 const asertoEdgePlugin string = `

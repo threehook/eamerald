@@ -1,4 +1,4 @@
-package adl_decision_logger
+package adl
 
 import (
 	"context"
@@ -14,18 +14,37 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// otelState holds the OTel logs SDK objects needed to emit and, on Stop,
-// flush and close. Kept separate from *Plugin's other fields so Start/Stop
-// only touch this when otlp output is actually active.
+// otelState holds the OTel logs SDK objects needed to emit and, on Close,
+// flush and shut down.
 type otelState struct {
 	provider *sdklog.LoggerProvider
 	logger   otellog.Logger
 }
 
+// startOTel sets up OTLP export when configured. A missing endpoint or a
+// setup error is logged and otlp output is simply skipped for this run,
+// rather than taking the rest of the logger (including stdout output) down
+// with it.
+func (l *Logger) startOTel(ctx context.Context) {
+	if l.cfg.OTLP.Endpoint == "" {
+		l.log.Error().Msgf("otlp output requested but opa.config.plugins.%s.otlp.endpoint is not set - skipping otlp output", ConfigKey)
+		return
+	}
+
+	state, err := newOTelState(ctx, l.cfg.OTLP)
+	if err != nil {
+		l.log.Error().Err(err).Str("endpoint", l.cfg.OTLP.Endpoint).Msg("failed to set up otlp log export - skipping otlp output")
+		return
+	}
+
+	l.otel = state
+}
+
 // newOTelState builds an OTLP gRPC log exporter and a batching LoggerProvider
-// for it. The batch processor makes emission asynchronous: LogDecision/
-// LogEvaluationError never block the Is() hot path on network I/O to the
-// collector, and a collector outage cannot fail authorization requests.
+// for it. The batch processor makes emission asynchronous, so a collector
+// outage cannot fail authorization requests. Note that this trades the
+// spec's "persist before returning the decision" guidance for availability;
+// the stdout output is the durable trail.
 func newOTelState(ctx context.Context, cfg OTLPConfig) (*otelState, error) {
 	exporterOpts := []otlploggrpc.Option{
 		otlploggrpc.WithEndpoint(cfg.Endpoint),
@@ -45,13 +64,11 @@ func newOTelState(ctx context.Context, cfg OTLPConfig) (*otelState, error) {
 
 	return &otelState{
 		provider: provider,
-		logger:   provider.Logger(PluginName),
+		logger:   provider.Logger(ConfigKey),
 	}, nil
 }
 
 // shutdown flushes any batched records and closes the exporter connection.
-// Must be called on plugin Stop so records buffered at shutdown are not
-// silently dropped.
 func (s *otelState) shutdown(ctx context.Context) error {
 	if s == nil || s.provider == nil {
 		return nil

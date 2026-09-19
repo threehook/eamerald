@@ -21,15 +21,18 @@ export default function App() {
 
     const url = baseUrl.replace(/\/$/, "");
     const body = {
-      query: "x = data.authz.request_laadpaal",
-      identity_context: { type: "IDENTITY_TYPE_SUB", identity: user },
-      resource_context: { postcode: postcode.trim(), huisnummer: Number(huisnummer) },
+      subject: { type: "user", id: user },
+      action: { name: "request_laadpaal" },
+      resource: {
+        type: "adres",
+        properties: { postcode: postcode.trim(), huisnummer: Number(huisnummer) },
+      },
     };
 
-    setRawRequest(`POST ${url}/api/v2/authz/query\n${JSON.stringify(body, null, 2)}`);
+    setRawRequest(`POST ${url}/access/v1/evaluation\n${JSON.stringify(body, null, 2)}`);
 
     try {
-      const res = await fetch(`${url}/api/v2/authz/query`, {
+      const res = await fetch(`${url}/access/v1/evaluation`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -44,14 +47,13 @@ export default function App() {
       // whole purpose is showing what the API actually returned.
       setRawResponse(JSON.stringify(data, null, 2));
 
-      const binding = data.response?.result?.[0]?.bindings?.x;
-      if (!binding) {
-        throw new Error("Onverwachte response-vorm (geen 'x' binding gevonden)");
+      if (typeof data.decision !== "boolean") {
+        throw new Error("Onverwachte response-vorm (geen 'decision' veld gevonden)");
       }
 
       setResult({
-        allowed: binding.decision === true,
-        reason: binding.context?.reason ?? "",
+        allowed: data.decision === true,
+        reason: data.context?.reason ?? "",
       });
     } catch (err) {
       setRawResponse(`Fout: ${err.message}`);
@@ -67,7 +69,7 @@ export default function App() {
         <h1>Laadpaal aanvraag</h1>
         <p>
           Test-GUI voor het laadpalen-voorbeeld — roept de echte PDP (Eamerald authorizer) rechtstreeks
-          aan via <code>/api/v2/authz/query</code>.
+          aan via <code>/access/v1/evaluation</code>.
         </p>
       </header>
 

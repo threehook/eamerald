@@ -2,8 +2,10 @@ package impl
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
+	"github.com/aserto-dev/go-authorizer/pkg/aerr"
 	"github.com/open-policy-agent/opa/v1/plugins"
 	"github.com/open-policy-agent/opa/v1/rego"
 	"github.com/open-policy-agent/opa/v1/storage"
@@ -37,6 +39,13 @@ type preparedQueryCache struct {
 
 func newPreparedQueryCache() *preparedQueryCache {
 	return &preparedQueryCache{}
+}
+
+// bindingName is the Rego variable the i-th decision rule is bound to. The
+// query builder and everything reading results back out go through it, so
+// the two cannot drift apart.
+func bindingName(i int) string {
+	return fmt.Sprintf("x%d", i)
 }
 
 // cacheKey returns a stable string for the (path, decisions) tuple.
@@ -103,6 +112,57 @@ func (c *preparedQueryCache) getOrPrepare(
 	}
 
 	return *v, nil
+}
+
+// decisionQuery returns the prepared query that binds each decision rule
+// under data.<path> to x0, x1, ... in request order.
+//
+// The query body and its prepared form depend only on the policy path and
+// the decisions list — both stable for the lifetime of the active OPA
+// compiler — so repeated calls for the same tuple skip the parse + plan work
+// and stop fighting each other on the compiler's internal locks. The cache
+// is invalidated whenever the compiler is rotated (bundle reload).
+//
+// Is() and the AuthZEN Evaluation API share this shape: a single-action
+// evaluation is the one-decision case, and both therefore share cache entries.
+func (c *preparedQueryCache) decisionQuery(
+	ctx context.Context, rt *runtime.Runtime, path string, decisions []string,
+) (rego.PreparedEvalQuery, error) {
+	return c.getOrPrepare(ctx, rt, cacheKey(path, decisions), func(ctx context.Context) (rego.PreparedEvalQuery, error) {
+		queryStmt := strings.Builder{}
+
+		for i, decision := range decisions {
+			rule := fmt.Sprintf("data.%s.%s\n", path, decision)
+
+			if ok, err := rt.ValidateRule(rule); !ok {
+				return rego.PreparedEvalQuery{}, aerr.ErrBadQuery.Err(err).Msgf("invalid rule: %q", rule)
+			}
+
+			q := fmt.Sprintf("%s = %s\n", bindingName(i), rule)
+
+			if _, err := rt.ValidateQuery(q); err != nil {
+				return rego.PreparedEvalQuery{}, aerr.ErrBadQuery.Err(err).Msgf("invalid query: %q", q)
+			}
+
+			queryStmt.WriteString(q)
+		}
+
+		pq, err := rt.ValidateQuery(queryStmt.String())
+		if err != nil {
+			return rego.PreparedEvalQuery{}, aerr.ErrBadQuery.Err(err).Msgf("invalid query batch: %q", queryStmt.String())
+		}
+
+		prepared, err := rego.New(
+			rego.Compiler(rt.GetPluginsManager().GetCompiler()),
+			rego.Store(rt.GetPluginsManager().Store),
+			rego.ParsedQuery(pq),
+		).PrepareForEval(ctx)
+		if err != nil {
+			return rego.PreparedEvalQuery{}, aerr.ErrBadQuery.Err(err).Msg(queryStmt.String())
+		}
+
+		return prepared, nil
+	})
 }
 
 // ensureCompilerWatcher registers (exactly once per runtime) a callback on

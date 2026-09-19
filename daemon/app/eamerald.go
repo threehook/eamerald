@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"net/http"
+	"time"
 
 	cerr "github.com/aserto-dev/errors"
 	console "github.com/aserto-dev/go-topaz-ui"
@@ -10,6 +11,7 @@ import (
 	"github.com/threehook/eamerald/daemon/app/middlewares"
 	"github.com/threehook/eamerald/daemon/authentication"
 	"github.com/threehook/eamerald/daemon/service/builder"
+	"github.com/threehook/eamerald/internal/adl"
 	"github.com/threehook/eamerald/internal/eds"
 	"github.com/threehook/eamerald/pkg/config"
 
@@ -35,6 +37,10 @@ type Eamerald struct {
 	Manager        *builder.ServiceManager
 	Services       map[string]builder.ServiceTypes
 }
+
+// adlCleanupTimeout bounds the final flush of buffered decision records on
+// shutdown.
+const adlCleanupTimeout = 30 * time.Second
 
 var healthCheck *health.Server
 
@@ -250,9 +256,14 @@ func (e *Eamerald) setupHealthAndMetrics() ([]grpc.ServerOption, error) {
 }
 
 func (e *Eamerald) prepareServices() error {
+	adlLogger, err := e.newADLLogger()
+	if err != nil {
+		return err
+	}
+
 	// prepare services
 	if e.Configuration.Edge.DBPath != "" {
-		dir, err := eds.New(e.Context, &e.Configuration.Edge, e.Logger)
+		dir, err := eds.New(e.Context, &e.Configuration.Edge, e.Logger, adlLogger)
 		if err != nil {
 			return err
 		}
@@ -266,7 +277,7 @@ func (e *Eamerald) prepareServices() error {
 	}
 
 	if serviceConfig, ok := e.Configuration.APIConfig.Services[authorizerService]; ok {
-		authorizer, err := NewAuthorizer(e.Context, serviceConfig, &e.Configuration.Common, nil, e.Logger)
+		authorizer, err := NewAuthorizer(e.Context, serviceConfig, &e.Configuration.Common, nil, e.Logger, adlLogger)
 		if err != nil {
 			return err
 		}
@@ -279,6 +290,33 @@ func (e *Eamerald) prepareServices() error {
 	}
 
 	return nil
+}
+
+// newADLLogger builds the Authorization Decision Log writer shared by every
+// service that evaluates authorization decisions. The authorizer's Is()
+// endpoint and the directory's AuthZEN Access API log through the same
+// instance, so a deployment running both does not open two OTLP exporters
+// against the collector.
+func (e *Eamerald) newADLLogger() (*adl.Logger, error) {
+	cfg, err := adl.ConfigFromPlugins(e.Configuration.OPA.Config.Plugins)
+	if err != nil {
+		return nil, err
+	}
+
+	adlLogger := adl.New(e.Context, cfg, e.Logger)
+
+	go func() {
+		<-e.Context.Done()
+
+		cleanupCtx, cancel := context.WithTimeout(context.Background(), adlCleanupTimeout)
+		defer cancel()
+
+		if err := adlLogger.Close(cleanupCtx); err != nil {
+			e.Logger.Error().Err(err).Msg("error flushing adl decision log")
+		}
+	}()
+
+	return adlLogger, nil
 }
 
 type services struct {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/aserto-dev/go-authorizer/aserto/authorizer/v2"
 	"github.com/aserto-dev/go-authorizer/pkg/aerr"
+	"github.com/threehook/eamerald/internal/adl"
 	"github.com/threehook/eamerald/internal/runtime"
 
 	"github.com/threehook/eamerald/daemon/authorizer/resolvers"
@@ -22,15 +23,23 @@ const (
 	InputIdentity string = "identity"
 	InputPolicy   string = "policy"
 	InputResource string = "resource"
+
+	// InputSubject, InputAction and InputContext are the elements of the
+	// AuthZEN information model set by the Access API. InputResource is
+	// shared with Is() and Query(): an AuthZEN resource flattens onto the
+	// same input.resource that a Topaz resource context does.
+	InputSubject string = "subject"
+	InputAction  string = "action"
+	InputContext string = "context"
 )
 
 const cleanupTimeout = 30 * time.Second
 
 type AuthorizerServer struct {
-	cfg         *config.Common
 	logger      *zerolog.Logger
 	jwtResolver *jwtResolver
 	resolver    *resolvers.Resolvers
+	adl         *adl.Logger
 
 	// preparedQueries memoizes the rego.PreparedEvalQuery values produced
 	// for each (policy path, decisions) tuple seen via Is(). Without this
@@ -44,6 +53,7 @@ func NewAuthorizerServer(
 	logger *zerolog.Logger,
 	cfg *config.Common,
 	rf *resolvers.Resolvers,
+	adlLogger *adl.Logger,
 ) (*AuthorizerServer, error) {
 	newLogger := logger.With().Str("component", "api.grpc").Logger()
 
@@ -66,10 +76,10 @@ func NewAuthorizerServer(
 	}()
 
 	return &AuthorizerServer{
-		cfg:             cfg,
 		logger:          &newLogger,
 		jwtResolver:     jwtResolver,
 		resolver:        rf,
+		adl:             adlLogger,
 		preparedQueries: newPreparedQueryCache(),
 	}, nil
 }

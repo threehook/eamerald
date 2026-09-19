@@ -35,7 +35,7 @@ func (cmd *InitCmd) Run(ctx context.Context) error {
 
 	logger := zerolog.New(io.Discard)
 
-	dir, err := eds.New(ctx, cfg, &logger)
+	dir, err := eds.New(ctx, cfg, &logger, nil)
 	if err != nil {
 		log.Error().Err(err).Str("db_file", cmd.DBFile).Msg("init_cmd")
 	}

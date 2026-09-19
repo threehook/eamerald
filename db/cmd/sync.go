@@ -43,7 +43,7 @@ func (cmd *SyncCmd) Run(ctx context.Context) error {
 
 	logger := zerolog.New(os.Stderr).Level(zerolog.InfoLevel)
 
-	dir, err := eds.New(ctx, cfg, &logger)
+	dir, err := eds.New(ctx, cfg, &logger, nil)
 	if err != nil {
 		return err
 	}

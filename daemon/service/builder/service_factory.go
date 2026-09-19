@@ -97,6 +97,10 @@ func (f *ServiceFactory) prepareGateway(config *API, gatewayOpts *GatewayOptions
 		config.Gateway.AllowedHeaders = DefaultGatewayAllowedHeaders
 	}
 
+	// Trace context propagation is a protocol requirement, not an operator
+	// preference, so these are added on top of whatever is configured.
+	config.Gateway.AllowedHeaders = lo.Uniq(append(config.Gateway.AllowedHeaders, TraceContextHeaders...))
+
 	if len(config.Gateway.AllowedOrigins) == 0 {
 		config.Gateway.AllowedOrigins = DefaultGatewayAllowedOrigins
 	}
@@ -164,16 +168,24 @@ func (f *ServiceFactory) prepareGateway(config *API, gatewayOpts *GatewayOptions
 	return &Gateway{Server: gtwServer, Mux: mux, Certs: &config.Gateway.Certs}, nil
 }
 
+// incomingHeaderMatcher decides which HTTP headers are forwarded into gRPC
+// metadata. Headers the deployment allows are passed through under their own
+// name; everything else falls back to grpc-gateway's default, which prefixes
+// IANA permanent headers and drops the rest.
+func incomingHeaderMatcher(allowedHeaders []string) func(string) (string, bool) {
+	return func(key string) (string, bool) {
+		if lo.Contains(allowedHeaders, key) {
+			return key, true
+		}
+
+		return runtime.DefaultHeaderMatcher(key)
+	}
+}
+
 // gatewayMux creates a gateway multiplexer for serving the API as an OpenAPI endpoint.
 func (f *ServiceFactory) gatewayMux(allowedHeaders []string, errorHandler runtime.ErrorHandlerFunc) *runtime.ServeMux {
 	opts := []runtime.ServeMuxOption{
-		runtime.WithIncomingHeaderMatcher(func(key string) (string, bool) {
-			if lo.Contains(allowedHeaders, key) {
-				return key, true
-			}
-
-			return runtime.DefaultHeaderMatcher(key)
-		}),
+		runtime.WithIncomingHeaderMatcher(incomingHeaderMatcher(allowedHeaders)),
 		runtime.WithMetadata(captureGatewayRoute),
 		runtime.WithMarshalerOption(
 			runtime.MIMEWildcard,

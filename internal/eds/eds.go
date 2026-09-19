@@ -4,13 +4,16 @@ import (
 	"context"
 
 	"github.com/rs/zerolog"
+	"github.com/threehook/eamerald/internal/adl"
 	"github.com/threehook/eamerald/internal/eds/pkg/directory"
 )
 
-func New(ctx context.Context, config *directory.Config, logger *zerolog.Logger) (*directory.Directory, error) {
+func New(
+	ctx context.Context, config *directory.Config, logger *zerolog.Logger, adlLogger *adl.Logger,
+) (*directory.Directory, error) {
 	newLogger := logger.With().Str("component", "edge-ds").Logger()
 
-	ds, err := directory.New(ctx, config, &newLogger)
+	ds, err := directory.New(ctx, config, &newLogger, adlLogger)
 	if err != nil {
 		return nil, err
 	}

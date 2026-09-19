@@ -230,4 +230,8 @@ data:
           # logius adl level 1 decision logger plugin configuration
           adl_decision_logger:
             enabled: true
+          {{- with .Values.adlDecisionLogger.resource }}
+            resource:
+              {{- toYaml . | nindent 14 }}
+          {{- end }}
         {{- end }}
