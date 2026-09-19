@@ -11,8 +11,11 @@ package adl
 
 import (
 	"encoding/json"
+	"maps"
+	"os"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
@@ -37,6 +40,10 @@ const (
 	defaultResourceTypeKey = "object_type"
 	defaultResourceIDKey   = "object_id"
 )
+
+// resourceKeyInstanceID names the entry identifying the PDP instance that
+// produced a record.
+const resourceKeyInstanceID = "instance_id"
 
 type Config struct {
 	Enabled bool       `json:"enabled"`
@@ -68,6 +75,34 @@ type OTLPConfig struct {
 type ResourceContextConfig struct {
 	TypeKey string `json:"type_key"`
 	IDKey   string `json:"id_key"`
+}
+
+// effectiveResource returns the producer identity to stamp on every record.
+//
+// An instance identifier is added unless the deployment named one itself.
+// AuthZEN's model is one policy per PDP, so several policies means several
+// PDPs; without this, their records - and those of replicas of one PDP - are
+// indistinguishable once aggregated, which is exactly what the spec requires
+// `resource` to prevent.
+func (c Config) effectiveResource() map[string]string {
+	resource := make(map[string]string, len(c.Resource)+1)
+	maps.Copy(resource, c.Resource)
+
+	if _, named := resource[resourceKeyInstanceID]; !named {
+		resource[resourceKeyInstanceID] = instanceID()
+	}
+
+	return resource
+}
+
+// instanceID prefers the host name, which is the pod name under Kubernetes
+// and so stays stable across restarts of the same PDP.
+func instanceID() string {
+	if hostname, err := os.Hostname(); err == nil && hostname != "" {
+		return hostname
+	}
+
+	return uuid.New().String()
 }
 
 func (c ResourceContextConfig) typeKey() string {

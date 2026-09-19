@@ -97,3 +97,25 @@ func TestConfigFromPlugins_RejectsMistypedConfig(t *testing.T) {
 
 	require.Error(t, err)
 }
+
+// Running one PDP per policy is only useful if their records can be told
+// apart, so every record carries an instance identifier whether or not the
+// deployment configured a resource.
+func TestConfig_EffectiveResource_AlwaysIdentifiesTheInstance(t *testing.T) {
+	resource := Config{}.effectiveResource()
+
+	assert.NotEmpty(t, resource[resourceKeyInstanceID])
+}
+
+func TestConfig_EffectiveResource_KeepsConfiguredIdentity(t *testing.T) {
+	resource := Config{Resource: map[string]string{"service.name": "eamerald"}}.effectiveResource()
+
+	assert.Equal(t, "eamerald", resource["service.name"])
+	assert.NotEmpty(t, resource[resourceKeyInstanceID])
+}
+
+func TestConfig_EffectiveResource_DoesNotOverrideAnExplicitInstanceID(t *testing.T) {
+	resource := Config{Resource: map[string]string{resourceKeyInstanceID: "pdp-laadpalen-0"}}.effectiveResource()
+
+	assert.Equal(t, "pdp-laadpalen-0", resource[resourceKeyInstanceID])
+}

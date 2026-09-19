@@ -38,13 +38,39 @@ The Access API has two implementations, on separate ports:
 - the authorizer (`daemon/authorizer/impl/access.go`) answers from the policy
   engine, and serves the two evaluation routes. The action names the rule:
   with a bundle rooted at `package authz`, an `action.name` of
-  `request_laadpaal` evaluates `data.authz.request_laadpaal`. AuthZEN has no
-  policy selector — a PDP serves one policy — so the root comes from the
-  loaded bundle; under a nested package the action carries the remainder,
-  e.g. `laadpalen.request_laadpaal` for `package authz.laadpalen`. The
-  searches return `Unimplemented`, because a Rego rule answers "may this
-  subject do this?" and offers no way to enumerate the subjects, resources or
-  actions it would admit.
+  `request_laadpaal` evaluates `data.authz.request_laadpaal`. Under a nested
+  package the action carries the remainder, e.g. `laadpalen.request_laadpaal`
+  for `package authz.laadpalen`. The searches return `Unimplemented`, because
+  a Rego rule answers "may this subject do this?" and offers no way to
+  enumerate the subjects, resources or actions it would admit.
+
+### One policy per PDP
+
+An access evaluation request carries no policy selector, because AuthZEN
+assumes a policy decision point evaluates one policy. So does this
+implementation: the deployment decides which policy an instance serves, and
+serving several means running several instances — one PDP each, as OpenFTV
+does with one PDP process per bundle.
+
+`opa.policy_root` names that policy. It only needs setting when the loaded
+bundle carries more than one package root, which is typically a decision
+package alongside library packages:
+
+```yaml
+opa:
+  policy_root: authz
+```
+
+With a single root there is nothing to disambiguate and it can stay empty.
+With several roots and no setting, the Access API refuses the request rather
+than binding to whichever package the policy store happened to list first —
+that choice is not stable across restarts, and an authorization endpoint that
+silently changes which policy it evaluates is worse than one that errors.
+
+This is scoped to the Access API. `Is()` and `Query()` take a policy path per
+request and keep working against a multi-policy bundle, so a bundle that is
+ambiguous for the Access API only produces a startup warning, not a startup
+failure.
 
 `Is()` is not an AuthZEN endpoint, so it is recorded under the AuthZEN model
 its information model corresponds to, as the spec directs for OPA-style
@@ -120,7 +146,7 @@ stdout output, if also selected, is unaffected.
 | `timestamp` | Milliseconds since the Unix epoch, UTC. |
 | `status` | `Ok` when the PDP reached a decision. A denial is still `Ok`: denial is a valid outcome, and `Error` is reserved for the PDP failing to evaluate at all. |
 | `attributes` | Always `{}` — Level 1 carries no source references. |
-| `resource` | The configured `resource` map, omitted when unset. The spec requires it whenever records are aggregated outside the producing organisation. |
+| `resource` | The configured `resource` map, plus an `instance_id` identifying the PDP that decided (the host/pod name, or a random id). The spec requires this whenever records are aggregated outside the producing organisation, and with one PDP per policy it is what keeps their records — and those of replicas of one PDP — distinguishable. Set `instance_id` in config to override it. |
 | `body["adl.core.request"]` | The AuthZEN request. Present for both `Ok` and `Error` records, showing what was attempted. |
 | `body["adl.core.response"]` | The AuthZEN response. Present only when `status` is `Ok` — omitted for `Error`, since no decision was reached. |
 

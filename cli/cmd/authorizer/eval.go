@@ -4,21 +4,19 @@ import (
 	"context"
 	"os"
 
-	"github.com/aserto-dev/go-authorizer/aserto/authorizer/v2"
-	"github.com/aserto-dev/go-authorizer/aserto/authorizer/v2/api"
+	dsa "github.com/authzen/access.go/api/access/v1"
 	"github.com/threehook/eamerald/cli/clients"
 	azc "github.com/threehook/eamerald/cli/clients/authorizer"
 	"github.com/threehook/eamerald/cli/jsonx"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/structpb"
 )
 
 type EvalCmd struct {
 	clients.RequestArgs
 	azc.Config
 
-	req  authorizer.IsRequest
-	resp authorizer.IsResponse
+	req  dsa.EvaluationRequest
+	resp dsa.EvaluationResponse
 }
 
 func (cmd *EvalCmd) Run(ctx context.Context) error {
@@ -30,7 +28,7 @@ func (cmd *EvalCmd) Run(ctx context.Context) error {
 		return err
 	}
 
-	if err := cmd.Invoke(ctx, authorizer.Authorizer_Is_FullMethodName, &cmd.req, &cmd.resp); err != nil {
+	if err := cmd.Invoke(ctx, dsa.Access_Evaluation_FullMethodName, &cmd.req, &cmd.resp); err != nil {
 		return err
 	}
 
@@ -38,15 +36,9 @@ func (cmd *EvalCmd) Run(ctx context.Context) error {
 }
 
 func (cmd *EvalCmd) template() proto.Message {
-	return &authorizer.IsRequest{
-		PolicyContext: &api.PolicyContext{
-			Path:      "",
-			Decisions: []string{allowed},
-		},
-		IdentityContext: &api.IdentityContext{
-			Identity: "",
-			Type:     api.IdentityType_IDENTITY_TYPE_NONE,
-		},
-		ResourceContext: &structpb.Struct{},
+	return &dsa.EvaluationRequest{
+		Subject:  &dsa.Subject{Type: "", Id: ""},
+		Action:   &dsa.Action{Name: allowed},
+		Resource: &dsa.Resource{Type: "", Id: ""},
 	}
 }

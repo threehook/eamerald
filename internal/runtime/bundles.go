@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"hash/adler32"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -217,19 +218,15 @@ func (r *Runtime) GetPolicyList(ctx context.Context, id string, fn PathFilterFn)
 	return policyList, nil
 }
 
-// GetPolicyRoot returns the package root name from the policy list (not from the .manifest file).
-// If no policies exist, it will return an empty string as the policy root.
-func (r *Runtime) GetPolicyRoot(ctx context.Context) (string, error) {
-	var policyRoot string
+// GetPolicyRoots returns every distinct package root in the policy list,
+// sorted, so that the result does not depend on the store's iteration order.
+func (r *Runtime) GetPolicyRoots(ctx context.Context) ([]string, error) {
+	roots := []string{}
 
 	err := storage.Txn(ctx, r.pluginsManager.Store, storage.TransactionParams{}, func(txn storage.Transaction) error {
 		policiesList, err := r.pluginsManager.Store.ListPolicies(ctx, txn)
 		if err != nil {
 			return errors.Wrap(err, "error listing policies from storage")
-		}
-
-		if len(policiesList) == 0 {
-			return nil
 		}
 
 		for _, id := range policiesList {
@@ -238,16 +235,62 @@ func (r *Runtime) GetPolicyRoot(ctx context.Context) (string, error) {
 				return err
 			}
 
-			if root != "" {
-				policyRoot = root
-				break
+			if root != "" && !slices.Contains(roots, root) {
+				roots = append(roots, root)
 			}
 		}
+
+		slices.Sort(roots)
 
 		return nil
 	})
 
-	return policyRoot, err
+	return roots, err
+}
+
+// PDPPolicyRoot returns the policy this instance serves as an AuthZEN policy
+// decision point.
+func (r *Runtime) PDPPolicyRoot(ctx context.Context) (string, error) {
+	roots, err := r.GetPolicyRoots(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	return r.SelectPolicyRoot(roots)
+}
+
+// SelectPolicyRoot picks, out of the loaded package roots, the one this
+// instance serves as a policy decision point.
+//
+// AuthZEN assumes a PDP evaluates one policy, so there is no policy selector
+// in an access evaluation request: the deployment decides. Picking a root
+// implicitly when several are loaded would make the decision depend on the
+// store's iteration order, so that case is an error the operator resolves by
+// setting opa.policy_root, or by running one instance per policy.
+func (r *Runtime) SelectPolicyRoot(roots []string) (string, error) {
+	configured := r.Config.PolicyRoot
+
+	switch {
+	case len(roots) == 0:
+		return "", errors.New("no policy loaded")
+
+	case configured != "":
+		if !slices.Contains(roots, configured) {
+			return "", errors.Errorf("opa.policy_root %q is not loaded; loaded policies are [%s]",
+				configured, strings.Join(roots, ", "))
+		}
+
+		return configured, nil
+
+	case len(roots) == 1:
+		return roots[0], nil
+
+	default:
+		return "", errors.Errorf(
+			"%d policies are loaded [%s] but a policy decision point serves one:"+
+				" set opa.policy_root, or run one instance per policy",
+			len(roots), strings.Join(roots, ", "))
+	}
 }
 
 // GetPolicyRootForPath returns the package root name from the policy list (not from the .manifest file) based on the given path.

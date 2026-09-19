@@ -36,6 +36,8 @@ type Logger struct {
 func New(ctx context.Context, cfg Config, log *zerolog.Logger) *Logger {
 	newLog := log.With().Str("component", ConfigKey).Logger()
 
+	cfg.Resource = cfg.effectiveResource()
+
 	logger := &Logger{cfg: cfg, log: &newLog, out: io.Discard}
 
 	if !cfg.Enabled {

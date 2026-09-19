@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync/atomic"
 
 	"github.com/aserto-dev/go-authorizer/pkg/aerr"
 	"github.com/open-policy-agent/opa/v1/plugins"
@@ -31,14 +32,38 @@ import (
 // Concurrency: sync.Map for the read-mostly path; singleflight collapses
 // concurrent misses for the same key into one PrepareForEval call so a
 // thundering herd on first use doesn't multiply work.
+//
+// The loaded policy roots are cached here too. They are derived from the same
+// compiler state - reading them parses every module in the store, which is far
+// too much to redo per decision - so they are invalidated by the same trigger.
 type preparedQueryCache struct {
 	entries     tsync.Map[string, *rego.PreparedEvalQuery] // key (string) -> *rego.PreparedEvalQuery
 	prepGroup   tsync.Group[string, *rego.PreparedEvalQuery]
+	roots       atomic.Pointer[[]string]              // package roots of the loaded bundle
 	watcherOnce tsync.Map[*plugins.Manager, struct{}] // key (*plugins.Manager) -> struct{} (one-time RegisterCompilerTrigger per runtime)
 }
 
 func newPreparedQueryCache() *preparedQueryCache {
 	return &preparedQueryCache{}
+}
+
+// policyRoots returns the package roots of the loaded bundle, reading them
+// from the store only after the compiler has been rotated.
+func (c *preparedQueryCache) policyRoots(ctx context.Context, rt *runtime.Runtime) ([]string, error) {
+	c.ensureCompilerWatcher(rt)
+
+	if cached := c.roots.Load(); cached != nil {
+		return *cached, nil
+	}
+
+	roots, err := rt.GetPolicyRoots(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	c.roots.Store(&roots)
+
+	return roots, nil
 }
 
 // bindingName is the Rego variable the i-th decision rule is bound to. The
@@ -187,6 +212,8 @@ func (c *preparedQueryCache) ensureCompilerWatcher(rt *runtime.Runtime) {
 	// Discard everything when the compiler rotates. We don't try to be
 	// precise — bundle reloads are rare relative to Is() rate.
 	pm.RegisterCompilerTrigger(func(_ storage.Transaction) {
+		c.roots.Store(nil)
+
 		c.entries.Range(func(k string, _ *rego.PreparedEvalQuery) bool {
 			c.entries.Clear()
 			return true

@@ -197,6 +197,7 @@ data:
 
     opa:
       instance_id: "-"
+      policy_root: {{ .Values.policyRoot | default "" | quote }}
       graceful_shutdown_period_seconds: 2
       local_bundles:
         paths: []

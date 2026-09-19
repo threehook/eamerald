@@ -232,22 +232,25 @@ func (s *AccessServer) input(
 	return input, user, nil
 }
 
-// policy returns the runtime together with the package root its bundle is
-// loaded under. AuthZEN has no policy selector - a PDP serves one policy -
-// so the action is resolved against the root of whatever bundle is loaded.
+// policy returns the runtime together with the policy this instance serves.
+//
+// AuthZEN has no policy selector, because a PDP evaluates one policy, so an
+// instance whose bundle carries several decision packages is not a single
+// PDP and says so rather than guessing which one the caller meant.
 func (s *AccessServer) policy(ctx context.Context) (*runtime.Runtime, string, error) {
 	rt, err := s.authz.getRuntime(ctx)
 	if err != nil {
 		return nil, "", err
 	}
 
-	policyRoot, err := rt.GetPolicyRoot(ctx)
+	roots, err := s.authz.preparedQueries.policyRoots(ctx, rt)
 	if err != nil {
-		return nil, "", aerr.ErrBadQuery.Err(err).Msg("failed to resolve the loaded policy root")
+		return nil, "", aerr.ErrBadRuntime.Err(err).Msg("failed to list the loaded policies")
 	}
 
-	if policyRoot == "" {
-		return nil, "", aerr.ErrBadQuery.Msg("no policy loaded")
+	policyRoot, err := rt.SelectPolicyRoot(roots)
+	if err != nil {
+		return nil, "", aerr.ErrBadRuntime.Err(err).Msg("no single policy to evaluate")
 	}
 
 	return rt, policyRoot, nil

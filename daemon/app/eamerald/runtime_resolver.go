@@ -93,6 +93,8 @@ func NewRuntimeResolver(
 		return nil, cleanup, aerr.ErrBadRuntime.Err(err)
 	}
 
+	logPDPPolicy(ctx, logger, rt)
+
 	return &RuntimeResolver{
 		runtime: rt,
 	}, cleanup, err
@@ -100,4 +102,20 @@ func NewRuntimeResolver(
 
 func (r *RuntimeResolver) GetRuntime(ctx context.Context) (*runtime.Runtime, error) {
 	return r.runtime, nil
+}
+
+// logPDPPolicy reports which policy this instance serves over the AuthZEN
+// Access API, at startup rather than at the first decision.
+//
+// It is a warning, not a startup failure: Is() and Query() take a policy path
+// per request and keep working against a multi-policy bundle. Only the Access
+// API needs a single policy, and only it fails.
+func logPDPPolicy(ctx context.Context, logger *zerolog.Logger, rt *runtime.Runtime) {
+	policyRoot, err := rt.PDPPolicyRoot(ctx)
+	if err != nil {
+		logger.Warn().Err(err).Msg("authzen access api unavailable")
+		return
+	}
+
+	logger.Info().Str("policy", policyRoot).Msg("authzen access api serving policy")
 }

@@ -218,6 +218,8 @@ func setCheckType(ctx context.Context, checkType CheckType, reqVersion int, runn
 		result = checkDecisionV2(ctx, runner.azClient, msg.GetFields()[CheckTypeMapStr[checkType]])
 	case checkType == Evaluation:
 		result = evaluationV1(ctx, runner.dsClient, msg.GetFields()[CheckTypeMapStr[checkType]])
+	case checkType == AuthorizerEvaluation:
+		result = authorizerEvaluationV1(ctx, runner.azClient, msg.GetFields()[CheckTypeMapStr[checkType]])
 	}
 
 	return result
@@ -329,6 +331,41 @@ func evaluationV1(ctx context.Context, c *dsc.Client, msg *structpb.Value) *Chec
 			Outcome:  false,
 			Duration: 0,
 			Err:      ErrSkippedDirectoryAssertion,
+			Str:      skipped,
+		}
+	}
+
+	var req dsa.EvaluationRequest
+	if err := UnmarshalReq(msg, &req); err != nil {
+		return &CheckResult{Err: err}
+	}
+
+	start := time.Now()
+
+	resp, err := c.Access.Evaluation(ctx, &req)
+
+	duration := time.Since(start)
+
+	return &CheckResult{
+		Outcome:  resp.GetDecision(),
+		Duration: duration,
+		Err:      err,
+		Str:      checkEvaluationStringV1(&req),
+	}
+}
+
+// authorizerEvaluationV1 asks the same AuthZEN Access Evaluation question as
+// evaluationV1, but of the authorizer's policy-engine-backed Access API
+// (daemon/authorizer/impl/access.go) rather than the directory's
+// graph-backed one - so it exercises the Rego decision itself, action.name
+// naming the rule under the loaded policy's root, not a directory relation
+// or permission.
+func authorizerEvaluationV1(ctx context.Context, c *azc.Client, msg *structpb.Value) *CheckResult {
+	if c == nil {
+		return &CheckResult{
+			Outcome:  false,
+			Duration: 0,
+			Err:      ErrSkippedAuthorizerAssertion,
 			Str:      skipped,
 		}
 	}

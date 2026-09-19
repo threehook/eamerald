@@ -15,13 +15,25 @@ import (
 )
 
 type Config struct {
-	LocalBundles                  LocalBundlesConfig `json:"local_bundles"`
-	InstanceID                    string             `json:"instance_id"`
-	PluginsErrorLimit             int                `json:"plugins_error_limit"`
-	GracefulShutdownPeriodSeconds int                `json:"graceful_shutdown_period_seconds"`
-	MaxPluginWaitTimeSeconds      int                `json:"max_plugin_wait_time_seconds"`
-	Flags                         Flags              `json:"flags"`
-	Config                        OPAConfig          `json:"config"`
+	LocalBundles LocalBundlesConfig `json:"local_bundles"`
+	InstanceID   string             `json:"instance_id"`
+
+	// PolicyRoot names the package root of the single policy this instance
+	// serves as an AuthZEN policy decision point, e.g. "authz" for a bundle
+	// whose decisions live in `package authz`.
+	//
+	// It only needs setting when the loaded bundle carries more than one
+	// package root - a bundle with library packages alongside the decision
+	// package, typically. With one root there is nothing to disambiguate.
+	// It does not restrict Is() or Query(), which take a policy path per
+	// request.
+	PolicyRoot string `json:"policy_root"`
+
+	PluginsErrorLimit             int       `json:"plugins_error_limit"`
+	GracefulShutdownPeriodSeconds int       `json:"graceful_shutdown_period_seconds"`
+	MaxPluginWaitTimeSeconds      int       `json:"max_plugin_wait_time_seconds"`
+	Flags                         Flags     `json:"flags"`
+	Config                        OPAConfig `json:"config"`
 }
 
 type Flags struct {
