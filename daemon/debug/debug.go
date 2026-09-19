@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-	"github.com/threehook/eamerald/daemon/x"
+	"github.com/threehook/eamerald/daemon/defaults"
 )
 
 type Config struct {
@@ -47,16 +47,16 @@ func NewServer(cfg *Config, log *zerolog.Logger) *Server {
 
 	debugLogger := log.With().Str("component", "debug").Logger()
 
-	runtime.SetMutexProfileFraction(x.MutexProfileFractionRate)
+	runtime.SetMutexProfileFraction(defaults.MutexProfileFractionRate)
 	debugLogger.Info().Int("fraction", runtime.SetMutexProfileFraction(-1)).Msg("mutex profiler")
 
 	srv := &http.Server{
 		Addr:              cfg.ListenAddress,
 		Handler:           pprofServeMux,
-		ReadTimeout:       x.ReadTimeout,
-		ReadHeaderTimeout: x.ReadHeaderTimeout,
-		WriteTimeout:      x.WriteTimeout,
-		IdleTimeout:       x.IdleTimeout,
+		ReadTimeout:       defaults.ReadTimeout,
+		ReadHeaderTimeout: defaults.ReadHeaderTimeout,
+		WriteTimeout:      defaults.WriteTimeout,
+		IdleTimeout:       defaults.IdleTimeout,
 	}
 
 	return &Server{

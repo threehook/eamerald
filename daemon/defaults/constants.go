@@ -1,7 +1,5 @@
-package x
+package defaults
 
 const (
-	AppName        string = "mrldd"
-	AppDescription string = "Mrld Service"
-	AppVersionTag  string = ""
+	AppName string = "mrldd"
 )

@@ -5,8 +5,8 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
+	"github.com/threehook/eamerald/daemon/defaults"
 	"github.com/threehook/eamerald/daemon/version"
-	"github.com/threehook/eamerald/daemon/x"
 )
 
 var rootCmd = &cobra.Command{
@@ -19,7 +19,7 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print version and exit",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("%s %s\n", x.AppName, version.GetInfo().String())
+		fmt.Printf("%s %s\n", defaults.AppName, version.GetInfo().String())
 	},
 }
 
