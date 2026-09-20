@@ -71,8 +71,10 @@ $ go install github.com/threehook/eamerald/cli@latest
 
 ```console
 $ make build
-$ ./dist/eamerald_<os>_<arch>/eamerald
+$ ./dist/mrld_<os>_<arch>/mrld
 ```
+
+`mrld` is the compiled binary name of the Eamerald CLI (built from `cli/` in this repo).
 
 `make build` compiles for your host platform by default. To target a different platform, set `GOOS`/`GOARCH`, e.g. `GOOS=linux GOARCH=amd64 make build`. The exact output path is listed in the `building binary=...` build log line, or in `dist/artifacts.json`.
 
@@ -93,7 +95,7 @@ These instructions help you get Eamerald up and running as the authorizer for a 
 The Eamerald authorizer is packaged as a Docker container. You can get the latest image using the following command:
 
 ```console
-$ eamerald install
+$ mrld install
 ```
 
 **NOTE:** If you get the following errors/warnings from Eamerald commands:
@@ -112,7 +114,7 @@ Eamerald has a set of pre-built templates that contain three types of artifacts:
 You can use the CLI to install the todo template:
 
 ```console
-$ eamerald templates install todo
+$ mrld templates install todo
 ```
 
 #### Artifacts
@@ -171,10 +173,10 @@ For a deeper overview of the `cfg/config.yaml` file, see [Eamerald configuration
 
 Besides laying down the artifacts mentioned, installing the Todo template did the following things:
 
-* started Eamerald in daemon (background) mode (see `eamerald start --help`).
-* set the manifest found in `model/manifest.yaml` (see `eamerald directory set manifest --help`).
-* imported the objects and relations found in `data/` (see `eamerald directory import --help`).
-* opened a browser window to the Eamerald [console](https://localhost:8080/ui/directory) (see `eamerald console --help`).
+* started Eamerald in daemon (background) mode (see `mrld start --help`).
+* set the manifest found in `model/manifest.yaml` (see `mrld directory set manifest --help`).
+* imported the objects and relations found in `data/` (see `mrld directory import --help`).
+* opened a browser window to the Eamerald [console](https://localhost:8080/ui/directory) (see `mrld console --help`).
 
 Feel free to play around with the Eamerald console! Or follow the next few steps to interact with the Eamerald policy and authorization endpoints.
 
@@ -205,9 +207,9 @@ To start an interactive session with the Eamerald endpoints over gRPC, see the [
 ## Command line options
 
 ```console
-$ eamerald --help
+$ mrld --help
 
-Usage: eamerald <command> [flags]
+Usage: mrld <command> [flags]
 
 Eamerald CLI
 
@@ -235,7 +237,7 @@ Flags:
       --no-color     disable colored terminal output ($EAMERALD_NO_COLOR)
   -v, --verbosity    log level
 
-Run "eamerald <command> --help" for more information on a command.
+Run "mrld <command> --help" for more information on a command.
 ```
 
 ## gRPC Endpoints
