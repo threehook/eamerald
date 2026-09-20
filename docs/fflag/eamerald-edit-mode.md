@@ -12,7 +12,7 @@ we have added the ability to construct these requests using a text editor.
 
 **NOTE: to enable the new capabilities, one must set the feature flag `EAMERALD_FFLAG` environment variable to the required value.**
 
-See [eamerald feature flags](./topaz-fflag.md)
+See [eamerald feature flags](./eamerald-fflag.md)
 
 ## Edit Mode
 
@@ -29,11 +29,11 @@ eamerald directory check --edit --insecure
 ```
 Opening edit:
 
-![prompter](topaz-edit-open.png)
+![prompter](eamerald-edit-open.png)
 
 Finished edit:
 
-![prompter](topaz-edit-finish.png)
+![prompter](eamerald-edit-finish.png)
 
 Result:
 
