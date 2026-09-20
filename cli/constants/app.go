@@ -1,7 +1,7 @@
 package constants
 
 const (
-	AppName        string = "eamerald"
+	AppName        string = "mrld"
 	AppDescription string = "Eamerald CLI"
 	AppVersionTag  string = ""
 )
