@@ -294,9 +294,9 @@ api:
 
 opa:
   instance_id: "-"
-  # package root of the policy this instance serves over the AuthZEN Access
-  # API. Only needed when the bundle carries more than one package root; a
-  # policy decision point serves one policy, so run one instance per policy.
+  # package root the AuthZEN Access API falls back to when a request selects
+  # no policy of its own. Only needed when the bundle carries more than one
+  # package root.
   policy_root: ""
   graceful_shutdown_period_seconds: 2
   # max_plugin_wait_time_seconds: 30 set as default

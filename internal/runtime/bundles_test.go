@@ -12,9 +12,60 @@ const (
 	rootLaadpalen = "laadpalen"
 )
 
-// TestSelectPolicyRoot covers which policy an instance serves as an AuthZEN
-// policy decision point. AuthZEN puts no policy selector in an access
-// evaluation request, so this has to be decided by the deployment - and a
+// TestPolicyRoots covers the reduction the fallback selection runs on: the
+// roots are what opa.policy_root is matched against, so a bundle of
+// per-doelbinding packages has to collapse to the one root they share.
+func TestPolicyRoots(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name     string
+		packages []string
+		want     []string
+	}{
+		{
+			name:     "a top-level package is its own root",
+			packages: []string{rootAuthz},
+			want:     []string{rootAuthz},
+		},
+		{
+			name:     "packages sharing a root collapse onto it",
+			packages: []string{"doelbinding." + rootLaadpalen, "doelbinding.subsidies"},
+			want:     []string{"doelbinding"},
+		},
+		{
+			name:     "distinct roots are all kept, in input order",
+			packages: []string{rootAuthz, "doelbinding.subsidies", "lib.postcode"},
+			want:     []string{rootAuthz, "doelbinding", "lib"},
+		},
+		{
+			name:     "nothing loaded yields no roots",
+			packages: []string{},
+			want:     []string{},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := PolicyRoots(tc.packages)
+
+			if len(got) != len(tc.want) {
+				t.Fatalf("PolicyRoots(%v) = %v, want %v", tc.packages, got, tc.want)
+			}
+
+			for i, want := range tc.want {
+				if got[i] != want {
+					t.Errorf("PolicyRoots(%v)[%d] = %q, want %q", tc.packages, i, got[i], want)
+				}
+			}
+		})
+	}
+}
+
+// TestSelectPolicyRoot covers which policy an instance serves when a request
+// selects none of its own. That has to be decided by the deployment - and a
 // bundle with several package roots must not resolve to whichever one the
 // policy store happens to list first.
 func TestSelectPolicyRoot(t *testing.T) {

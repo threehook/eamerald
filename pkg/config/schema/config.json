@@ -509,7 +509,7 @@
                     "type": "string"
                 },
                 "policy_root": {
-                    "description": "Package root of the policy this instance serves over the AuthZEN Access API. Only needed when the loaded bundle carries more than one package root; a policy decision point serves one policy, so run one instance per policy.",
+                    "description": "Package root the AuthZEN Access API falls back to when a request selects no policy of its own, through a \"doelbinding\" entry in its context. Only needed when the loaded bundle carries more than one package root.",
                     "type": "string"
                 },
                 "graceful_shutdown_period_seconds": {

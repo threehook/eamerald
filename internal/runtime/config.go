@@ -18,8 +18,8 @@ type Config struct {
 	LocalBundles LocalBundlesConfig `json:"local_bundles"`
 	InstanceID   string             `json:"instance_id"`
 
-	// PolicyRoot names the package root of the single policy this instance
-	// serves as an AuthZEN policy decision point, e.g. "authz" for a bundle
+	// PolicyRoot names the package root the AuthZEN Access API falls back to
+	// when a request selects no policy of its own, e.g. "authz" for a bundle
 	// whose decisions live in `package authz`.
 	//
 	// It only needs setting when the loaded bundle carries more than one

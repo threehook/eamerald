@@ -112,13 +112,13 @@ adlDecisionLogger:
   #     deployment.environment: production
   resource: {}
 
-# Package root of the policy this release serves over the AuthZEN Access API
-# (POST /access/v1/evaluation), e.g. "authz" for decisions in `package authz`.
+# Package root the AuthZEN Access API (POST /access/v1/evaluation) falls back
+# to, e.g. "authz" for decisions in `package authz`.
 #
-# A policy decision point evaluates one policy, so an access evaluation request
-# carries no policy selector. Leave this empty when the bundle has a single
-# package root - it is then unambiguous. Set it when the bundle also carries
-# library packages, or install this chart once per policy to run one PDP each.
+# Only used for requests that select no policy themselves; a request naming
+# `"doelbinding": "x"` in its context is served by `package doelbinding.x`.
+# Leave this empty when the bundle has a single package root - it is then
+# unambiguous. Set it when the bundle also carries library packages.
 policyRoot: ""
 
 # git policy source plugin: tracks a policy bundle directly from a git repo.

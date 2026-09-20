@@ -43,28 +43,35 @@ The Access API has two implementations, on separate ports:
   a Rego rule answers "may this subject do this?" and offers no way to
   enumerate the subjects, resources or actions it would admit.
 
-### One policy per PDP
+### Selecting a policy
 
-An access evaluation request carries no policy selector, because AuthZEN
-assumes a policy decision point evaluates one policy. So does this
-implementation: the deployment decides which policy an instance serves, and
-serving several means running several instances — one PDP each, as OpenFTV
-does with one PDP process per bundle.
+One instance serves as many policies as its bundle carries. AuthZEN has no
+policy field, so a request selects one through the context:
 
-`opa.policy_root` names that policy. It only needs setting when the loaded
-bundle carries more than one package root, which is typically a decision
-package alongside library packages:
+```json
+{"context": {"doelbinding": "laadpalen"}}
+```
+
+which evaluates `data.doelbinding.laadpalen.<action>`. Selectable policies
+live under the `doelbinding` prefix and nowhere else, so a request cannot
+reach a library package by naming it, and an unknown doelbinding is an error
+rather than a policy chosen on the caller's behalf. This follows OpenFTV,
+whose OPA PDP routes each request to `data.doelbinding.<x>` the same way.
+
+A request that selects nothing falls back to `opa.policy_root`:
 
 ```yaml
 opa:
   policy_root: authz
 ```
 
-With a single root there is nothing to disambiguate and it can stay empty.
-With several roots and no setting, the Access API refuses the request rather
-than binding to whichever package the policy store happened to list first —
-that choice is not stable across restarts, and an authorization endpoint that
-silently changes which policy it evaluates is worse than one that errors.
+which only needs setting when the bundle carries more than one package root,
+typically a decision package alongside library packages. With a single root
+there is nothing to disambiguate and it can stay empty. With several roots
+and no setting, an unselective request is refused rather than bound to
+whichever package the policy store happened to list first — that order is not
+stable across restarts, and an authorization endpoint that silently changes
+which policy it evaluates is worse than one that errors.
 
 The Access API is the authorizer's only decision-making endpoint, so every
 decision is in scope for ADL by construction.
@@ -150,7 +157,7 @@ entries and the trace IDs queryable as structured metadata:
 | `timestamp` | Milliseconds since the Unix epoch, UTC. |
 | `status` | `Ok` when the PDP reached a decision. A denial is still `Ok`: denial is a valid outcome, and `Error` is reserved for the PDP failing to evaluate at all. |
 | `attributes` | Always `{}` — Level 1 carries no source references. |
-| `resource` | The configured `resource` map, plus an `instance_id` identifying the PDP that decided (the host/pod name, or a random id). The spec requires this whenever records are aggregated outside the producing organisation, and with one PDP per policy it is what keeps their records — and those of replicas of one PDP — distinguishable. Set `instance_id` in config to override it. |
+| `resource` | The configured `resource` map, plus an `instance_id` identifying the PDP that decided (the host/pod name, or a random id). The spec requires this whenever records are aggregated outside the producing organisation, and it is what keeps the records of replicas, and of separately deployed PDPs, distinguishable. Set `instance_id` in config to override it. |
 | `body["adl.core.request"]` | The AuthZEN request. Present for both `Ok` and `Error` records, showing what was attempted. |
 | `body["adl.core.response"]` | The AuthZEN response. Present only when `status` is `Ok` — omitted for `Error`, since no decision was reached. |
 
@@ -162,10 +169,9 @@ adjustments:
 - **Subject** is replaced by the directory user the identity resolved to, not
   the caller's own properties: `subject.properties.jwt` is how a caller hands
   the PDP a bearer token, and that must never reach the log.
-- **Context** gains `policy_path`, holding the package root the action was
-  resolved against - AuthZEN has no field for it, since the API assumes one
-  PDP evaluates one policy, but without it a record can't be tied back to the
-  rule that decided.
+- **Context** gains `policy_path`, holding the package the action was
+  resolved against - the request names a doelbinding, not a package, and
+  without it a record can't be tied back to the rule that decided.
 
 ## Known deviations
 

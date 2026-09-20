@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"context"
 	"maps"
+	"slices"
 
 	"github.com/aserto-dev/go-authorizer/aserto/authorizer/v2/api"
 	"github.com/aserto-dev/go-authorizer/pkg/aerr"
@@ -33,6 +34,14 @@ const (
 // IDENTITY_TYPE_JWT does on the Topaz APIs.
 const subjectJWTProperty = "jwt"
 
+// doelbindingKey is the request-context entry through which a request picks
+// the policy to evaluate, and doelbindingPrefix is the package namespace
+// those policies live in.
+const (
+	doelbindingKey    = "doelbinding"
+	doelbindingPrefix = "doelbinding"
+)
+
 // AccessServer serves the AuthZEN Access API from the policy engine.
 //
 // The directory serves the same API from its relationship graph. This
@@ -41,10 +50,11 @@ const subjectJWTProperty = "jwt"
 // the generic Query() endpoint whose arbitrary result shape has no AuthZEN
 // equivalent and therefore cannot be recorded as a conformant decision.
 //
-// The action names the rule. With a bundle rooted at `package authz`, an
-// action.name of "request_laadpaal" evaluates data.authz.request_laadpaal.
-// That rule returns either the AuthZEN decision object verbatim -
-// {"decision": bool, "context": {...}} - or a bare boolean.
+// The action names the rule, and the request's doelbinding names the package
+// it lives in - see policyPath. With a bundle rooted at `package authz` and
+// no doelbinding, an action.name of "request_laadpaal" evaluates
+// data.authz.request_laadpaal. That rule returns either the AuthZEN decision
+// object verbatim - {"decision": bool, "context": {...}} - or a bare boolean.
 type AccessServer struct {
 	authz *AuthorizerServer
 }
@@ -104,12 +114,12 @@ func (s *AccessServer) ActionSearch(
 func (s *AccessServer) evaluation(
 	ctx context.Context, req *dsa.EvaluationRequest,
 ) (*dsa.EvaluationResponse, evalMeta, error) {
-	rt, policyRoot, err := s.policy(ctx)
+	rt, err := s.authz.getRuntime(ctx)
 	if err != nil {
 		return &dsa.EvaluationResponse{}, evalMeta{identity: identityContext(req.GetSubject())}, err
 	}
 
-	return s.evaluate(ctx, rt, policyRoot, req)
+	return s.evaluate(ctx, rt, req)
 }
 
 func (s *AccessServer) evaluations(
@@ -121,19 +131,23 @@ func (s *AccessServer) evaluations(
 		return &dsa.EvaluationsResponse{}, meta, aerr.ErrInvalidArgument.Msg("evaluations not set")
 	}
 
-	rt, policyRoot, err := s.policy(ctx)
+	rt, err := s.authz.getRuntime(ctx)
 	if err != nil {
 		return &dsa.EvaluationsResponse{}, meta, err
 	}
 
-	meta.policyRoot = policyRoot
+	// A sub-request bringing no context of its own is evaluated against the
+	// batch's policy, so that is the one the batch record names. When the
+	// batch selects none - because its sub-requests each select their own -
+	// the record names no policy rather than one of theirs.
+	meta.policyPath, _ = s.policyPath(ctx, rt, req.GetContext())
 
 	resp := &dsa.EvaluationsResponse{
 		Evaluations: make([]*dsa.EvaluationResponse, 0, len(req.GetEvaluations())),
 	}
 
 	for _, evaluation := range req.GetEvaluations() {
-		outcome, outcomeMeta, err := s.evaluate(ctx, rt, policyRoot, defaulted(req, evaluation))
+		outcome, outcomeMeta, err := s.evaluate(ctx, rt, defaulted(req, evaluation))
 		if err != nil {
 			return resp, meta, err
 		}
@@ -151,14 +165,21 @@ func (s *AccessServer) evaluations(
 }
 
 func (s *AccessServer) evaluate(
-	ctx context.Context, rt *runtime.Runtime, policyRoot string, req *dsa.EvaluationRequest,
+	ctx context.Context, rt *runtime.Runtime, req *dsa.EvaluationRequest,
 ) (*dsa.EvaluationResponse, evalMeta, error) {
-	meta := evalMeta{policyRoot: policyRoot, identity: identityContext(req.GetSubject())}
+	meta := evalMeta{identity: identityContext(req.GetSubject())}
 
 	action := req.GetAction().GetName()
 	if action == "" {
 		return &dsa.EvaluationResponse{}, meta, aerr.ErrInvalidArgument.Msg("action name not set")
 	}
+
+	path, err := s.policyPath(ctx, rt, req.GetContext())
+	if err != nil {
+		return &dsa.EvaluationResponse{}, meta, err
+	}
+
+	meta.policyPath = path
 
 	input, user, err := s.input(ctx, req, meta.identity)
 	if err != nil {
@@ -170,7 +191,7 @@ func (s *AccessServer) evaluate(
 	s.authz.logger.Debug().Str("api", "evaluation").Str("action", action).
 		Interface("input", input).Msg("evaluation")
 
-	query, err := s.authz.preparedQueries.decisionQuery(ctx, rt, policyRoot, []string{action})
+	query, err := s.authz.preparedQueries.decisionQuery(ctx, rt, path, []string{action})
 	if err != nil {
 		return &dsa.EvaluationResponse{}, meta, err
 	}
@@ -178,12 +199,12 @@ func (s *AccessServer) evaluate(
 	results, err := query.Eval(ctx, rego.EvalInput(input))
 	if err != nil {
 		return &dsa.EvaluationResponse{}, meta,
-			aerr.ErrBadQuery.Err(err).Msgf("query evaluation failed: path=%s action=%s", policyRoot, action)
+			aerr.ErrBadQuery.Err(err).Msgf("query evaluation failed: path=%s action=%s", path, action)
 	}
 
 	if len(results) == 0 {
 		return &dsa.EvaluationResponse{}, meta,
-			aerr.ErrBadQuery.Msgf("undefined results: path=%s action=%s", policyRoot, action)
+			aerr.ErrBadQuery.Msgf("undefined results: path=%s action=%s", path, action)
 	}
 
 	binding, ok := results[0].Bindings[bindingName(0)]
@@ -232,35 +253,67 @@ func (s *AccessServer) input(
 	return input, user, nil
 }
 
-// policy returns the runtime together with the policy this instance serves.
+// policyPath returns the package to evaluate a request against.
 //
-// AuthZEN has no policy selector, because a PDP evaluates one policy, so an
-// instance whose bundle carries several decision packages is not a single
-// PDP and says so rather than guessing which one the caller meant.
-func (s *AccessServer) policy(ctx context.Context) (*runtime.Runtime, string, error) {
-	rt, err := s.authz.getRuntime(ctx)
+// AuthZEN has no policy field, so a request selects its policy through the
+// context: `"doelbinding": "laadpalen"` evaluates data.doelbinding.laadpalen.
+// Selectable policies live under that one prefix, so that a request cannot
+// reach a library package by naming it, and an unknown doelbinding is an
+// error rather than a policy chosen on the caller's behalf.
+//
+// A request that selects nothing gets the policy the instance was configured
+// to serve, which is the whole story for a single-policy deployment.
+func (s *AccessServer) policyPath(
+	ctx context.Context, rt *runtime.Runtime, reqContext *structpb.Struct,
+) (string, error) {
+	packages, err := s.authz.preparedQueries.policyPackages(ctx, rt)
 	if err != nil {
-		return nil, "", err
+		return "", aerr.ErrBadRuntime.Err(err).Msg("failed to list the loaded policies")
 	}
 
-	roots, err := s.authz.preparedQueries.policyRoots(ctx, rt)
-	if err != nil {
-		return nil, "", aerr.ErrBadRuntime.Err(err).Msg("failed to list the loaded policies")
+	selected := stringProperty(reqContext, doelbindingKey)
+	if selected == "" {
+		policyRoot, err := rt.SelectPolicyRoot(defaultPolicyRoots(packages))
+		if err != nil {
+			return "", aerr.ErrBadRuntime.Err(err).Msg("no policy to evaluate")
+		}
+
+		return policyRoot, nil
 	}
 
-	policyRoot, err := rt.SelectPolicyRoot(roots)
-	if err != nil {
-		return nil, "", aerr.ErrBadRuntime.Err(err).Msg("no single policy to evaluate")
+	return doelbindingPolicy(packages, selected)
+}
+
+// defaultPolicyRoots returns the roots a request that selects nothing can be
+// served from. The doelbinding namespace is not among them: those packages
+// are reachable only by naming one, so falling back into the namespace would
+// answer with a policy the request did not ask for - and with the bare
+// `doelbinding` root, which is no policy at all.
+func defaultPolicyRoots(packages []string) []string {
+	return slices.DeleteFunc(runtime.PolicyRoots(packages), func(root string) bool {
+		return root == doelbindingPrefix
+	})
+}
+
+// doelbindingPolicy maps a selected doelbinding onto the loaded package that
+// serves it. Prefixing is what contains the selection: no doelbinding can
+// name a package outside the namespace set aside for them.
+func doelbindingPolicy(packages []string, selected string) (string, error) {
+	path := doelbindingPrefix + "." + selected
+
+	if !slices.Contains(packages, path) {
+		return "", aerr.ErrInvalidArgument.Msgf(
+			"doelbinding %q selects no loaded policy; expected a bundle carrying `package %s`", selected, path)
 	}
 
-	return rt, policyRoot, nil
+	return path, nil
 }
 
 // evalMeta carries what the decision log needs but an AuthZEN request does
 // not hold: which policy the decision came from, and what the subject
 // actually resolved to.
 type evalMeta struct {
-	policyRoot string
+	policyPath string
 	identity   *api.IdentityContext
 	user       *dsc.Object
 }
@@ -274,7 +327,7 @@ func (m evalMeta) request(req *dsa.EvaluationRequest) *dsa.EvaluationRequest {
 		Subject:  adlSubject(m.identity, m.user),
 		Action:   req.GetAction(),
 		Resource: req.GetResource(),
-		Context:  withPolicyPath(req.GetContext(), m.policyRoot),
+		Context:  withPolicyPath(req.GetContext(), m.policyPath),
 	}
 }
 
@@ -294,7 +347,7 @@ func (m evalMeta) requests(req *dsa.EvaluationsRequest) *dsa.EvaluationsRequest 
 		Subject:     adlSubject(m.identity, m.user),
 		Action:      req.GetAction(),
 		Resource:    req.GetResource(),
-		Context:     withPolicyPath(req.GetContext(), m.policyRoot),
+		Context:     withPolicyPath(req.GetContext(), m.policyPath),
 		Evaluations: evaluations,
 	}
 }
@@ -380,17 +433,17 @@ func flatten(properties *structpb.Struct, fields map[string]string) map[string]a
 	return out
 }
 
-// withPolicyPath records which policy produced the decision. AuthZEN assumes
-// one PDP serves one policy and so has no field for it; without it a log
-// record cannot be tied back to the bundle that decided.
-func withPolicyPath(base *structpb.Struct, policyRoot string) *structpb.Struct {
-	if policyRoot == "" {
+// withPolicyPath records which policy produced the decision. AuthZEN has no
+// field for it - the request names a doelbinding, not a package - and
+// without it a log record cannot be tied back to the rule that decided.
+func withPolicyPath(base *structpb.Struct, policyPath string) *structpb.Struct {
+	if policyPath == "" {
 		return base
 	}
 
 	fields := make(map[string]*structpb.Value, len(base.GetFields())+1)
 	maps.Copy(fields, base.GetFields())
-	fields[policyPathKey] = structpb.NewStringValue(policyRoot)
+	fields[policyPathKey] = structpb.NewStringValue(policyPath)
 
 	return &structpb.Struct{Fields: fields}
 }

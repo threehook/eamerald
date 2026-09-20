@@ -27,6 +27,7 @@ export default function App() {
         type: "adres",
         properties: { postcode: postcode.trim(), huisnummer: Number(huisnummer) },
       },
+      context: { doelbinding: "laadpalen" },
     };
 
     setRawRequest(`POST ${url}/access/v1/evaluation\n${JSON.stringify(body, null, 2)}`);

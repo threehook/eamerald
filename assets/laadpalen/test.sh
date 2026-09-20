@@ -3,8 +3,9 @@
 # request_laadpaal decision and reports pass/fail per case.
 #
 # The decision is requested over the AuthZEN Access Evaluation API, which the
-# authorizer serves from the policy engine: the action names the rule, so
-# `request_laadpaal` evaluates data.authz.request_laadpaal.
+# authorizer serves from the policy engine: the action names the rule, and
+# the request's doelbinding names the package it lives in, so this evaluates
+# data.doelbinding.laadpalen.request_laadpaal.
 #
 # Usage: assets/laadpalen/test.sh [authorizer-url]
 # (defaults to https://localhost:8383)
@@ -33,7 +34,8 @@ for i in $(seq 0 $((count - 1))); do
     '{
       subject: {type: "user", id: $identity},
       action: {name: "request_laadpaal"},
-      resource: {type: "adres", properties: {postcode: $postcode, huisnummer: $huisnummer}}
+      resource: {type: "adres", properties: {postcode: $postcode, huisnummer: $huisnummer}},
+      context: {doelbinding: "laadpalen"}
     }')
 
   response=$(curl -sk -X POST "$AUTHORIZER_URL/access/v1/evaluation" \

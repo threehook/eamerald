@@ -22,6 +22,13 @@ const (
 	testJWT          = "eyJhbGciOi.not-a-real-one"
 	testPostcodeVal  = "1111BB"
 	testResourceID   = "1111BB-2"
+
+	// A bundle serving one doelbinding alongside a library package.
+	testDoelbinding     = "laadpalen"
+	testDoelbindingPkg  = doelbindingPrefix + "." + testDoelbinding
+	testLibraryPkg      = "lib.postcode"
+	testLibraryPkgRoot  = "lib"
+	testOtherDoelbinder = doelbindingPrefix + ".subsidies"
 )
 
 func mustStruct(t *testing.T, fields map[string]any) *structpb.Struct {
@@ -305,6 +312,104 @@ func TestWithPolicyPath(t *testing.T) {
 	})
 }
 
+// TestDoelbindingPolicy covers how a request picks its policy, and - the
+// reason the packages are prefixed at all - what it cannot pick: a library
+// package, or the instance's own decision package, are both out of reach
+// however the doelbinding is spelled.
+func TestDoelbindingPolicy(t *testing.T) {
+	t.Parallel()
+
+	packages := []string{
+		testPolicyRoot,
+		testDoelbindingPkg,
+		testOtherDoelbinder,
+		testLibraryPkg,
+	}
+
+	cases := []struct {
+		name     string
+		selected string
+		want     string
+		wantErr  bool
+	}{
+		{
+			name:     "a doelbinding selects the package that serves it",
+			selected: testDoelbinding,
+			want:     testDoelbindingPkg,
+		},
+		{
+			name:     "an unknown doelbinding is an error, not a fallback",
+			selected: "vergunningen",
+			wantErr:  true,
+		},
+		{
+			name:     "a library package cannot be reached",
+			selected: testLibraryPkg,
+			wantErr:  true,
+		},
+		{
+			name:     "the configured decision package cannot be reached either",
+			selected: testPolicyRoot,
+			wantErr:  true,
+		},
+		{
+			name:     "no traversal out of the namespace",
+			selected: "../authz",
+			wantErr:  true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := doelbindingPolicy(packages, tc.selected)
+
+			if tc.wantErr {
+				if err == nil {
+					t.Fatalf("doelbindingPolicy(%q) = %q, want an error", tc.selected, got)
+				}
+
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("doelbindingPolicy(%q): %v", tc.selected, err)
+			}
+
+			if got != tc.want {
+				t.Errorf("doelbindingPolicy(%q) = %q, want %q", tc.selected, got, tc.want)
+			}
+		})
+	}
+}
+
+// TestDefaultPolicyRoots covers the other half of the containment: a request
+// that selects nothing must not land in the doelbinding namespace, however
+// few other packages the bundle carries.
+func TestDefaultPolicyRoots(t *testing.T) {
+	t.Parallel()
+
+	t.Run("the doelbinding namespace is never a default", func(t *testing.T) {
+		t.Parallel()
+
+		got := defaultPolicyRoots([]string{testPolicyRoot, testDoelbindingPkg, testLibraryPkg})
+		want := []string{testPolicyRoot, testLibraryPkgRoot}
+
+		if len(got) != len(want) || got[0] != want[0] || got[1] != want[1] {
+			t.Errorf("defaultPolicyRoots() = %v, want %v", got, want)
+		}
+	})
+
+	t.Run("a bundle of nothing but doelbindingen has no default", func(t *testing.T) {
+		t.Parallel()
+
+		if got := defaultPolicyRoots([]string{testDoelbindingPkg, testOtherDoelbinder}); len(got) != 0 {
+			t.Errorf("defaultPolicyRoots() = %v, want none", got)
+		}
+	})
+}
+
 // TestEvalMetaRequest is the data-minimisation guard: whatever a caller sends
 // as subject properties, the decision record carries only what the identity
 // resolved to. A bearer token passed in must never reach the log.
@@ -325,7 +430,7 @@ func TestEvalMetaRequest(t *testing.T) {
 	}
 
 	meta := evalMeta{
-		policyRoot: testPolicyRoot,
+		policyPath: testPolicyRoot,
 		identity:   identityContext(req.GetSubject()),
 		user:       &dsc.Object{Type: testSubjectType, Id: testSubjectID},
 	}

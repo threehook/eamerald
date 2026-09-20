@@ -218,10 +218,10 @@ func (r *Runtime) GetPolicyList(ctx context.Context, id string, fn PathFilterFn)
 	return policyList, nil
 }
 
-// GetPolicyRoots returns every distinct package root in the policy list,
+// GetPolicyPackages returns every distinct package path in the policy list,
 // sorted, so that the result does not depend on the store's iteration order.
-func (r *Runtime) GetPolicyRoots(ctx context.Context) ([]string, error) {
-	roots := []string{}
+func (r *Runtime) GetPolicyPackages(ctx context.Context) ([]string, error) {
+	packages := []string{}
 
 	err := storage.Txn(ctx, r.pluginsManager.Store, storage.TransactionParams{}, func(txn storage.Transaction) error {
 		policiesList, err := r.pluginsManager.Store.ListPolicies(ctx, txn)
@@ -230,26 +230,53 @@ func (r *Runtime) GetPolicyRoots(ctx context.Context) ([]string, error) {
 		}
 
 		for _, id := range policiesList {
-			root, err := r.getRootFromPolicyID(ctx, id, txn)
+			pkg, err := r.getPackageFromPolicyID(ctx, id, txn)
 			if err != nil {
 				return err
 			}
 
-			if root != "" && !slices.Contains(roots, root) {
-				roots = append(roots, root)
+			if pkg != "" && !slices.Contains(packages, pkg) {
+				packages = append(packages, pkg)
 			}
 		}
 
-		slices.Sort(roots)
+		slices.Sort(packages)
 
 		return nil
 	})
 
-	return roots, err
+	return packages, err
 }
 
-// PDPPolicyRoot returns the policy this instance serves as an AuthZEN policy
-// decision point.
+// GetPolicyRoots returns every distinct package root in the policy list,
+// sorted, so that the result does not depend on the store's iteration order.
+func (r *Runtime) GetPolicyRoots(ctx context.Context) ([]string, error) {
+	packages, err := r.GetPolicyPackages(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return PolicyRoots(packages), nil
+}
+
+// PolicyRoots reduces package paths to their distinct roots, keeping the
+// sorted order of the input.
+func PolicyRoots(packages []string) []string {
+	roots := []string{}
+
+	for _, pkg := range packages {
+		root, _, _ := strings.Cut(pkg, ".")
+
+		if root != "" && !slices.Contains(roots, root) {
+			roots = append(roots, root)
+		}
+	}
+
+	return roots
+}
+
+// PDPPolicyRoot returns the policy the AuthZEN Access API falls back to when
+// a request selects none of its own.
 func (r *Runtime) PDPPolicyRoot(ctx context.Context) (string, error) {
 	roots, err := r.GetPolicyRoots(ctx)
 	if err != nil {
@@ -260,13 +287,11 @@ func (r *Runtime) PDPPolicyRoot(ctx context.Context) (string, error) {
 }
 
 // SelectPolicyRoot picks, out of the loaded package roots, the one this
-// instance serves as a policy decision point.
+// instance serves when a request selects no policy of its own.
 //
-// AuthZEN assumes a PDP evaluates one policy, so there is no policy selector
-// in an access evaluation request: the deployment decides. Picking a root
-// implicitly when several are loaded would make the decision depend on the
-// store's iteration order, so that case is an error the operator resolves by
-// setting opa.policy_root, or by running one instance per policy.
+// Picking a root implicitly when several are loaded would make the decision
+// depend on the store's iteration order, so that case is an error the
+// operator resolves by setting opa.policy_root.
 func (r *Runtime) SelectPolicyRoot(roots []string) (string, error) {
 	configured := r.Config.PolicyRoot
 
@@ -287,8 +312,8 @@ func (r *Runtime) SelectPolicyRoot(roots []string) (string, error) {
 
 	default:
 		return "", errors.Errorf(
-			"%d policies are loaded [%s] but a policy decision point serves one:"+
-				" set opa.policy_root, or run one instance per policy",
+			"%d policies are loaded [%s] and the request selected none:"+
+				" set opa.policy_root, or select one per request",
 			len(roots), strings.Join(roots, ", "))
 	}
 }
@@ -333,6 +358,17 @@ func (r *Runtime) GetPolicyRootForPath(ctx context.Context, path string) (string
 }
 
 func (r *Runtime) getRootFromPolicyID(ctx context.Context, policyID string, txn storage.Transaction) (string, error) {
+	packageName, err := r.getPackageFromPolicyID(ctx, policyID, txn)
+	if err != nil {
+		return "", err
+	}
+
+	root, _, _ := strings.Cut(packageName, ".")
+
+	return root, nil
+}
+
+func (r *Runtime) getPackageFromPolicyID(ctx context.Context, policyID string, txn storage.Transaction) (string, error) {
 	buf, err := r.pluginsManager.Store.GetPolicy(ctx, txn, policyID)
 	if err != nil {
 		return "", errors.Wrap(err, "store.GetPolicy")
@@ -343,14 +379,7 @@ func (r *Runtime) getRootFromPolicyID(ctx context.Context, policyID string, txn 
 		return "", errors.Wrap(err, "ast.ParseModule")
 	}
 
-	packageName := strings.TrimPrefix(module.Package.Path.String(), "data.")
-
-	s := strings.Split(packageName, ".")
-	if len(s) >= 1 {
-		return s[0], nil
-	}
-
-	return "", err
+	return strings.TrimPrefix(module.Package.Path.String(), "data."), nil
 }
 
 func policyExists(ctx context.Context, r *Runtime, id string) bool {

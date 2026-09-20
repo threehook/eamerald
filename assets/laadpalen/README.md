@@ -17,10 +17,10 @@ AuthZEN-shaped decision (`{"decision": bool, "context": {"reason": string}}`).
 - `test_cases.json` / `test.sh` - a checklist of expected decisions and a
   script that checks them against a running deployment (see below)
 
-The actual policy (`request_laadpaal`, in `package authz`) lives in the
-separate `opa-policies` GitHub repo, which the chart's git policy-source
-plugin polls automatically. This directory owns the schema and the example
-data that policy runs against.
+The actual policy (`request_laadpaal`, in `package doelbinding.laadpalen`)
+lives in the separate `opa-policies` GitHub repo, which the chart's git
+policy-source plugin polls automatically. This directory owns the schema and
+the example data that policy runs against.
 
 ## How the decision is requested
 
@@ -33,14 +33,16 @@ POST https://localhost:8383/access/v1/evaluation
 {
   "subject":  {"type": "user", "id": "jerry@example.com"},
   "action":   {"name": "request_laadpaal"},
-  "resource": {"type": "adres", "properties": {"postcode": "1111BB", "huisnummer": 2}}
+  "resource": {"type": "adres", "properties": {"postcode": "1111BB", "huisnummer": 2}},
+  "context":  {"doelbinding": "laadpalen"}
 }
 ```
 
-The action names the rule, so this evaluates `data.authz.request_laadpaal`,
-and the rule's `{"decision": ..., "context": ...}` return value *is* the
-response body. Resource properties arrive flattened, which is why the policy
-reads `input.resource.postcode` and not `input.resource.properties.postcode`.
+The action names the rule, and the doelbinding names the package it lives
+in, so this evaluates `data.doelbinding.laadpalen.request_laadpaal`, and the
+rule's `{"decision": ..., "context": ...}` return value *is* the response
+body. Resource properties arrive flattened, which is why the policy reads
+`input.resource.postcode` and not `input.resource.properties.postcode`.
 
 This matters beyond tidiness: it's what every decision goes through the
 Authorization Decision Log by - see `internal/adl/adl.md`.

@@ -80,8 +80,7 @@ type ResourceContextConfig struct {
 // effectiveResource returns the producer identity to stamp on every record.
 //
 // An instance identifier is added unless the deployment named one itself.
-// AuthZEN's model is one policy per PDP, so several policies means several
-// PDPs; without this, their records - and those of replicas of one PDP - are
+// Without it the records of replicas, and of separately deployed PDPs, are
 // indistinguishable once aggregated, which is exactly what the spec requires
 // `resource` to prevent.
 func (c Config) effectiveResource() map[string]string {
