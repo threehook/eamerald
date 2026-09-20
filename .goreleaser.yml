@@ -9,7 +9,7 @@ env:
   - REPO=eamerald
   - IMAGE_ORG=threehook
   - IMAGE_REPO=eamerald
-  - DESCRIPTION="Topaz Authorization Service"
+  - DESCRIPTION="Eamerald Authorization Service"
   - LICENSE=Apache-2.0
 
 before:
