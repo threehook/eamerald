@@ -7,7 +7,7 @@ import (
 
 	azc "github.com/threehook/eamerald/cli/clients/authorizer"
 	dsc "github.com/threehook/eamerald/cli/clients/directory"
-	"github.com/threehook/eamerald/cli/x"
+	"github.com/threehook/eamerald/cli/constants"
 	"github.com/threehook/eamerald/internal/fs"
 
 	client "github.com/aserto-dev/go-aserto"
@@ -29,9 +29,9 @@ func TestDirectory(t *testing.T) {
 		Image:        tc.TestImage(),
 		ExposedPorts: tc.TestExposedPorts,
 		Env: map[string]string{
-			x.EnvEameraldCertsDir:     x.DefCertsDir,
-			x.EnvEameraldDBDir:        x.DefDBDir,
-			x.EnvEameraldDecisionsDir: x.DefDecisionsDir,
+			constants.EnvEameraldCertsDir:     constants.DefCertsDir,
+			constants.EnvEameraldDBDir:        constants.DefDBDir,
+			constants.EnvEameraldDecisionsDir: constants.DefDecisionsDir,
 		},
 		Files: []testcontainers.ContainerFile{
 			{

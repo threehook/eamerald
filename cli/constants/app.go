@@ -1,4 +1,4 @@
-package x
+package constants
 
 const (
 	AppName        string = "mrld"

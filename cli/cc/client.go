@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/threehook/eamerald/cli/x"
+	"github.com/threehook/eamerald/cli/constants"
 )
 
 const (
@@ -21,7 +21,7 @@ const (
 )
 
 func DirectorySvc() string {
-	if directorySvc := os.Getenv(x.EnvEameraldDirectorySvc); directorySvc != "" {
+	if directorySvc := os.Getenv(constants.EnvEameraldDirectorySvc); directorySvc != "" {
 		return directorySvc
 	}
 
@@ -29,7 +29,7 @@ func DirectorySvc() string {
 }
 
 func DirectoryKey() string {
-	if directoryKey := os.Getenv(x.EnvEameraldDirectoryKey); directoryKey != "" {
+	if directoryKey := os.Getenv(constants.EnvEameraldDirectoryKey); directoryKey != "" {
 		return directoryKey
 	}
 
@@ -37,7 +37,7 @@ func DirectoryKey() string {
 }
 
 func DirectoryToken() string {
-	if directoryToken := os.Getenv(x.EnvEameraldDirectoryToken); directoryToken != "" {
+	if directoryToken := os.Getenv(constants.EnvEameraldDirectoryToken); directoryToken != "" {
 		return directoryToken
 	}
 
@@ -45,7 +45,7 @@ func DirectoryToken() string {
 }
 
 func AuthorizerSvc() string {
-	if authorizerSvc := os.Getenv(x.EnvEameraldAuthorizerSvc); authorizerSvc != "" {
+	if authorizerSvc := os.Getenv(constants.EnvEameraldAuthorizerSvc); authorizerSvc != "" {
 		return authorizerSvc
 	}
 
@@ -53,7 +53,7 @@ func AuthorizerSvc() string {
 }
 
 func AuthorizerKey() string {
-	if authorizerKey := os.Getenv(x.EnvEameraldAuthorizerKey); authorizerKey != "" {
+	if authorizerKey := os.Getenv(constants.EnvEameraldAuthorizerKey); authorizerKey != "" {
 		return authorizerKey
 	}
 
@@ -61,7 +61,7 @@ func AuthorizerKey() string {
 }
 
 func AuthorizerToken() string {
-	if authorizerToken := os.Getenv(x.EnvEameraldAuthorizerToken); authorizerToken != "" {
+	if authorizerToken := os.Getenv(constants.EnvEameraldAuthorizerToken); authorizerToken != "" {
 		return authorizerToken
 	}
 
@@ -69,7 +69,7 @@ func AuthorizerToken() string {
 }
 
 func Insecure() bool {
-	if insecure := os.Getenv(x.EnvEameraldInsecure); insecure != "" {
+	if insecure := os.Getenv(constants.EnvEameraldInsecure); insecure != "" {
 		if b, err := strconv.ParseBool(insecure); err == nil {
 			return b
 		}
@@ -79,7 +79,7 @@ func Insecure() bool {
 }
 
 func Plaintext() bool {
-	if plaintext := os.Getenv(x.EnvEameraldPlaintext); plaintext != "" {
+	if plaintext := os.Getenv(constants.EnvEameraldPlaintext); plaintext != "" {
 		if b, err := strconv.ParseBool(plaintext); err == nil {
 			return b
 		}
@@ -89,7 +89,7 @@ func Plaintext() bool {
 }
 
 func Timeout() time.Duration {
-	if timeout := os.Getenv(x.EnvEameraldTimeout); timeout != "" {
+	if timeout := os.Getenv(constants.EnvEameraldTimeout); timeout != "" {
 		if dur, err := time.ParseDuration(timeout); err == nil {
 			return dur
 		}
@@ -99,7 +99,7 @@ func Timeout() time.Duration {
 }
 
 func NoCheck() bool {
-	if noCheck := os.Getenv(x.EnvEameraldNoCheck); noCheck != "" {
+	if noCheck := os.Getenv(constants.EnvEameraldNoCheck); noCheck != "" {
 		if b, err := strconv.ParseBool(noCheck); err == nil {
 			return b
 		}
@@ -109,7 +109,7 @@ func NoCheck() bool {
 }
 
 func NoColor() bool {
-	if noColor := os.Getenv(x.EnvEameraldNoColor); noColor != "" {
+	if noColor := os.Getenv(constants.EnvEameraldNoColor); noColor != "" {
 		if b, err := strconv.ParseBool(noColor); err == nil {
 			return b
 		}

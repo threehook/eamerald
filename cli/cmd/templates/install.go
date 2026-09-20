@@ -19,7 +19,7 @@ import (
 	"github.com/threehook/eamerald/cli/cmd/directory"
 	"github.com/threehook/eamerald/cli/cmd/directory/data"
 	"github.com/threehook/eamerald/cli/cmd/eamerald"
-	"github.com/threehook/eamerald/cli/x"
+	"github.com/threehook/eamerald/cli/constants"
 	"github.com/threehook/eamerald/internal/fs"
 	"github.com/threehook/eamerald/pkg/config"
 )
@@ -48,7 +48,7 @@ func (cmd *InstallTemplateCmd) Run(ctx context.Context, cfg *cc.Config) error {
 	cmd.ContainerTag = cc.ContainerVersionTag(cmd.ContainerVersion, cmd.ContainerTag)
 
 	if cmd.Legacy {
-		cmd.TemplatesURL = x.TopazTmplV32URL
+		cmd.TemplatesURL = constants.TopazTmplV32URL
 	}
 
 	tmpl, err := getTemplate(cmd.Name, cmd.TemplatesURL)

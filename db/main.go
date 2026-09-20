@@ -9,7 +9,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/threehook/eamerald/cli/cc"
-	"github.com/threehook/eamerald/cli/x"
+	"github.com/threehook/eamerald/cli/constants"
 	"github.com/threehook/eamerald/db/cmd"
 )
 
@@ -33,8 +33,8 @@ func main() {
 			NoExpandSubcommands: true,
 		}),
 		kong.Vars{
-			"directory_svc":   os.Getenv(x.EnvEameraldDirectorySvc),
-			"directory_key":   os.Getenv(x.EnvEameraldDirectoryKey),
+			"directory_svc":   os.Getenv(constants.EnvEameraldDirectorySvc),
+			"directory_key":   os.Getenv(constants.EnvEameraldDirectoryKey),
 			"directory_token": "",
 			"insecure":        strconv.FormatBool(false),
 			"plaintext":       strconv.FormatBool(false),

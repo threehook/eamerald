@@ -1,4 +1,4 @@
-package x
+package constants
 
 // Environment variable name constants
 

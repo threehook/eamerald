@@ -11,7 +11,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/spf13/viper"
 	"github.com/threehook/eamerald/cli/cc"
-	"github.com/threehook/eamerald/cli/x"
+	"github.com/threehook/eamerald/cli/constants"
 	"github.com/threehook/eamerald/daemon/service/builder"
 )
 
@@ -190,19 +190,19 @@ func (l *Loader) GetPorts() ([]string, error) {
 }
 
 func SetEnvVars(fileContents string) (string, error) {
-	if err := os.Setenv(x.EnvEameraldCfgDir, cc.GetEameraldCfgDir()); err != nil {
+	if err := os.Setenv(constants.EnvEameraldCfgDir, cc.GetEameraldCfgDir()); err != nil {
 		return "", err
 	}
 
-	if err := os.Setenv(x.EnvEameraldCertsDir, cc.GetEameraldCertsDir()); err != nil {
+	if err := os.Setenv(constants.EnvEameraldCertsDir, cc.GetEameraldCertsDir()); err != nil {
 		return "", err
 	}
 
-	if err := os.Setenv(x.EnvEameraldDBDir, cc.GetEameraldDataDir()); err != nil {
+	if err := os.Setenv(constants.EnvEameraldDBDir, cc.GetEameraldDataDir()); err != nil {
 		return "", err
 	}
 
-	if err := os.Setenv(x.EnvEameraldDecisionsDir, cc.GetEameraldDecisionsDir()); err != nil {
+	if err := os.Setenv(constants.EnvEameraldDecisionsDir, cc.GetEameraldDecisionsDir()); err != nil {
 		return "", err
 	}
 

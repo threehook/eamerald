@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/threehook/eamerald/cli/x"
+	"github.com/threehook/eamerald/cli/constants"
 	"github.com/threehook/eamerald/internal/fs"
 	"github.com/threehook/eamerald/internal/xdg"
 )
@@ -13,7 +13,7 @@ import (
 
 // GetEameraldDir returns the eamerald root directory ($HOME/.config/eamerald).
 func GetEameraldDir() string {
-	if eameraldDir := os.Getenv(x.EnvEameraldDir); eameraldDir != "" {
+	if eameraldDir := os.Getenv(constants.EnvEameraldDir); eameraldDir != "" {
 		return eameraldDir
 	}
 
@@ -22,7 +22,7 @@ func GetEameraldDir() string {
 
 // GetEameraldCfgDir returns the eamerald config directory ($XDG_CONFIG_HOME/eamerald/cfg).
 func GetEameraldCfgDir() string {
-	if cfgDir := os.Getenv(x.EnvEameraldCfgDir); cfgDir != "" {
+	if cfgDir := os.Getenv(constants.EnvEameraldCfgDir); cfgDir != "" {
 		return cfgDir
 	}
 
@@ -31,7 +31,7 @@ func GetEameraldCfgDir() string {
 
 // GetEameraldCertsDir returns the eamerald certs directory ($XDG_DATA_HOME/eamerald/certs).
 func GetEameraldCertsDir() string {
-	if certsDir := os.Getenv(x.EnvEameraldCertsDir); certsDir != "" {
+	if certsDir := os.Getenv(constants.EnvEameraldCertsDir); certsDir != "" {
 		return certsDir
 	}
 
@@ -40,7 +40,7 @@ func GetEameraldCertsDir() string {
 
 // GetEameraldDataDir returns the eamerald db directory ($XDG_DATA_HOME/eamerald/db).
 func GetEameraldDataDir() string {
-	if dataDir := os.Getenv(x.EnvEameraldDBDir); dataDir != "" {
+	if dataDir := os.Getenv(constants.EnvEameraldDBDir); dataDir != "" {
 		return dataDir
 	}
 
@@ -49,7 +49,7 @@ func GetEameraldDataDir() string {
 
 // GetEameraldDecisionsDir returns the eamerald decisions log directory ($XDG_DATA_HOME/eamerald/decisions).
 func GetEameraldDecisionsDir() string {
-	if dataDir := os.Getenv(x.EnvEameraldDecisionsDir); dataDir != "" {
+	if dataDir := os.Getenv(constants.EnvEameraldDecisionsDir); dataDir != "" {
 		return dataDir
 	}
 
@@ -58,7 +58,7 @@ func GetEameraldDecisionsDir() string {
 
 // GetEameraldTemplateDir returns the templates installation directory ($XDG_DATA_HOME/eamerald/tmpl).
 func GetEameraldTemplateDir() string {
-	if tmplDir := os.Getenv(x.EnvEameraldTmplDir); tmplDir != "" {
+	if tmplDir := os.Getenv(constants.EnvEameraldTmplDir); tmplDir != "" {
 		return tmplDir
 	}
 
@@ -67,11 +67,11 @@ func GetEameraldTemplateDir() string {
 
 // GetEameraldTemplateURL returns the URL to the templates container, can be local or remote.
 func GetEameraldTemplateURL() string {
-	if tmplURL := os.Getenv(x.EnvEameraldTmplURL); tmplURL != "" {
+	if tmplURL := os.Getenv(constants.EnvEameraldTmplURL); tmplURL != "" {
 		return tmplURL
 	}
 
-	return x.DefEameraldTmplURL
+	return constants.DefEameraldTmplURL
 }
 
 func EnsureDirs() error {

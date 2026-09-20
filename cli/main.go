@@ -14,8 +14,8 @@ import (
 	"github.com/threehook/eamerald/cli/cc"
 	"github.com/threehook/eamerald/cli/cmd"
 	"github.com/threehook/eamerald/cli/cmd/common"
+	"github.com/threehook/eamerald/cli/constants"
 	"github.com/threehook/eamerald/cli/fflag"
-	"github.com/threehook/eamerald/cli/x"
 
 	ver "github.com/threehook/eamerald/cli/version"
 
@@ -65,7 +65,7 @@ func run() int {
 	zerolog.SetGlobalLevel(logLevel(cli.LogLevel))
 
 	if cli.NoColor {
-		_ = os.Setenv(x.EnvEameraldNoColor, strconv.FormatBool(true))
+		_ = os.Setenv(constants.EnvEameraldNoColor, strconv.FormatBool(true))
 	}
 
 	if err := cc.EnsureDirs(); err != nil {
@@ -83,8 +83,8 @@ func run() int {
 
 func kongParse(cfg *cc.Config, cli *cmd.CLI, cwd string) *kong.Context {
 	kongCtx := kong.Parse(cli,
-		kong.Name(x.AppName),
-		kong.Description(x.AppDescription),
+		kong.Name(constants.AppName),
+		kong.Description(constants.AppDescription),
 		kong.UsageOnError(),
 		kong.ConfigureHelp(kong.HelpOptions{
 			NoAppSummary:        false,

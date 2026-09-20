@@ -9,8 +9,8 @@ import (
 
 	v3 "github.com/aserto-dev/azm/v3"
 	"github.com/rs/zerolog"
+	"github.com/threehook/eamerald/cli/constants"
 	"github.com/threehook/eamerald/cli/table"
-	"github.com/threehook/eamerald/cli/x"
 )
 
 type VerifyTemplateCmd struct {
@@ -21,7 +21,7 @@ type VerifyTemplateCmd struct {
 
 func (cmd *VerifyTemplateCmd) Run(ctx context.Context) error {
 	if cmd.Legacy {
-		cmd.TemplatesURL = x.TopazTmplV32URL
+		cmd.TemplatesURL = constants.TopazTmplV32URL
 	}
 
 	catalog, err := getCatalog(cmd.TemplatesURL)

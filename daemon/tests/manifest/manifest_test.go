@@ -12,7 +12,7 @@ import (
 	client "github.com/aserto-dev/go-aserto"
 	dsc "github.com/aserto-dev/go-aserto/ds/v3"
 	dsm "github.com/aserto-dev/go-directory/aserto/directory/model/v3"
-	"github.com/threehook/eamerald/cli/x"
+	"github.com/threehook/eamerald/cli/constants"
 	assets_test "github.com/threehook/eamerald/daemon/tests/assets"
 	tc "github.com/threehook/eamerald/daemon/tests/common"
 	"github.com/threehook/eamerald/internal/fs"
@@ -33,9 +33,9 @@ func TestManifest(t *testing.T) {
 		Image:        tc.TestImage(),
 		ExposedPorts: []string{"9292/tcp"},
 		Env: map[string]string{
-			x.EnvEameraldCertsDir:     x.DefCertsDir,
-			x.EnvEameraldDBDir:        x.DefDBDir,
-			x.EnvEameraldDecisionsDir: x.DefDecisionsDir,
+			constants.EnvEameraldCertsDir:     constants.DefCertsDir,
+			constants.EnvEameraldDBDir:        constants.DefDBDir,
+			constants.EnvEameraldDecisionsDir: constants.DefDecisionsDir,
 		},
 		Files: []testcontainers.ContainerFile{
 			{

@@ -17,7 +17,7 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
-	"github.com/threehook/eamerald/cli/x"
+	"github.com/threehook/eamerald/cli/constants"
 
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 )
@@ -30,7 +30,7 @@ const (
 func PolicyRoot() string {
 	const defaultPolicyRoot = ".policy"
 
-	policyRoot := os.Getenv(x.EnvPolicyFileStoreRoot)
+	policyRoot := os.Getenv(constants.EnvPolicyFileStoreRoot)
 	if policyRoot == "" {
 		home, err := os.UserHomeDir()
 		if err != nil {

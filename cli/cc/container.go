@@ -9,8 +9,8 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/samber/lo"
+	"github.com/threehook/eamerald/cli/constants"
 	ver "github.com/threehook/eamerald/cli/version"
-	"github.com/threehook/eamerald/cli/x"
 )
 
 const (
@@ -35,7 +35,7 @@ func defaultContainerTag() string {
 
 // Container returns the fully qualified container name (registry/image:tag).
 func Container(registry, image, tag string) string {
-	if container := os.Getenv(x.EnvContainer); container != "" {
+	if container := os.Getenv(constants.EnvContainer); container != "" {
 		return container
 	}
 
@@ -48,7 +48,7 @@ func Container(registry, image, tag string) string {
 
 // ContainerRegistry returns the container registry (host[:port]/repo).
 func ContainerRegistry() string {
-	if containerRegistry := os.Getenv(x.EnvContainerRegistry); containerRegistry != "" {
+	if containerRegistry := os.Getenv(constants.EnvContainerRegistry); containerRegistry != "" {
 		return containerRegistry
 	}
 
@@ -61,7 +61,7 @@ func ContainerRegistry() string {
 
 // ContainerImage returns the container image name.
 func ContainerImage() string {
-	if containerImage := os.Getenv(x.EnvContainerName); containerImage != "" {
+	if containerImage := os.Getenv(constants.EnvContainerName); containerImage != "" {
 		return containerImage
 	}
 
@@ -74,7 +74,7 @@ func ContainerImage() string {
 
 // ContainerTag returns the container tag (label or semantic version).
 func ContainerTag() string {
-	if containerTag := os.Getenv(x.EnvContainerTag); containerTag != "" {
+	if containerTag := os.Getenv(constants.EnvContainerTag); containerTag != "" {
 		return containerTag
 	}
 
@@ -87,7 +87,7 @@ func ContainerTag() string {
 
 // ContainerPlatform, returns the container platform for multi-platform capable servers.
 func ContainerPlatform() string {
-	if containerPlatform := os.Getenv(x.EnvContainerPlatform); containerPlatform != "" {
+	if containerPlatform := os.Getenv(constants.EnvContainerPlatform); containerPlatform != "" {
 		return containerPlatform
 	}
 
@@ -100,7 +100,7 @@ func ContainerPlatform() string {
 
 // ContainerName returns the container instance name (docker run --name CONTAINER_NAME).
 func ContainerName(defaultConfigFile string) string {
-	if containerName := os.Getenv(x.EnvContainerName); containerName != "" {
+	if containerName := os.Getenv(constants.EnvContainerName); containerName != "" {
 		return containerName
 	}
 

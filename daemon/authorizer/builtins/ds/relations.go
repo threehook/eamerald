@@ -6,7 +6,7 @@ import (
 	"github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	"github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/samber/lo"
-	"github.com/threehook/eamerald/cli/x"
+	"github.com/threehook/eamerald/cli/constants"
 	"github.com/threehook/eamerald/daemon/authorizer/builtins"
 
 	"github.com/open-policy-agent/opa/v1/ast"
@@ -47,7 +47,7 @@ func RegisterRelations(logger *zerolog.Logger, fnName string, dr reader.ReaderCl
 				return ast.StringTerm(dsRelationsHelp), nil
 			}
 
-			args.Page = &common.PaginationRequest{Size: x.MaxPaginationSize, Token: ""}
+			args.Page = &common.PaginationRequest{Size: constants.MaxPaginationSize, Token: ""}
 
 			resp := &reader.GetRelationsResponse{}
 

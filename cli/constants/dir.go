@@ -1,4 +1,4 @@
-package x
+package constants
 
 // Directory constants.
 const (

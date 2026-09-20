@@ -4,8 +4,8 @@ import (
 	"context"
 	"os"
 
+	"github.com/threehook/eamerald/cli/constants"
 	"github.com/threehook/eamerald/cli/table"
-	"github.com/threehook/eamerald/cli/x"
 )
 
 type ListTemplatesCmd struct {
@@ -15,7 +15,7 @@ type ListTemplatesCmd struct {
 
 func (cmd *ListTemplatesCmd) Run(ctx context.Context) error {
 	if cmd.Legacy {
-		cmd.TemplatesURL = x.TopazTmplV32URL
+		cmd.TemplatesURL = constants.TopazTmplV32URL
 	}
 
 	ctlg, err := getCatalog(cmd.TemplatesURL)

@@ -10,8 +10,8 @@ import (
 	"github.com/samber/lo"
 	"github.com/threehook/eamerald/cli/cc"
 	"github.com/threehook/eamerald/cli/cmd/common"
+	"github.com/threehook/eamerald/cli/constants"
 	"github.com/threehook/eamerald/cli/dockerx"
-	"github.com/threehook/eamerald/cli/x"
 	"github.com/threehook/eamerald/pkg/config"
 )
 
@@ -182,13 +182,13 @@ func getEnvFromVolumes(volumes []string) []string {
 
 		switch {
 		case strings.Contains(volumes[i], "certs"):
-			envs = append(envs, x.EnvEameraldCertsDir+"="+mountedPath)
+			envs = append(envs, constants.EnvEameraldCertsDir+"="+mountedPath)
 		case strings.Contains(volumes[i], "db"):
-			envs = append(envs, x.EnvEameraldDBDir+"="+mountedPath)
+			envs = append(envs, constants.EnvEameraldDBDir+"="+mountedPath)
 		case strings.Contains(volumes[i], "cfg"):
-			envs = append(envs, x.EnvEameraldCfgDir+"="+mountedPath)
+			envs = append(envs, constants.EnvEameraldCfgDir+"="+mountedPath)
 		case strings.Contains(volumes[i], "decisions"):
-			envs = append(envs, x.EnvEameraldDecisionsDir+"="+mountedPath)
+			envs = append(envs, constants.EnvEameraldDecisionsDir+"="+mountedPath)
 		}
 	}
 

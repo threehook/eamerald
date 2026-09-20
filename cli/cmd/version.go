@@ -6,9 +6,9 @@ import (
 	"os"
 
 	"github.com/threehook/eamerald/cli/cc"
+	"github.com/threehook/eamerald/cli/constants"
 	"github.com/threehook/eamerald/cli/dockerx"
 	"github.com/threehook/eamerald/cli/version"
-	"github.com/threehook/eamerald/cli/x"
 )
 
 type VersionCmd struct {
@@ -23,7 +23,7 @@ type VersionCmd struct {
 func (cmd *VersionCmd) Run(ctx context.Context) error {
 	cmd.ContainerTag = cc.ContainerVersionTag(cmd.ContainerVersion, cmd.ContainerTag)
 
-	cc.Con().Info().Msg("%s %s", x.AppName, version.GetInfo().String())
+	cc.Con().Info().Msg("%s %s", constants.AppName, version.GetInfo().String())
 
 	if !cmd.Container {
 		return nil

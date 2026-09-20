@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/threehook/eamerald/cli/cc"
 	"github.com/threehook/eamerald/cli/cmd/common"
-	"github.com/threehook/eamerald/cli/x"
+	"github.com/threehook/eamerald/cli/constants"
 )
 
 type DownloadTemplateCmd struct {
@@ -30,7 +30,7 @@ func (cmd *DownloadTemplateCmd) Run(ctx context.Context) error {
 	topazTemplateDir := cc.GetEameraldTemplateDir()
 
 	if cmd.Legacy {
-		cmd.TemplatesURL = x.TopazTmplV32URL
+		cmd.TemplatesURL = constants.TopazTmplV32URL
 	}
 
 	catalog, err := getCatalog(cmd.TemplatesURL)

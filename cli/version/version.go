@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/threehook/eamerald/cli/x"
+	"github.com/threehook/eamerald/cli/constants"
 )
 
 var (
@@ -54,5 +54,5 @@ func (vi Info) String() string {
 }
 
 func UserAgent() string {
-	return fmt.Sprintf("%s/%s", x.AppName, GetInfo().Version)
+	return fmt.Sprintf("%s/%s", constants.AppName, GetInfo().Version)
 }

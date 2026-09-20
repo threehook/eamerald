@@ -9,8 +9,8 @@ import (
 	"github.com/aserto-dev/go-directory/aserto/directory/writer/v3"
 	"github.com/threehook/eamerald/cli/clients"
 	dsc "github.com/threehook/eamerald/cli/clients/directory"
+	"github.com/threehook/eamerald/cli/constants"
 	"github.com/threehook/eamerald/cli/jsonx"
-	"github.com/threehook/eamerald/cli/x"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -159,6 +159,6 @@ func (cmd *ListRelationsCmd) template() proto.Message {
 		SubjectId:       "",
 		SubjectRelation: "",
 		WithObjects:     false,
-		Page:            &common.PaginationRequest{Size: x.MaxPaginationSize, Token: ""},
+		Page:            &common.PaginationRequest{Size: constants.MaxPaginationSize, Token: ""},
 	}
 }

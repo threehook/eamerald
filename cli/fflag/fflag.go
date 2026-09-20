@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/threehook/eamerald/cli/x"
+	"github.com/threehook/eamerald/cli/constants"
 )
 
 // feature flags package.
@@ -26,12 +26,12 @@ var (
 
 func Init() {
 	ffOnce.Do(func() {
-		env := os.Getenv(x.EnvEameraldFeatureFlag)
+		env := os.Getenv(constants.EnvEameraldFeatureFlag)
 		if env == "" {
 			ff = Default
 		}
 
-		f, err := strconv.ParseUint(os.Getenv(x.EnvEameraldFeatureFlag), 10, 8)
+		f, err := strconv.ParseUint(os.Getenv(constants.EnvEameraldFeatureFlag), 10, 8)
 		if err != nil {
 			ff = Default
 		}
