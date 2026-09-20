@@ -17,7 +17,8 @@
         ],
         "assertions": [
             "api-gateway/test/api-gateway_assertions.json",
-            "api-gateway/test/api-gateway_evaluations.json"
+            "api-gateway/test/api-gateway_evaluations.json",
+            "api-gateway/test/api-gateway_action_searches.json"
         ]
     }
 }

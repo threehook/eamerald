@@ -15,6 +15,9 @@
           "todo/todo_objects.json",
           "todo/todo_relations.json"
         ],
-        "assertions": []
+        "assertions": [
+            "todo/test/todo_evaluations.json",
+            "todo/test/todo_subject_searches.json"
+        ]
     }
 }

@@ -1,0 +1,28 @@
+{
+  "assertions": [
+    {
+      "action_search": {
+        "subject": { "type": "identity", "id": "jerry@the-smiths.com" },
+        "resource": { "type": "route", "id": "/todos" }
+      },
+      "expected_set": ["GET"],
+      "expected": true
+    },
+    {
+      "action_search": {
+        "subject": { "type": "identity", "id": "rick@the-citadel.com" },
+        "resource": { "type": "route", "id": "/todos" }
+      },
+      "expected_set": ["GET", "PUT", "PATCH", "POST", "DELETE"],
+      "expected": true
+    },
+    {
+      "action_search": {
+        "subject": { "type": "identity", "id": "beth@the-smiths.com" },
+        "resource": { "type": "route", "id": "/users/{userId}" }
+      },
+      "expected_set": ["GET"],
+      "expected": true
+    }
+  ]
+}

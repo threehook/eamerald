@@ -1,0 +1,28 @@
+{
+  "assertions": [
+    {
+      "evaluation": {
+        "subject": { "type": "user", "id": "beth@the-smiths.com" },
+        "action": { "name": "in_management_chain" },
+        "resource": { "type": "user", "id": "jerry@the-smiths.com" }
+      },
+      "expected": true
+    },
+    {
+      "evaluation": {
+        "subject": { "type": "user", "id": "rick@the-citadel.com" },
+        "action": { "name": "in_management_chain" },
+        "resource": { "type": "user", "id": "jerry@the-smiths.com" }
+      },
+      "expected": true
+    },
+    {
+      "evaluation": {
+        "subject": { "type": "user", "id": "jerry@the-smiths.com" },
+        "action": { "name": "in_management_chain" },
+        "resource": { "type": "user", "id": "beth@the-smiths.com" }
+      },
+      "expected": false
+    }
+  ]
+}

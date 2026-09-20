@@ -1,0 +1,33 @@
+{
+  "assertions": [
+    {
+      "description": "one round trip covering four independent resource-permission decisions, derived directly from the owner/writer/reader relations in simple-rbac_relations.json - including time-crystal, which has no owner tuple at all so can_delete is false for everyone",
+      "evaluations": {
+        "evaluations": [
+          {
+            "subject": { "type": "user", "id": "rick@the-citadel.com" },
+            "action": { "name": "can_read" },
+            "resource": { "type": "resource", "id": "mega-seed" }
+          },
+          {
+            "subject": { "type": "user", "id": "rick@the-citadel.com" },
+            "action": { "name": "can_write" },
+            "resource": { "type": "resource", "id": "mega-seed" }
+          },
+          {
+            "subject": { "type": "user", "id": "rick@the-citadel.com" },
+            "action": { "name": "can_delete" },
+            "resource": { "type": "resource", "id": "time-crystal" }
+          },
+          {
+            "subject": { "type": "user", "id": "morty@the-citadel.com" },
+            "action": { "name": "can_delete" },
+            "resource": { "type": "resource", "id": "portal-gun" }
+          }
+        ]
+      },
+      "expected_decisions": [true, false, false, true],
+      "expected": true
+    }
+  ]
+}

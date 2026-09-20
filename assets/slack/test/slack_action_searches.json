@@ -1,0 +1,37 @@
+{
+  "assertions": [
+    {
+      "action_search": {
+        "subject": { "type": "user", "id": "beth@the-smiths.com" },
+        "resource": { "type": "channel", "id": "smiths.general" }
+      },
+      "expected_set": [
+        "can_write",
+        "can_comment",
+        "can_read"
+      ],
+      "expected": true
+    },
+    {
+      "action_search": {
+        "subject": { "type": "user", "id": "rick@the-citadel.com" },
+        "resource": { "type": "channel", "id": "smiths.citadel" }
+      },
+      "expected_set": [
+        "can_delete",
+        "can_write",
+        "can_comment",
+        "can_read"
+      ],
+      "expected": true
+    },
+    {
+      "action_search": {
+        "subject": { "type": "user", "id": "summer@the-smiths.com" },
+        "resource": { "type": "channel", "id": "smiths.general" }
+      },
+      "expected_set": [],
+      "expected": true
+    }
+  ]
+}

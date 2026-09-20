@@ -1,0 +1,28 @@
+{
+  "assertions": [
+    {
+      "evaluation": {
+        "subject": { "type": "user", "id": "aaronp@acmecorp.com" },
+        "action": { "name": "in_management_chain" },
+        "resource": { "type": "user", "id": "allisob@acmecorp.com" }
+      },
+      "expected": true
+    },
+    {
+      "evaluation": {
+        "subject": { "type": "user", "id": "christk@acmecorp.com" },
+        "action": { "name": "in_management_chain" },
+        "resource": { "type": "user", "id": "allisob@acmecorp.com" }
+      },
+      "expected": true
+    },
+    {
+      "evaluation": {
+        "subject": { "type": "user", "id": "allisob@acmecorp.com" },
+        "action": { "name": "in_management_chain" },
+        "resource": { "type": "user", "id": "aaronp@acmecorp.com" }
+      },
+      "expected": false
+    }
+  ]
+}

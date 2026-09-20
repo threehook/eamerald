@@ -1,0 +1,60 @@
+{
+  "assertions": [
+    {
+      "subject_search": {
+        "subject": {
+          "type": "user"
+        },
+        "action": {
+          "name": "can_share"
+        },
+        "resource": {
+          "type": "folder",
+          "id": "root"
+        }
+      },
+      "expected_set": [
+        "user:beth@the-smiths.com"
+      ],
+      "expected": true
+    },
+    {
+      "subject_search": {
+        "subject": {
+          "type": "user"
+        },
+        "action": {
+          "name": "can_read"
+        },
+        "resource": {
+          "type": "doc",
+          "id": "rick.inventions"
+        }
+      },
+      "expected_set": [
+        "user:rick@the-citadel.com",
+        "user:beth@the-smiths.com"
+      ],
+      "expected": true
+    },
+    {
+      "subject_search": {
+        "subject": {
+          "type": "user"
+        },
+        "action": {
+          "name": "can_write"
+        },
+        "resource": {
+          "type": "folder",
+          "id": "rick"
+        }
+      },
+      "expected_set": [
+        "user:rick@the-citadel.com",
+        "user:beth@the-smiths.com"
+      ],
+      "expected": true
+    }
+  ]
+}

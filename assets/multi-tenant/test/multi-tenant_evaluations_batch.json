@@ -1,0 +1,33 @@
+{
+  "assertions": [
+    {
+      "description": "one round trip covering four independent resource-permission decisions, reusing facts already verified individually in multi-tenant_evaluations.json - including the cross-tenant asymmetry (Beth reads+writes but cannot delete the other tenant's resource)",
+      "evaluations": {
+        "evaluations": [
+          {
+            "subject": { "type": "identity", "id": "beth@the-smiths.com" },
+            "action": { "name": "can_delete" },
+            "resource": { "type": "resource", "id": "smiths-budget" }
+          },
+          {
+            "subject": { "type": "identity", "id": "beth@the-smiths.com" },
+            "action": { "name": "can_delete" },
+            "resource": { "type": "resource", "id": "citadel-adventures" }
+          },
+          {
+            "subject": { "type": "identity", "id": "jerry@the-smiths.com" },
+            "action": { "name": "can_read" },
+            "resource": { "type": "resource", "id": "citadel-adventures" }
+          },
+          {
+            "subject": { "type": "identity", "id": "rick@the-citadel.com" },
+            "action": { "name": "can_delete" },
+            "resource": { "type": "resource", "id": "citadel-adventures" }
+          }
+        ]
+      },
+      "expected_decisions": [true, false, false, true],
+      "expected": true
+    }
+  ]
+}

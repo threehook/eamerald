@@ -1,0 +1,67 @@
+{
+  "assertions": [
+    {
+      "resource_search": {
+        "subject": {
+          "type": "user",
+          "id": "beth@the-smiths.com"
+        },
+        "action": {
+          "name": "can_read"
+        },
+        "resource": {
+          "type": "folder"
+        }
+      },
+      "expected_set": [
+        "folder:root",
+        "folder:rick",
+        "folder:morty",
+        "folder:morty.shared",
+        "folder:summer",
+        "folder:jerry",
+        "folder:beth"
+      ],
+      "expected": true
+    },
+    {
+      "resource_search": {
+        "subject": {
+          "type": "user",
+          "id": "rick@the-citadel.com"
+        },
+        "action": {
+          "name": "can_read"
+        },
+        "resource": {
+          "type": "folder"
+        }
+      },
+      "expected_set": [
+        "folder:rick",
+        "folder:morty.shared"
+      ],
+      "expected": true
+    },
+    {
+      "resource_search": {
+        "subject": {
+          "type": "user",
+          "id": "rick@the-citadel.com"
+        },
+        "action": {
+          "name": "can_read"
+        },
+        "resource": {
+          "type": "doc"
+        }
+      },
+      "expected_set": [
+        "doc:rick.inventions",
+        "doc:groceries",
+        "doc:morty.shared.notes"
+      ],
+      "expected": true
+    }
+  ]
+}

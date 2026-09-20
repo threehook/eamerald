@@ -1,0 +1,28 @@
+{
+  "assertions": [
+    {
+      "action_search": {
+        "subject": { "type": "identity", "id": "beth@the-smiths.com" },
+        "resource": { "type": "repo", "id": "smiths.budget" }
+      },
+      "expected_set": ["can_administer", "can_delete", "can_maintain", "can_write", "can_triage", "can_read"],
+      "expected": true
+    },
+    {
+      "action_search": {
+        "subject": { "type": "identity", "id": "morty@the-citadel.com" },
+        "resource": { "type": "repo", "id": "smiths.budget" }
+      },
+      "expected_set": ["can_read"],
+      "expected": true
+    },
+    {
+      "action_search": {
+        "subject": { "type": "identity", "id": "jerry@the-smiths.com" },
+        "resource": { "type": "repo", "id": "citadel.missions" }
+      },
+      "expected_set": [],
+      "expected": true
+    }
+  ]
+}

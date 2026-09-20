@@ -13,6 +13,9 @@
         ],
         "domain_data": [
         ],
-        "assertions": []
+        "assertions": [
+            "acmecorp/test/acmecorp_evaluations.json",
+            "acmecorp/test/acmecorp_resource_searches.json"
+        ]
     }
 }

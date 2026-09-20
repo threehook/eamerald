@@ -1,0 +1,33 @@
+{
+  "assertions": [
+    {
+      "description": "one round trip covering four independent endpoint-invocation decisions, reusing the same facts already verified individually in api-auth_evaluations.json",
+      "evaluations": {
+        "evaluations": [
+          {
+            "subject": { "type": "identity", "id": "rick@the-citadel.com" },
+            "action": { "name": "can_invoke" },
+            "resource": { "type": "endpoint", "id": "todo:DELETE:/v1/todos/{todoId}" }
+          },
+          {
+            "subject": { "type": "identity", "id": "summer@the-smiths.com" },
+            "action": { "name": "can_invoke" },
+            "resource": { "type": "endpoint", "id": "todo:POST:/v1/todos" }
+          },
+          {
+            "subject": { "type": "identity", "id": "morty@the-citadel.com" },
+            "action": { "name": "can_invoke" },
+            "resource": { "type": "endpoint", "id": "petstore:GET:/pet/{petId}" }
+          },
+          {
+            "subject": { "type": "identity", "id": "jerry@the-smiths.com" },
+            "action": { "name": "can_invoke" },
+            "resource": { "type": "endpoint", "id": "todo:GET:/v1/todos" }
+          }
+        ]
+      },
+      "expected_decisions": [true, false, true, true],
+      "expected": true
+    }
+  ]
+}

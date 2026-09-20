@@ -37,12 +37,31 @@ const (
 	Check
 	Evaluation
 	AuthorizerEvaluation
+	Evaluations
+	SubjectSearch
+	ResourceSearch
+	ActionSearch
 )
 
 const (
 	CheckStr                string = "check"
 	EvaluationStr           string = "evaluation"
 	AuthorizerEvaluationStr string = "authorizer_evaluation"
+	EvaluationsStr          string = "evaluations"
+	SubjectSearchStr        string = "subject_search"
+	ResourceSearchStr       string = "resource_search"
+	ActionSearchStr         string = "action_search"
+)
+
+// ExpectedSet and ExpectedDecisions name the assertion fields carrying the
+// expected results for the list-returning check types above (Evaluations,
+// SubjectSearch, ResourceSearch, ActionSearch). Those checks pass or fail on
+// whether the endpoint's result list matches this expected list, not on a
+// single boolean outcome, so unlike the other check types they keep
+// "expected": true and use this list to record what a match means.
+const (
+	ExpectedSet       string = "expected_set"
+	ExpectedDecisions string = "expected_decisions"
 )
 
 type CheckResult struct {
@@ -56,12 +75,20 @@ var CheckTypeMap = map[string]CheckType{
 	CheckStr:                Check,
 	EvaluationStr:           Evaluation,
 	AuthorizerEvaluationStr: AuthorizerEvaluation,
+	EvaluationsStr:          Evaluations,
+	SubjectSearchStr:        SubjectSearch,
+	ResourceSearchStr:       ResourceSearch,
+	ActionSearchStr:         ActionSearch,
 }
 
 var CheckTypeMapStr = map[CheckType]string{
 	Check:                CheckStr,
 	Evaluation:           EvaluationStr,
 	AuthorizerEvaluation: AuthorizerEvaluationStr,
+	Evaluations:          EvaluationsStr,
+	SubjectSearch:        SubjectSearchStr,
+	ResourceSearch:       ResourceSearchStr,
+	ActionSearch:         ActionSearchStr,
 }
 
 func GetCheckType(msg *structpb.Struct) CheckType {
@@ -201,6 +228,28 @@ func GetBool(msg *structpb.Struct, fieldName string) (bool, bool) {
 func GetString(msg *structpb.Struct, fieldName string) (string, bool) {
 	v, ok := msg.GetFields()[fieldName]
 	return v.GetStringValue(), ok
+}
+
+func GetStringSlice(msg *structpb.Struct, fieldName string) []string {
+	values := msg.GetFields()[fieldName].GetListValue().GetValues()
+
+	out := make([]string, 0, len(values))
+	for _, v := range values {
+		out = append(out, v.GetStringValue())
+	}
+
+	return out
+}
+
+func GetBoolSlice(msg *structpb.Struct, fieldName string) []bool {
+	values := msg.GetFields()[fieldName].GetListValue().GetValues()
+
+	out := make([]bool, 0, len(values))
+	for _, v := range values {
+		out = append(out, v.GetBoolValue())
+	}
+
+	return out
 }
 
 func UnmarshalReq(value *structpb.Value, msg proto.Message) error {

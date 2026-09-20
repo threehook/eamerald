@@ -1,0 +1,36 @@
+{
+  "assertions": [
+    {
+      "subject_search": {
+        "subject": { "type": "user" },
+        "action": { "name": "in_management_chain" },
+        "resource": { "type": "user", "id": "jerry@the-smiths.com" }
+      },
+      "expected_set": [
+        "user:beth@the-smiths.com",
+        "user:rick@the-citadel.com"
+      ],
+      "expected": true
+    },
+    {
+      "subject_search": {
+        "subject": { "type": "user" },
+        "action": { "name": "in_management_chain" },
+        "resource": { "type": "user", "id": "rick@the-citadel.com" }
+      },
+      "expected_set": [],
+      "expected": true
+    },
+    {
+      "subject_search": {
+        "subject": { "type": "user" },
+        "action": { "name": "in_management_chain" },
+        "resource": { "type": "user", "id": "morty@the-citadel.com" }
+      },
+      "expected_set": [
+        "user:rick@the-citadel.com"
+      ],
+      "expected": true
+    }
+  ]
+}

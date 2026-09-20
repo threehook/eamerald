@@ -13,6 +13,9 @@
         ],
         "domain_data": [
         ],
-        "assertions": []
+        "assertions": [
+            "citadel/test/citadel_evaluations.json",
+            "citadel/test/citadel_subject_searches.json"
+        ]
     }
 }

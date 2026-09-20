@@ -1,0 +1,57 @@
+{
+  "assertions": [
+    {
+      "resource_search": {
+        "subject": { "type": "user", "id": "aaronp@acmecorp.com" },
+        "action": { "name": "in_management_chain" },
+        "resource": { "type": "user" }
+      },
+      "expected_set": [
+        "user:allisob@acmecorp.com",
+        "user:jesuse@acmecorp.com",
+        "user:johne@acmecorp.com",
+        "user:lubork@acmecorp.com",
+        "user:parnak@acmecorp.com",
+        "user:reneel@acmecorp.com",
+        "user:rolandw@acmecorp.com",
+        "user:syeda@acmecorp.com",
+        "user:jasonc@acmecorp.com",
+        "user:jeffw@acmecorp.com",
+        "user:karinl@acmecorp.com",
+        "user:lorrain@acmecorp.com",
+        "user:meravs@acmecorp.com",
+        "user:tado@acmecorp.com",
+        "user:tobyn@acmecorp.com",
+        "user:toshm@acmecorp.com"
+      ],
+      "expected": true
+    },
+    {
+      "resource_search": {
+        "subject": { "type": "user", "id": "syeda@acmecorp.com" },
+        "action": { "name": "in_management_chain" },
+        "resource": { "type": "user" }
+      },
+      "expected_set": [
+        "user:jasonc@acmecorp.com",
+        "user:jeffw@acmecorp.com",
+        "user:karinl@acmecorp.com",
+        "user:lorrain@acmecorp.com",
+        "user:meravs@acmecorp.com",
+        "user:tado@acmecorp.com",
+        "user:tobyn@acmecorp.com",
+        "user:toshm@acmecorp.com"
+      ],
+      "expected": true
+    },
+    {
+      "resource_search": {
+        "subject": { "type": "user", "id": "allisob@acmecorp.com" },
+        "action": { "name": "in_management_chain" },
+        "resource": { "type": "user" }
+      },
+      "expected_set": [],
+      "expected": true
+    }
+  ]
+}

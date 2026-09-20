@@ -216,6 +216,14 @@ func setCheckType(ctx context.Context, checkType CheckType, reqVersion int, runn
 		result = evaluationV1(ctx, runner.dsClient, msg.GetFields()[CheckTypeMapStr[checkType]])
 	case checkType == AuthorizerEvaluation:
 		result = authorizerEvaluationV1(ctx, runner.azClient, msg.GetFields()[CheckTypeMapStr[checkType]])
+	case checkType == Evaluations:
+		result = evaluationsV1(ctx, runner.dsClient, msg)
+	case checkType == SubjectSearch:
+		result = subjectSearchV1(ctx, runner.dsClient, msg)
+	case checkType == ResourceSearch:
+		result = resourceSearchV1(ctx, runner.dsClient, msg)
+	case checkType == ActionSearch:
+		result = actionSearchV1(ctx, runner.dsClient, msg)
 	}
 
 	return result
@@ -228,26 +236,37 @@ const (
 	msgVersionV3
 )
 
+// reqVersionFields orders the fields that identify a request's shape. Only
+// the "Check" check type actually branches on the returned version (its v3
+// case); every other check type just needs a non-zero result to pass the
+// generic well-formedness gate in exec(), which is why the AuthZEN search
+// requests ("resource", no "action" - action_search searches for actions
+// rather than taking one) and the batch evaluations request ("evaluations",
+// no top-level "action" since each entry is self-contained) are both mapped
+// to msgVersionV1 here rather than a version of their own.
+var reqVersionFields = []struct {
+	name    string
+	version int
+}{
+	{"object_type", msgVersionV3},
+	{"object", msgVersionV2},
+	{"identity_context", msgVersionV2},
+	{"action", msgVersionV1},
+	{"resource", msgVersionV1},
+	{"evaluations", msgVersionV1},
+}
+
 func getReqVersion(val *structpb.Value) int {
-	if val == nil {
+	v, ok := val.GetKind().(*structpb.Value_StructValue)
+	if !ok {
 		return msgVersionUnknown
 	}
 
-	if v, ok := val.GetKind().(*structpb.Value_StructValue); ok {
-		if _, ok := v.StructValue.GetFields()["object_type"]; ok {
-			return msgVersionV3
-		}
+	fields := v.StructValue.GetFields()
 
-		if _, ok := v.StructValue.GetFields()["object"]; ok {
-			return msgVersionV2
-		}
-
-		if _, ok := v.StructValue.GetFields()["identity_context"]; ok {
-			return msgVersionV2
-		}
-
-		if _, ok := v.StructValue.GetFields()["action"]; ok {
-			return msgVersionV1
+	for _, f := range reqVersionFields {
+		if _, ok := fields[f.name]; ok {
+			return f.version
 		}
 	}
 
@@ -345,6 +364,193 @@ func authorizerEvaluationV1(ctx context.Context, c *azc.Client, msg *structpb.Va
 		Err:      err,
 		Str:      checkEvaluationStringV1(&req),
 	}
+}
+
+// evaluationsV1 exercises the batch "boxcarring" /evaluations endpoint.
+// Unlike the single-decision checks above, its outcome is a decision per
+// entry in the request's evaluations list, so it passes when that decision
+// sequence matches the assertion's expected_decisions, position for
+// position - not against the top-level "expected" bool, which stays true.
+func evaluationsV1(ctx context.Context, c *dsc.Client, msg *structpb.Struct) *CheckResult {
+	if c == nil {
+		return &CheckResult{Outcome: false, Duration: 0, Err: ErrSkippedDirectoryAssertion, Str: skipped}
+	}
+
+	var req dsa.EvaluationsRequest
+	if err := UnmarshalReq(msg.GetFields()[EvaluationsStr], &req); err != nil {
+		return &CheckResult{Err: err}
+	}
+
+	start := time.Now()
+
+	resp, err := c.Access.Evaluations(ctx, &req)
+
+	duration := time.Since(start)
+
+	actual := decisionsOf(resp.GetEvaluations())
+	expected := GetBoolSlice(msg, ExpectedDecisions)
+
+	return &CheckResult{
+		Outcome:  boolSliceEqual(actual, expected),
+		Duration: duration,
+		Err:      err,
+		Str:      fmt.Sprintf("evaluations -> %v (want %v)", actual, expected),
+	}
+}
+
+// subjectSearchV1, resourceSearchV1 and actionSearchV1 exercise the
+// AuthZEN search endpoints. Each returns a list rather than a single
+// decision, so - like evaluationsV1 - they pass when the result set matches
+// the assertion's expected_set as a set (order does not matter), and the
+// top-level "expected" bool stays true.
+func subjectSearchV1(ctx context.Context, c *dsc.Client, msg *structpb.Struct) *CheckResult {
+	if c == nil {
+		return &CheckResult{Outcome: false, Duration: 0, Err: ErrSkippedDirectoryAssertion, Str: skipped}
+	}
+
+	var req dsa.SubjectSearchRequest
+	if err := UnmarshalReq(msg.GetFields()[SubjectSearchStr], &req); err != nil {
+		return &CheckResult{Err: err}
+	}
+
+	start := time.Now()
+
+	resp, err := c.Access.SubjectSearch(ctx, &req)
+
+	duration := time.Since(start)
+
+	actual := make([]string, 0, len(resp.GetResults()))
+	for _, s := range resp.GetResults() {
+		actual = append(actual, s.GetType()+":"+s.GetId())
+	}
+
+	expected := GetStringSlice(msg, ExpectedSet)
+
+	str := fmt.Sprintf("subject_search %s#%s@%s -> %v (want %v)",
+		req.GetResource().GetType(), req.GetResource().GetId(), req.GetAction().GetName(), actual, expected)
+
+	return &CheckResult{
+		Outcome:  stringSetEqual(actual, expected),
+		Duration: duration,
+		Err:      err,
+		Str:      str,
+	}
+}
+
+func resourceSearchV1(ctx context.Context, c *dsc.Client, msg *structpb.Struct) *CheckResult {
+	if c == nil {
+		return &CheckResult{Outcome: false, Duration: 0, Err: ErrSkippedDirectoryAssertion, Str: skipped}
+	}
+
+	var req dsa.ResourceSearchRequest
+	if err := UnmarshalReq(msg.GetFields()[ResourceSearchStr], &req); err != nil {
+		return &CheckResult{Err: err}
+	}
+
+	start := time.Now()
+
+	resp, err := c.Access.ResourceSearch(ctx, &req)
+
+	duration := time.Since(start)
+
+	actual := make([]string, 0, len(resp.GetResults()))
+	for _, r := range resp.GetResults() {
+		actual = append(actual, r.GetType()+":"+r.GetId())
+	}
+
+	expected := GetStringSlice(msg, ExpectedSet)
+
+	str := fmt.Sprintf("resource_search %s#%s@%s -> %v (want %v)",
+		req.GetResource().GetType(), req.GetAction().GetName(), req.GetSubject().GetId(), actual, expected)
+
+	return &CheckResult{
+		Outcome:  stringSetEqual(actual, expected),
+		Duration: duration,
+		Err:      err,
+		Str:      str,
+	}
+}
+
+func actionSearchV1(ctx context.Context, c *dsc.Client, msg *structpb.Struct) *CheckResult {
+	if c == nil {
+		return &CheckResult{Outcome: false, Duration: 0, Err: ErrSkippedDirectoryAssertion, Str: skipped}
+	}
+
+	var req dsa.ActionSearchRequest
+	if err := UnmarshalReq(msg.GetFields()[ActionSearchStr], &req); err != nil {
+		return &CheckResult{Err: err}
+	}
+
+	start := time.Now()
+
+	resp, err := c.Access.ActionSearch(ctx, &req)
+
+	duration := time.Since(start)
+
+	actual := make([]string, 0, len(resp.GetResults()))
+	for _, a := range resp.GetResults() {
+		actual = append(actual, a.GetName())
+	}
+
+	expected := GetStringSlice(msg, ExpectedSet)
+
+	str := fmt.Sprintf("action_search %s:%s@%s:%s -> %v (want %v)",
+		req.GetResource().GetType(), req.GetResource().GetId(), req.GetSubject().GetType(), req.GetSubject().GetId(), actual, expected)
+
+	return &CheckResult{
+		Outcome:  stringSetEqual(actual, expected),
+		Duration: duration,
+		Err:      err,
+		Str:      str,
+	}
+}
+
+func decisionsOf(evals []*dsa.EvaluationResponse) []bool {
+	out := make([]bool, 0, len(evals))
+	for _, e := range evals {
+		out = append(out, e.GetDecision())
+	}
+
+	return out
+}
+
+// stringSetEqual reports whether a and b contain the same strings, ignoring
+// order and duplicate count position (but not duplicate count itself).
+func stringSetEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	counts := make(map[string]int, len(a))
+	for _, v := range a {
+		counts[v]++
+	}
+
+	for _, v := range b {
+		counts[v]--
+	}
+
+	for _, c := range counts {
+		if c != 0 {
+			return false
+		}
+	}
+
+	return true
+}
+
+func boolSliceEqual(a, b []bool) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+
+	return true
 }
 
 func checkStringV3(req *dsr.CheckRequest) string {
