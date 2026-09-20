@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	name string = "eamerald-backup"
+	name string = "mrld-backup"
 	desc string = "eamerald backup utility"
 )
 

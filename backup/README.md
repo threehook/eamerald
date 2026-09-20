@@ -1,15 +1,15 @@
-# topaz-backup
+# Eamerald backup
 
-topaz-backup creates backup of the topaz directory store.
+mrld-backup creates backup of the eamerald directory store.
 
 
 ## List plugins
 
 ```
-topaz-backup
-Usage: topaz-backup <command>
+mrld-backup
+Usage: mrld-backup <command>
 
-topaz backup utility
+eamerald backup utility
 
 Commands:
   boltdb    boltdb plugin
@@ -17,9 +17,9 @@ Commands:
 Flags:
   -h, --help    Show context-sensitive help.
 
-Run "topaz-backup <command> --help" for more information on a command.
+Run "mrld-backup <command> --help" for more information on a command.
 
-topaz-backup: error: expected "boltdb"
+mrld-backup: error: expected "boltdb"
 ```
 
 NOTES:
@@ -29,9 +29,9 @@ NOTES:
 ## List input argument of a plugin
 
 ```
-topaz-backup boltdb
+mrld-backup boltdb
 
-Usage: topaz-backup boltdb --db-file=STRING --backup-dir=STRING
+Usage: mrld-backup boltdb --db-file=STRING --backup-dir=STRING
 
 boltdb plugin
 
@@ -41,7 +41,7 @@ Flags:
       --db-file=STRING       database file path
       --backup-dir=STRING    backup directory path
 
-topaz-backup: error: missing flags: --backup-dir=STRING, --db-file=STRING
+mrld-backup: error: missing flags: --backup-dir=STRING, --db-file=STRING
 ```
 
 NOTES:
@@ -51,13 +51,13 @@ NOTES:
 ## Execute backup
 
 ```
-topaz-backup boltdb \
---db-file ~/.local/share/topaz/db/gdrive-v33.db \
---backup-dir ~/.local/share/topaz/backup
+mrld-backup boltdb \
+--db-file ~/.local/share/eamerald/db/gdrive-v33.db \
+--backup-dir ~/.local/share/eamerald/backup
 
-/Users/gertd/.local/share/topaz/backup/gdrive-v33-20250731T162842.db
+/Users/<username>/.local/share/eamerald/backup/gdrive-v33-20250731T162842.db
 ```
 
 NOTES:
 
-* When using the `boltdb` plugin, the topaz-backup command `MUST` be executed on the same machine as were the `topazd` process is running. As the `topazd` process holds the exclusive `read-write` connection to the boltdb database file, the backup process uses a `read-only` connection, to copy the content to a new backup file, and flushed the file state to disk when finished.
+* When using the `boltdb` plugin, the mrld-backup command `MUST` be executed on the same machine as were the `mrldd` process is running. As the `mrldd` process holds the exclusive `read-write` connection to the boltdb database file, the backup process uses a `read-only` connection, to copy the content to a new backup file, and flushed the file state to disk when finished.
