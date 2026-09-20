@@ -30,51 +30,12 @@ Each AuthZEN route has its own typed logger method, so `event_name` follows
 the endpoint that handled the decision rather than being inferred from the
 shape of the request.
 
-The Access API has two implementations, on separate ports:
-
-- the directory (`internal/eds/pkg/directory/v3/access.go`) answers from its
-  relationship graph, and serves all five routes;
-- the authorizer (`daemon/authorizer/impl/access.go`) answers from the policy
-  engine, and serves the two evaluation routes. The action names the rule:
-  with a bundle rooted at `package authz`, an `action.name` of
-  `request_laadpaal` evaluates `data.authz.request_laadpaal`. Under a nested
-  package the action carries the remainder, e.g. `laadpalen.request_laadpaal`
-  for `package authz.laadpalen`. The searches return `Unimplemented`, because
-  a Rego rule answers "may this subject do this?" and offers no way to
-  enumerate the subjects, resources or actions it would admit.
-
-### Selecting a policy
-
-One instance serves as many policies as its bundle carries. AuthZEN has no
-policy field, so a request selects one through the context:
-
-```json
-{"context": {"doelbinding": "laadpalen"}}
-```
-
-which evaluates `data.doelbinding.laadpalen.<action>`. Selectable policies
-live under the `doelbinding` prefix and nowhere else, so a request cannot
-reach a library package by naming it, and an unknown doelbinding is an error
-rather than a policy chosen on the caller's behalf. This follows OpenFTV,
-whose OPA PDP routes each request to `data.doelbinding.<x>` the same way.
-
-A request that selects nothing falls back to `opa.policy_root`:
-
-```yaml
-opa:
-  policy_root: authz
-```
-
-which only needs setting when the bundle carries more than one package root,
-typically a decision package alongside library packages. With a single root
-there is nothing to disambiguate and it can stay empty. With several roots
-and no setting, an unselective request is refused rather than bound to
-whichever package the policy store happened to list first — that order is not
-stable across restarts, and an authorization endpoint that silently changes
-which policy it evaluates is worse than one that errors.
-
 The Access API is the authorizer's only decision-making endpoint, so every
-decision is in scope for ADL by construction.
+decision is in scope for ADL by construction. It has two implementations
+(directory and authorizer), and the authorizer's side can serve several
+policies from one bundle, selected per request - see
+`daemon/authorizer/impl/policy-selection.md` for how that resolution works;
+this document only covers what gets logged once a decision is reached.
 
 Because the logger is shared with the directory, which has no OPA runtime,
 it is not an OPA plugin. The `adl_decision_logger` plugin name is still
@@ -170,8 +131,9 @@ adjustments:
   the caller's own properties: `subject.properties.jwt` is how a caller hands
   the PDP a bearer token, and that must never reach the log.
 - **Context** gains `policy_path`, holding the package the action was
-  resolved against - the request names a doelbinding, not a package, and
-  without it a record can't be tied back to the rule that decided.
+  resolved against (see `daemon/authorizer/impl/policy-selection.md`) - the
+  request names a doelbinding, not a package, and without it a record can't
+  be tied back to the rule that decided.
 
 ## Known deviations
 
