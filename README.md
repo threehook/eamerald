@@ -254,9 +254,6 @@ To interact with the directory endpoint, use `localhost:9292`:
 $ grpcui --insecure localhost:9292
 ```
 
-## Demo
-![demo](./assets/topaz.gif)
-
 ## Credits
 
 Eamerald uses a lot of great and amazing open source projects and libraries.
