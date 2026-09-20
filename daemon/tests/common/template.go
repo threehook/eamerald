@@ -5,12 +5,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	azc "github.com/threehook/eamerald/cli/clients/authorizer"
-	dsc "github.com/threehook/eamerald/cli/clients/directory"
-	"github.com/threehook/eamerald/cli/cmd/common"
-	"github.com/threehook/eamerald/cli/cmd/directory"
-	"github.com/threehook/eamerald/cli/cmd/directory/data"
-	"github.com/threehook/eamerald/cli/cmd/templates"
+	azc "github.com/threehook/eamerald/mrld/clients/authorizer"
+	dsc "github.com/threehook/eamerald/mrld/clients/directory"
+	"github.com/threehook/eamerald/mrld/cmd/common"
+	"github.com/threehook/eamerald/mrld/cmd/directory"
+	"github.com/threehook/eamerald/mrld/cmd/directory/data"
+	"github.com/threehook/eamerald/mrld/cmd/templates"
 	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/stretchr/testify/assert"

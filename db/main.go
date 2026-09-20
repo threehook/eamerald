@@ -8,9 +8,9 @@ import (
 	"syscall"
 
 	"github.com/alecthomas/kong"
-	"github.com/threehook/eamerald/cli/cc"
-	"github.com/threehook/eamerald/cli/constants"
 	"github.com/threehook/eamerald/db/cmd"
+	"github.com/threehook/eamerald/mrld/cc"
+	"github.com/threehook/eamerald/mrld/constants"
 )
 
 func main() {

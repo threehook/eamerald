@@ -5,12 +5,12 @@ import (
 	"testing"
 	"time"
 
-	azc "github.com/threehook/eamerald/cli/clients/authorizer"
-	dsc "github.com/threehook/eamerald/cli/clients/directory"
-	"github.com/threehook/eamerald/cli/constants"
 	assets_test "github.com/threehook/eamerald/daemon/tests/assets"
 	tc "github.com/threehook/eamerald/daemon/tests/common"
 	"github.com/threehook/eamerald/internal/fs"
+	azc "github.com/threehook/eamerald/mrld/clients/authorizer"
+	dsc "github.com/threehook/eamerald/mrld/clients/directory"
+	"github.com/threehook/eamerald/mrld/constants"
 
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"

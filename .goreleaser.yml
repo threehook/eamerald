@@ -37,7 +37,7 @@ builds:
     mod_timestamp: "{{ .CommitTimestamp }}"
 
   - id: mrld
-    main: ./cli
+    main: ./mrld
     binary: mrld
     goos:
       - darwin
@@ -50,9 +50,9 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/cli/version.ver={{.Version}}
-      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/cli/version.commit={{.ShortCommit}}
-      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/cli/version.date={{.Date}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/mrld/version.ver={{.Version}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/mrld/version.commit={{.ShortCommit}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/mrld/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
   - id: mrld-db

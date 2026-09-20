@@ -10,9 +10,9 @@ import (
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/samber/lo"
 	"github.com/spf13/viper"
-	"github.com/threehook/eamerald/cli/cc"
-	"github.com/threehook/eamerald/cli/constants"
 	"github.com/threehook/eamerald/daemon/service/builder"
+	"github.com/threehook/eamerald/mrld/cc"
+	"github.com/threehook/eamerald/mrld/constants"
 )
 
 const (

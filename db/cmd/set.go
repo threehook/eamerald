@@ -5,9 +5,9 @@ import (
 	"io"
 	"os"
 
-	dsc "github.com/threehook/eamerald/cli/clients/directory"
 	"github.com/threehook/eamerald/db/pkg/inproc"
 	"github.com/threehook/eamerald/internal/eds/pkg/directory"
+	dsc "github.com/threehook/eamerald/mrld/clients/directory"
 
 	"github.com/rs/zerolog"
 )

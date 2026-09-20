@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	azc "github.com/threehook/eamerald/cli/clients/authorizer"
-	dsc "github.com/threehook/eamerald/cli/clients/directory"
-	"github.com/threehook/eamerald/cli/constants"
 	"github.com/threehook/eamerald/internal/fs"
+	azc "github.com/threehook/eamerald/mrld/clients/authorizer"
+	dsc "github.com/threehook/eamerald/mrld/clients/directory"
+	"github.com/threehook/eamerald/mrld/constants"
 
 	client "github.com/aserto-dev/go-aserto"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"

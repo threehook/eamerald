@@ -42,7 +42,7 @@ builds:
       post: make container-tag
 
   - id: mrld
-    main: ./cli
+    main: ./mrld
     binary: mrld
     goos:
       - linux

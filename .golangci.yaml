@@ -119,10 +119,10 @@ linters:
     paths:
       - internal/xdg/
       - daemon/signals/
-      - cli/editor/
+      - mrld/editor/
 
     rules:
-      - path: cli/cmd/
+      - path: mrld/cmd/
         linters:
           - dupl
       - path: builtins/
@@ -135,7 +135,7 @@ linters:
       - path: daemon/tests
         linters:
           - goconst
-      # - path: cli/cmd/certs/
+      # - path: mrld/cmd/certs/
       #   linters:
       #     - staticcheck # See https://github.com/dominikh/go-tools/issues/1737
 

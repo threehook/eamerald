@@ -1,6 +1,6 @@
 package cmd
 
-import dsc "github.com/threehook/eamerald/cli/clients/directory"
+import dsc "github.com/threehook/eamerald/mrld/clients/directory"
 
 type CLI struct {
 	Init InitCmd `cmd:"" help:"create new database file"`

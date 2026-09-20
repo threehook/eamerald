@@ -8,8 +8,8 @@ import (
 
 	"github.com/distribution/reference"
 	"github.com/pkg/errors"
-	"github.com/threehook/eamerald/cli/cc"
 	"github.com/threehook/eamerald/internal/fs"
+	"github.com/threehook/eamerald/mrld/cc"
 )
 
 const defaultPolicyRegistry string = "https://ghcr.io"

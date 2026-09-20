@@ -12,10 +12,10 @@ import (
 	client "github.com/aserto-dev/go-aserto"
 	dsc "github.com/aserto-dev/go-aserto/ds/v3"
 	dsm "github.com/aserto-dev/go-directory/aserto/directory/model/v3"
-	"github.com/threehook/eamerald/cli/constants"
 	assets_test "github.com/threehook/eamerald/daemon/tests/assets"
 	tc "github.com/threehook/eamerald/daemon/tests/common"
 	"github.com/threehook/eamerald/internal/fs"
+	"github.com/threehook/eamerald/mrld/constants"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

@@ -143,7 +143,7 @@ k8s-deploy: require-manifest
 	@kubectl -n ${K8S_NAMESPACE} rollout status deployment/${K8S_RELEASE}
 	@if [ -n "$(DATA)" ]; then \
 		echo "importing data: $(DATA)"; \
-		cat $(DATA) | go run ./cli directory import --stdin -H localhost:9292 --insecure; \
+		cat $(DATA) | go run ./mrld directory import --stdin -H localhost:9292 --insecure; \
 	fi
 
 .PHONY: k8s-uninstall

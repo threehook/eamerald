@@ -59,7 +59,7 @@ See the [docs](docs/) directory for configuration reference (`docs/config.md`) a
 * Via a GO install
 
 ```console
-$ go install github.com/threehook/eamerald/cli@latest
+$ go install github.com/threehook/eamerald/mrld@latest
 ```
 
 ### Building from source
@@ -74,7 +74,7 @@ $ make build
 $ ./dist/mrld_<os>_<arch>/mrld
 ```
 
-`mrld` is the compiled binary name of the Eamerald CLI (built from `cli/` in this repo).
+`mrld` is the compiled binary name of the Eamerald CLI (built from `mrld/` in this repo).
 
 `make build` compiles for your host platform by default. To target a different platform, set `GOOS`/`GOARCH`, e.g. `GOOS=linux GOARCH=amd64 make build`. The exact output path is listed in the `building binary=...` build log line, or in `dist/artifacts.json`.
 
