@@ -27,8 +27,7 @@ policy field, so a request selects one through the context:
 which evaluates `data.doelbinding.laadpalen.<action>`. Selectable policies
 live under the `doelbinding` prefix and nowhere else, so a request cannot
 reach a library package by naming it, and an unknown doelbinding is an error
-rather than a policy chosen on the caller's behalf. This follows OpenFTV,
-whose OPA PDP routes each request to `data.doelbinding.<x>` the same way.
+rather than a policy chosen on the caller's behalf.
 
 A request that selects nothing falls back to `opa.policy_root`:
 
