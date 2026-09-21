@@ -12,7 +12,7 @@ It uses the [Open Policy Agent](https://www.openpolicyagent.org/) (OPA) as its d
 
 Authorization policies can leverage user attributes, group membership, application resources, and relationships between them. All data used for authorization is modeled and stored locally in an embedded database, so authorization decisions can be evaluated quickly and efficiently.
 
-<img src="assets/topaz_model_viz.gif" alt="topaz model visualization">
+<img src="assets/eamerald_model_viz.gif" alt="topaz model visualization">
 
 ## Documentation and support
 
