@@ -7,7 +7,7 @@
 # the request's doelbinding names the package it lives in, so this evaluates
 # data.doelbinding.laadpalen.request_laadpaal.
 #
-# Usage: assets/laadpalen/test.sh [authorizer-url]
+# Usage: examples/laadpalen/test.sh [authorizer-url]
 # (defaults to https://localhost:8383)
 set -euo pipefail
 

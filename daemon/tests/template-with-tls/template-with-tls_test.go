@@ -81,16 +81,16 @@ func TestTemplates(t *testing.T) {
 }
 
 var tcs = []string{
-	"../../../assets/acmecorp.json",
-	"../../../assets/peoplefinder.json",
+	"../../../templates/acmecorp.json",
+	"../../../templates/peoplefinder.json",
 
-	"../../../assets/citadel.json",
-	"../../../assets/api-auth.json",
-	"../../../assets/api-gateway.json",
-	"../../../assets/gdrive.json",
-	"../../../assets/github.json",
-	"../../../assets/multi-tenant.json",
-	"../../../assets/simple-rbac.json",
-	"../../../assets/slack.json",
-	"../../../assets/todo.json",
+	"../../../templates/citadel.json",
+	"../../../templates/api-auth.json",
+	"../../../templates/api-gateway.json",
+	"../../../templates/gdrive.json",
+	"../../../templates/github.json",
+	"../../../templates/multi-tenant.json",
+	"../../../templates/simple-rbac.json",
+	"../../../templates/slack.json",
+	"../../../templates/todo.json",
 }

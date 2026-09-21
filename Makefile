@@ -113,7 +113,7 @@ k8s-install: require-manifest
 .PHONY: require-manifest
 require-manifest:
 	@if [ -z "$(MANIFEST)" ]; then \
-		echo -e "$(ERR_COLOR)MANIFEST is required, e.g. MANIFEST=assets/laadpalen/manifest.yaml or MANIFEST=assets/todo/manifest.yaml$(NO_COLOR)"; \
+		echo -e "$(ERR_COLOR)MANIFEST is required, e.g. MANIFEST=examples/laadpalen/manifest.yaml or MANIFEST=templates/todo/manifest.yaml$(NO_COLOR)"; \
 		exit 1; \
 	fi
 
@@ -184,22 +184,22 @@ k8s-logs:
 	@kubectl -n ${K8S_NAMESPACE} logs -f deployment/${K8S_RELEASE}
 
 # laadpalen deploys via k8s-deploy like every other manifest - see
-# assets/laadpalen/README.md:
-#   make k8s-deploy MANIFEST=assets/laadpalen/manifest.yaml \
-#     DATA="assets/laadpalen/laadpalen_objects.jsonl assets/laadpalen/laadpalen_relations.jsonl"
+# examples/laadpalen/README.md:
+#   make k8s-deploy MANIFEST=examples/laadpalen/manifest.yaml \
+#     DATA="examples/laadpalen/laadpalen_objects.jsonl examples/laadpalen/laadpalen_relations.jsonl"
 
 .PHONY: laadpalen-gui
 laadpalen-gui:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
-	@cd assets/laadpalen/gui && npm install && npm run dev
+	@cd examples/laadpalen/gui && npm install && npm run dev
 
-# checks every case in assets/laadpalen/test_cases.json against a running
-# authorizer's request_laadpaal decision (see assets/laadpalen/README.md for
+# checks every case in examples/laadpalen/test_cases.json against a running
+# authorizer's request_laadpaal decision (see examples/laadpalen/README.md for
 # how to deploy with that model first).
 .PHONY: laadpalen-test
 laadpalen-test:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
-	@assets/laadpalen/test.sh
+	@examples/laadpalen/test.sh
 
 PHONY: go-mod-tidy
 go-mod-tidy:

@@ -53,8 +53,8 @@ Deploy first, the same way as any other eamerald manifest - `MANIFEST` and
 `DATA` name this one:
 
 ```
-make k8s-deploy MANIFEST=assets/laadpalen/manifest.yaml \
-  DATA="assets/laadpalen/laadpalen_objects.jsonl assets/laadpalen/laadpalen_relations.jsonl"
+make k8s-deploy MANIFEST=examples/laadpalen/manifest.yaml \
+  DATA="examples/laadpalen/laadpalen_objects.jsonl examples/laadpalen/laadpalen_relations.jsonl"
 ```
 
 Every `make k8s-deploy` states its own `MANIFEST`, and applying one wipes the
@@ -118,5 +118,5 @@ wrong.
 You can also point it at a different authorizer:
 
 ```
-assets/laadpalen/test.sh https://some-other-host:8383
+examples/laadpalen/test.sh https://some-other-host:8383
 ```
