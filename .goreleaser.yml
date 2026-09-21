@@ -40,7 +40,6 @@ builds:
     main: ./mrld
     binary: mrld
     goos:
-      - darwin
       - linux
     goarch:
       - amd64
@@ -92,22 +91,12 @@ builds:
     mod_timestamp: "{{ .CommitTimestamp }}"
 
 archives:
+  # No archives are downloaded/installed standalone anymore - everything
+  # ships as the docker image. Without this, goreleaser falls back to its
+  # own default .tar.gz archive instead of skipping archiving entirely.
   # https://goreleaser.com/customization/archive/
   - formats:
-      - zip
-    ids:
-      - mrld
-      - mrldd
-      - mrld-backup
-    # mrld is cross-platform; mrldd/mrld-backup are Linux-only, so a macOS
-    # archive holds only mrld while a Linux archive holds all three - see
-    # https://goreleaser.com/errors/multiple-binaries-archive
-    allow_different_binary_count: true
-    files:
-      - LICENSE
-      - README.md
-    name_template: >-
-      mrld_{{ .Os }}_{{ .Arch }}
+      - binary
 
 checksum:
   # https://goreleaser.com/customization/checksum/
@@ -156,7 +145,6 @@ dockers_v2:
       - linux/arm64
 
     ids:
-      - mrld
       - mrldd
       - mrld-db
       - mrld-backup
