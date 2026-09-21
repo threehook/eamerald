@@ -42,11 +42,9 @@ func mustStruct(t *testing.T, fields map[string]any) *structpb.Struct {
 	return s
 }
 
-// TestFlatten covers the mapping a policy actually sees. The laadpalen
-// policy reads input.resource.postcode, so an AuthZEN resource has to arrive
-// with its properties at the top level rather than nested under
-// "properties" - that is what lets an existing Is()/Query() policy serve the
-// Access API unchanged.
+// TestFlatten covers the mapping a policy actually sees.
+// The laadpalen policy reads input.resource.postcode, so an AuthZEN resource has to arrive with its properties at the top level rather than nested
+// under "properties" - that is what lets a policy written against that input shape serve the Access API unchanged.
 func TestFlatten(t *testing.T) {
 	t.Parallel()
 
@@ -312,10 +310,8 @@ func TestWithPolicyPath(t *testing.T) {
 	})
 }
 
-// TestDoelbindingPolicy covers how a request picks its policy, and - the
-// reason the packages are prefixed at all - what it cannot pick: a library
-// package, or the instance's own decision package, are both out of reach
-// however the doelbinding is spelled.
+// TestDoelbindingPolicy covers how a request picks its policy, and - the reason the packages are prefixed at all - what it cannot pick:
+// a library package, or the instance's own decision package, are both out of reach however the doelbinding is spelled.
 func TestDoelbindingPolicy(t *testing.T) {
 	t.Parallel()
 
@@ -384,9 +380,8 @@ func TestDoelbindingPolicy(t *testing.T) {
 	}
 }
 
-// TestDefaultPolicyRoots covers the other half of the containment: a request
-// that selects nothing must not land in the doelbinding namespace, however
-// few other packages the bundle carries.
+// TestDefaultPolicyRoots covers the other half of the containment: a request that selects nothing must not land in the doelbinding namespace,
+// however few other packages the bundle carries.
 func TestDefaultPolicyRoots(t *testing.T) {
 	t.Parallel()
 
@@ -410,9 +405,8 @@ func TestDefaultPolicyRoots(t *testing.T) {
 	})
 }
 
-// TestEvalMetaRequest is the data-minimisation guard: whatever a caller sends
-// as subject properties, the decision record carries only what the identity
-// resolved to. A bearer token passed in must never reach the log.
+// TestEvalMetaRequest is the data-minimisation guard: whatever a caller sends as subject properties, the decision record carries only what the
+// identity resolved to. A bearer token passed in must never reach the log.
 func TestEvalMetaRequest(t *testing.T) {
 	t.Parallel()
 
@@ -449,15 +443,13 @@ func TestEvalMetaRequest(t *testing.T) {
 		t.Errorf("%s = %q, want %q", policyPathKey, p, testPolicyRoot)
 	}
 
-	// The resource is the caller's, unmodified: it is the decision's subject
-	// matter, not a credential.
+	// The resource is the caller's, unmodified: it is the decision's subject matter, not a credential.
 	if got := logged.GetResource().GetProperties().GetFields()[testPostcode].GetStringValue(); got != testPostcodeVal {
 		t.Errorf("resource postcode = %q, want %q", got, testPostcodeVal)
 	}
 }
 
-// TestScrubSubject guards the same property leak on the batch sub-requests,
-// which carry their own subjects.
+// TestScrubSubject guards the same property leak on the batch sub-requests, which carry their own subjects.
 func TestScrubSubject(t *testing.T) {
 	t.Parallel()
 

@@ -60,10 +60,8 @@ func NewRuntimeResolver(
 		runtime.WithBuiltin1(az.RegisterActionSearch(logger, builtins.AZActionSearch, acClient)),
 
 		// plugins
-		// ADL records are written by internal/adl, shared with the directory's
-		// AuthZEN Access API, which has no OPA runtime to host a plugin. The
-		// key is registered here only so OPA accepts the
-		// opa.config.plugins.adl_decision_logger block that configures it.
+		// ADL records are written by internal/adl, shared with the directory's/ AuthZEN Access API, which has no OPA runtime to host a plugin.
+		// The key is registered here only so OPA accepts the opa.config.plugins.adl_decision_logger block that configures it.
 		runtime.WithPlugin(adl.ConfigKey, noop.NewPluginFactory(adl.ConfigKey)),
 		runtime.WithPlugin(edge.PluginName, edge.NewPluginFactory(ctx, cfg, logger)),
 		runtime.WithPlugin(git.PluginName, git.NewPluginFactory(ctx, logger)),
@@ -104,12 +102,9 @@ func (r *RuntimeResolver) GetRuntime(ctx context.Context) (*runtime.Runtime, err
 	return r.runtime, nil
 }
 
-// logPDPPolicy reports which policy the AuthZEN Access API falls back to, at
-// startup rather than at the first decision.
+// logPDPPolicy reports which policy the AuthZEN Access API falls back to, at startup rather than at the first decision.
 //
-// It is a warning, not a startup failure: a request selecting its own policy
-// is unaffected, as are Is() and Query(), which take a policy path per
-// request. Only a request that selects nothing has nowhere to go.
+// It is a warning, not a startup failure: a request that selects its own policy is unaffected. Only a request that selects nothing has nowhere to go.
 func logPDPPolicy(ctx context.Context, logger *zerolog.Logger, rt *runtime.Runtime) {
 	policyRoot, err := rt.PDPPolicyRoot(ctx)
 	if err != nil {

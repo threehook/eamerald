@@ -53,8 +53,7 @@ func TestCacheKey(t *testing.T) {
 }
 
 // TestGetOrPrepare_CachesAndDedupes asserts that for a given key the
-// expensive factory function runs at most once across many concurrent
-// goroutines, and that subsequent calls reuse the cached PreparedEvalQuery.
+// expensive factory function runs at most once across many concurrent goroutines, and that subsequent calls reuse the cached PreparedEvalQuery.
 func TestGetOrPrepare_CachesAndDedupes(t *testing.T) {
 	t.Parallel()
 
@@ -62,10 +61,8 @@ func TestGetOrPrepare_CachesAndDedupes(t *testing.T) {
 
 	var prepCalls atomic.Int64
 
-	// Build a real, evaluable PreparedEvalQuery from a trivial Rego module
-	// so we exercise the same code path Is() would. The cache stores the
-	// prepared object; we don't need the runtime here because the cache
-	// itself doesn't care what's behind the factory.
+	// Build a real, evaluable PreparedEvalQuery from a trivial Rego module so we exercise the same code path an evaluation would. The cache stores the
+	// prepared object; we don't need the runtime here because the cache itself doesn't care what's behind the factory.
 	factory := func(ctx context.Context) (rego.PreparedEvalQuery, error) {
 		prepCalls.Add(1)
 
@@ -93,9 +90,8 @@ func TestGetOrPrepare_CachesAndDedupes(t *testing.T) {
 
 	wg.Wait()
 
-	// With singleflight collapsing concurrent misses, we expect 1 factory
-	// call. Allow up to a small handful in case the platform's scheduler
-	// races the first store-vs-load — but flag explicitly if it's many.
+	// With singleflight collapsing concurrent misses, we expect 1 factory call. Allow up to a small handful in case the platform's scheduler races
+	// the first store-vs-load — but flag explicitly if it's many.
 	if calls := prepCalls.Load(); calls > 4 {
 		t.Fatalf("factory called %d times for one key, expected ~1", calls)
 	}
@@ -127,9 +123,8 @@ func TestGetOrPrepare_CachesAndDedupes(t *testing.T) {
 	}
 }
 
-// TestGetOrPrepare_FactoryError ensures errors from the factory are
-// propagated and NOT cached (so a transient failure doesn't poison the
-// cache for the lifetime of the server).
+// TestGetOrPrepare_FactoryError ensures errors from the factory are propagated and NOT cached (so a transient failure doesn't poison the cache for
+// the lifetime of the server).
 func TestGetOrPrepare_FactoryError(t *testing.T) {
 	t.Parallel()
 

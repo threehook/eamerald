@@ -152,11 +152,7 @@ dockers_v2:
     images:
       - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_ORG }}/{{ .Env.IMAGE_REPO }}"
 
-    # Multiple platforms in one entry means goreleaser already builds and
-    # pushes a single multi-arch manifest per tag via buildx - no separate
-    # docker_manifests step needed (that only applies to the legacy dockers:
-    # pipe). Snapshot builds only fake per-arch-suffixed tags locally because
-    # a multi-platform manifest can't be built without actually pushing it.
+    # Multiple platforms in one entry produces a multi-arch manifest via buildx.
     tags:
       - "{{ .Version }}"
       - "{{ if eq .Env.DISABLE_GITHUB_RELEASE \"true\" }}main{{ end }}"

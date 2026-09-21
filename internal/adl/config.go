@@ -3,10 +3,8 @@
 //
 // Spec: https://gitdocumentatie.logius.nl/publicatie/ftv/adl/1.0.0/
 //
-// The package deliberately depends only on the AuthZEN wire types and the
-// W3C trace context helpers: ADL covers both the authorizer's Is() endpoint
-// and the directory's AuthZEN Access API, and the latter runs without an OPA
-// runtime, so the logger cannot live inside an OPA plugin.
+// The package deliberately depends only on the AuthZEN wire types and the W3C trace context helpers: ADL covers both the authorizer's and the
+// directory's AuthZEN Access API implementations, and the latter runs without an OPA runtime, so the logger cannot live inside an OPA plugin.
 package adl
 
 import (

@@ -44,17 +44,12 @@ const (
 
 // AccessServer serves the AuthZEN Access API from the policy engine.
 //
-// The directory serves the same API from its relationship graph. This
-// implementation serves it from Rego, so that a policy decision can be asked
-// for - and logged - under the AuthZEN information model, rather than through
-// the generic Query() endpoint whose arbitrary result shape has no AuthZEN
-// equivalent and therefore cannot be recorded as a conformant decision.
+// The directory serves the same API from its relationship graph. This implementation serves it from Rego, so that a policy decision can be asked
+// for - and logged - under the AuthZEN information model, in a shape fixed enough to record as a conformant decision.
 //
-// The action names the rule, and the request's doelbinding names the package
-// it lives in - see policyPath. With a bundle rooted at `package authz` and
-// no doelbinding, an action.name of "request_laadpaal" evaluates
-// data.authz.request_laadpaal. That rule returns either the AuthZEN decision
-// object verbatim - {"decision": bool, "context": {...}} - or a bare boolean.
+// The action names the rule, and the request's doelbinding names the package/ it lives in - see policyPath.
+// With a bundle rooted at `package authz` and no doelbinding, an action.name of "request_laadpaal" evaluates data.authz.request_laadpaal.
+// That rule returns either the AuthZEN decision object verbatim - {"decision": bool, "context": {...}} - or a bare boolean.
 type AccessServer struct {
 	authz *AuthorizerServer
 }
@@ -219,11 +214,9 @@ func (s *AccessServer) evaluate(
 
 // input builds the Rego input for an AuthZEN evaluation.
 //
-// input.user and input.identity keep the shape Is() and Query() produce, so
-// that a policy written against those APIs keeps working. The AuthZEN model
-// is added alongside, with each element's properties flattened and its
-// structural fields folded in: a policy reads input.resource.postcode, not
-// input.resource.properties.postcode.
+// input.user and input.identity keep a stable shape so that a policy written against them keeps working.
+// The AuthZEN model is added alongside, with each element's properties flattened and its structural fields folded in: a policy reads
+// input.resource.postcode, not input.resource.properties.postcode.
 func (s *AccessServer) input(
 	ctx context.Context, req *dsa.EvaluationRequest, identity *api.IdentityContext,
 ) (map[string]any, *dsc.Object, error) {
@@ -255,14 +248,12 @@ func (s *AccessServer) input(
 
 // policyPath returns the package to evaluate a request against.
 //
-// AuthZEN has no policy field, so a request selects its policy through the
-// context: `"doelbinding": "laadpalen"` evaluates data.doelbinding.laadpalen.
-// Selectable policies live under that one prefix, so that a request cannot
-// reach a library package by naming it, and an unknown doelbinding is an
+// AuthZEN has no policy field, so a request selects its policy through the context: `"doelbinding": "laadpalen"` evaluates
+// data.doelbinding.laadpalen.
+// Selectable policies live under that one prefix, so that a request cannot reach a library package by naming it, and an unknown doelbinding is an
 // error rather than a policy chosen on the caller's behalf.
 //
-// A request that selects nothing gets the policy the instance was configured
-// to serve, which is the whole story for a single-policy deployment.
+// A request that selects nothing gets the policy the instance was configured to serve, which is the whole story for a single-policy deployment.
 func (s *AccessServer) policyPath(
 	ctx context.Context, rt *runtime.Runtime, reqContext *structpb.Struct,
 ) (string, error) {
@@ -284,20 +275,17 @@ func (s *AccessServer) policyPath(
 	return doelbindingPolicy(packages, selected)
 }
 
-// defaultPolicyRoots returns the roots a request that selects nothing can be
-// served from. The doelbinding namespace is not among them: those packages
-// are reachable only by naming one, so falling back into the namespace would
-// answer with a policy the request did not ask for - and with the bare
-// `doelbinding` root, which is no policy at all.
+// defaultPolicyRoots returns the roots a request that selects nothing can be served from.
+// The doelbinding namespace is not among them: those packages are reachable only by naming one, so falling back into the namespace would answer with
+// a policy the request did not ask for - and with the bare `doelbinding` root, which is no policy at all.
 func defaultPolicyRoots(packages []string) []string {
 	return slices.DeleteFunc(runtime.PolicyRoots(packages), func(root string) bool {
 		return root == doelbindingPrefix
 	})
 }
 
-// doelbindingPolicy maps a selected doelbinding onto the loaded package that
-// serves it. Prefixing is what contains the selection: no doelbinding can
-// name a package outside the namespace set aside for them.
+// doelbindingPolicy maps a selected doelbinding onto the loaded package that serves it.
+// Prefixing is what contains the selection: no doelbinding can name a package outside the namespace set aside for them.
 func doelbindingPolicy(packages []string, selected string) (string, error) {
 	path := doelbindingPrefix + "." + selected
 
@@ -309,8 +297,7 @@ func doelbindingPolicy(packages []string, selected string) (string, error) {
 	return path, nil
 }
 
-// evalMeta carries what the decision log needs but an AuthZEN request does
-// not hold: which policy the decision came from, and what the subject
+// evalMeta carries what the decision log needs but an AuthZEN request does not hold: which policy the decision came from, and what the subject
 // actually resolved to.
 type evalMeta struct {
 	policyPath string
@@ -318,10 +305,8 @@ type evalMeta struct {
 	user       *dsc.Object
 }
 
-// request returns the form of req that goes into the decision log: the
-// subject replaced by what the identity resolved to - never the caller's
-// properties, which may carry a bearer token - and the deciding policy
-// recorded in the context.
+// request returns the form of req that goes into the decision log: the subject replaced by what the identity resolved to - never the caller's
+// properties, which may carry a bearer token - and the deciding policy recorded in the context.
 func (m evalMeta) request(req *dsa.EvaluationRequest) *dsa.EvaluationRequest {
 	return &dsa.EvaluationRequest{
 		Subject:  adlSubject(m.identity, m.user),
@@ -352,8 +337,7 @@ func (m evalMeta) requests(req *dsa.EvaluationsRequest) *dsa.EvaluationsRequest 
 	}
 }
 
-// identityContext maps an AuthZEN subject onto the identity context the
-// authorizer resolves directory users from.
+// identityContext maps an AuthZEN subject onto the identity context the authorizer resolves directory users from.
 func identityContext(subject *dsa.Subject) *api.IdentityContext {
 	if jwt := stringProperty(subject.GetProperties(), subjectJWTProperty); jwt != "" {
 		return &api.IdentityContext{Type: api.IdentityType_IDENTITY_TYPE_JWT, Identity: jwt}
@@ -366,8 +350,7 @@ func identityContext(subject *dsa.Subject) *api.IdentityContext {
 	return &api.IdentityContext{Type: api.IdentityType_IDENTITY_TYPE_NONE}
 }
 
-// evaluationResponse maps the value a decision rule bound onto an AuthZEN
-// evaluation response. A rule either returns the decision object verbatim,
+// evaluationResponse maps the value a decision rule bound onto an AuthZEN evaluation response. A rule either returns the decision object verbatim,
 // or a bare boolean when it carries nothing but an outcome.
 func evaluationResponse(action string, binding any) (*dsa.EvaluationResponse, error) {
 	switch result := binding.(type) {
@@ -414,9 +397,8 @@ func defaulted(batch *dsa.EvaluationsRequest, req *dsa.EvaluationRequest) *dsa.E
 	}
 }
 
-// flatten merges an AuthZEN properties bag with the structural fields of the
-// element it belongs to. A property already using one of those names wins:
-// caller data is never silently overwritten.
+// flatten merges an AuthZEN properties bag with the structural fields of the element it belongs to. A property already using one of those names
+// wins: caller data is never silently overwritten.
 func flatten(properties *structpb.Struct, fields map[string]string) map[string]any {
 	out := properties.AsMap()
 
@@ -433,8 +415,7 @@ func flatten(properties *structpb.Struct, fields map[string]string) map[string]a
 	return out
 }
 
-// withPolicyPath records which policy produced the decision. AuthZEN has no
-// field for it - the request names a doelbinding, not a package - and
+// withPolicyPath records which policy produced the decision. AuthZEN has no field for it - the request names a doelbinding, not a package - and
 // without it a log record cannot be tied back to the rule that decided.
 func withPolicyPath(base *structpb.Struct, policyPath string) *structpb.Struct {
 	if policyPath == "" {
@@ -448,8 +429,7 @@ func withPolicyPath(base *structpb.Struct, policyPath string) *structpb.Struct {
 	return &structpb.Struct{Fields: fields}
 }
 
-// scrubSubject drops the caller's subject properties, which may carry a
-// bearer token, keeping only the type and id the decision was made for.
+// scrubSubject drops the caller's subject properties, which may carry a bearer token, keeping only the type and id the decision was made for.
 func scrubSubject(subject *dsa.Subject) *dsa.Subject {
 	if subject == nil {
 		return nil
@@ -462,11 +442,9 @@ func stringProperty(properties *structpb.Struct, key string) string {
 	return properties.GetFields()[key].GetStringValue()
 }
 
-// errSearchUnsupported reports that a search API has no policy-engine
-// implementation. The searches enumerate candidates, which the directory can
-// do by walking its relationship graph but a Rego rule cannot: a policy
-// answers "may this subject do this?", and offers no way to enumerate the
-// subjects, resources or actions it would admit. They are served by the
+// errSearchUnsupported reports that a search API has no policy-engine implementation.
+// The searches enumerate candidates, which the directory can do by walking its relationship graph but a Rego rule cannot: a policy answers
+// "may this subject do this?", and offers no way to enumerate the subjects, resources or actions it would admit. They are served by the
 // directory's Access API instead.
 func errSearchUnsupported(api string) error {
 	return status.Errorf(codes.Unimplemented,

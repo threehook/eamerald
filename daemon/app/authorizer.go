@@ -106,14 +106,11 @@ func (e *Authorizer) Close() {
 	}
 }
 
-// servesAccessAPI reports whether the policy-engine implementation of the
-// AuthZEN Access API should be registered on this port.
+// servesAccessAPI reports whether the policy-engine implementation of the AuthZEN Access API should be registered on this port.
 //
-// The directory registers its own graph-backed implementation alongside the
-// reader, and gRPC panics on a duplicate service registration, so a
-// deployment that puts the authorizer and the reader on one address gets the
-// directory's. Serving policy decisions over AuthZEN then needs the two on
-// separate addresses, which is how they are configured by default.
+// The directory registers its own graph-backed implementation alongside the reader, and gRPC panics on a duplicate service registration, so a
+// deployment that puts the authorizer and the reader on one address gets the directory's.
+// Serving policy decisions over AuthZEN then needs the two on separate addresses, which is how they are configured by default.
 func (e *Authorizer) servesAccessAPI(services ...string) bool {
 	if !lo.Contains(services, readerService) {
 		return true

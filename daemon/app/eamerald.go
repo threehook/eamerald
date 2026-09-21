@@ -26,8 +26,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// Eamerald is an authorizer service instance, responsible for managing
-// the authorizer API, user directory instance and the OPA plugins.
+// Eamerald is an authorizer service instance, responsible for managing the authorizer API, user directory instance and the OPA plugins.
 type Eamerald struct {
 	Context        context.Context
 	Logger         *zerolog.Logger
@@ -38,8 +37,7 @@ type Eamerald struct {
 	Services       map[string]builder.ServiceTypes
 }
 
-// adlCleanupTimeout bounds the final flush of buffered decision records on
-// shutdown.
+// adlCleanupTimeout bounds the final flush of buffered decision records on shutdown.
 const adlCleanupTimeout = 30 * time.Second
 
 var healthCheck *health.Server
@@ -224,14 +222,9 @@ func (e *Eamerald) setupHealthAndMetrics() ([]grpc.ServerOption, error) {
 			return nil, err
 		}
 
-		// healthCheck must be assigned, and the phony sync/git services
-		// registered, before any OPA plugin starts (NewRuntimeResolver runs
-		// after ConfigServices but before Start): a plugin whose initial
-		// sync completes synchronously — as the git plugin's does — calls
-		// SetServiceStatus during its own Start(), and that call is a no-op
-		// if healthCheck is still nil, or gets clobbered if the NOT_SERVING
-		// default is registered afterward in Start(). Registering here,
-		// before plugins run, avoids both.
+		// The health server must be running before OPA plugins start. Plugins publish ready/not-ready via SetServiceStatus, which updates
+		// healthCheck; if that is still nil their updates are ignored.
+		// Point healthCheck at the server here. The loop below marks the edge and git plugins not-ready until they report otherwise.
 		healthCheck = e.Manager.HealthServer.Server
 
 		for _, phonyService := range []string{"sync", "git"} {
@@ -292,10 +285,8 @@ func (e *Eamerald) prepareServices() error {
 	return nil
 }
 
-// newADLLogger builds the Authorization Decision Log writer shared by every
-// service that evaluates authorization decisions. The authorizer's Is()
-// endpoint and the directory's AuthZEN Access API log through the same
-// instance, so a deployment running both does not open two OTLP exporters
+// newADLLogger builds the Authorization Decision Log writer shared by every service that evaluates authorization decisions. The authorizer's and
+// the directory's AuthZEN Access API implementations log through the same instance, so a deployment running both does not open two OTLP exporters
 // against the collector.
 func (e *Eamerald) newADLLogger() (*adl.Logger, error) {
 	cfg, err := adl.ConfigFromPlugins(e.Configuration.OPA.Config.Plugins)

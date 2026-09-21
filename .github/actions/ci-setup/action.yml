@@ -1,7 +1,6 @@
 name: CI setup
-description: Go toolchain and Docker QEMU/Buildx/GHCR login shared by the ci workflow's jobs. The
-  calling job must check the repo out itself before this step - a local action can't be the thing
-  that checks itself out.
+description: Go toolchain and Docker QEMU/Buildx/GHCR login shared by the ci workflow's jobs.
+  The calling job must check the repo out itself before this step - a local action can't be the thing that checks itself out.
 
 inputs:
   github-token:
