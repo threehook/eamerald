@@ -2,7 +2,6 @@
 
 # Eamerald - cloud-native authorization for modern applications and APIs
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/threehook/eamerald)](https://goreportcard.com/report/github.com/threehook/eamerald)
 [![ci](https://github.com/threehook/eamerald/actions/workflows/ci.yaml/badge.svg)](https://github.com/threehook/eamerald/actions/workflows/ci.yaml)
 ![Apache 2.0](https://img.shields.io/github/license/threehook/eamerald)
 ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/threehook/eamerald)
