@@ -99,6 +99,10 @@ archives:
       - mrld
       - mrldd
       - mrld-backup
+    # mrld is cross-platform; mrldd/mrld-backup are Linux-only, so a macOS
+    # archive holds only mrld while a Linux archive holds all three - see
+    # https://goreleaser.com/errors/multiple-binaries-archive
+    allow_different_binary_count: true
     files:
       - LICENSE
       - README.md
