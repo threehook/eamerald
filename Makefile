@@ -214,7 +214,7 @@ release: gover
 .PHONY: snapshot
 snapshot: gover
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
-	@${EXT_BIN_DIR}/goreleaser release --config .goreleaser.yml --clean --snapshot --skip archive,homebrew,sbom
+	@${EXT_BIN_DIR}/goreleaser release --config .goreleaser.yml --clean --snapshot --skip sbom
 
 .PHONY: generate
 generate:
@@ -246,7 +246,7 @@ test: gover test-snapshot
 test-snapshot:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
 	@docker image rm ${REGISTRY}/${IMAGE_ORG}/${IMAGE_REPO}:0.0.0-test-$$(git rev-parse --short HEAD)-$$(uname -m) || true
-	@${EXT_BIN_DIR}/goreleaser release --config .goreleaser-test.yml --clean --snapshot --skip archive,homebrew,sbom
+	@${EXT_BIN_DIR}/goreleaser release --config .goreleaser-test.yml --clean --snapshot --skip archive,sbom
 
 .PHONE: container-tag
 container-tag:
