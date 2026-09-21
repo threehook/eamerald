@@ -152,12 +152,15 @@ dockers_v2:
     images:
       - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_ORG }}/{{ .Env.IMAGE_REPO }}"
 
-    # Per-architecture staging tags only - not meant to be pulled directly.
-    # docker_manifests below combines these into the real, multi-arch tags
-    # (the version tag, main, latest).
+    # Multiple platforms in one entry means goreleaser already builds and
+    # pushes a single multi-arch manifest per tag via buildx - no separate
+    # docker_manifests step needed (that only applies to the legacy dockers:
+    # pipe). Snapshot builds only fake per-arch-suffixed tags locally because
+    # a multi-platform manifest can't be built without actually pushing it.
     tags:
       - "{{ .Version }}"
       - "{{ if eq .Env.DISABLE_GITHUB_RELEASE \"true\" }}main{{ end }}"
+      - "{{ if and (not .IsSnapshot) (ne .Env.DISABLE_GITHUB_RELEASE \"true\") }}latest{{ end }}"
 
     labels:
       "org.opencontainers.image.created": "{{.Date}}"
@@ -174,27 +177,6 @@ dockers_v2:
     annotations:
     build_args:
     flags:
-
-docker_manifests:
-  # Combines the two per-arch "<tag>-amd64"/"<tag>-arm64" images above into
-  # the real, user-facing multi-arch tags, so
-  # `docker pull ghcr.io/threehook/eamerald:main` (or :<version>, :latest)
-  # picks the right architecture on its own.
-  # https://goreleaser.com/customization/docker_manifest/
-  - name_template: "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_ORG }}/{{ .Env.IMAGE_REPO }}:{{ .Version }}"
-    image_templates:
-      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_ORG }}/{{ .Env.IMAGE_REPO }}:{{ .Version }}-amd64"
-      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_ORG }}/{{ .Env.IMAGE_REPO }}:{{ .Version }}-arm64"
-
-  - name_template: "{{ if eq .Env.DISABLE_GITHUB_RELEASE \"true\" }}{{ .Env.REGISTRY }}/{{ .Env.IMAGE_ORG }}/{{ .Env.IMAGE_REPO }}:main{{ end }}"
-    image_templates:
-      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_ORG }}/{{ .Env.IMAGE_REPO }}:main-amd64"
-      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_ORG }}/{{ .Env.IMAGE_REPO }}:main-arm64"
-
-  - name_template: "{{ if and (not .IsSnapshot) (ne .Env.DISABLE_GITHUB_RELEASE \"true\") }}{{ .Env.REGISTRY }}/{{ .Env.IMAGE_ORG }}/{{ .Env.IMAGE_REPO }}:latest{{ end }}"
-    image_templates:
-      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_ORG }}/{{ .Env.IMAGE_REPO }}:{{ .Version }}-amd64"
-      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_ORG }}/{{ .Env.IMAGE_REPO }}:{{ .Version }}-arm64"
 
 retry:
   # https://goreleaser.com/customization/general/retry/
