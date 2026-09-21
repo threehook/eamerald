@@ -1,4 +1,4 @@
-<img src="assets/logo.svg" alt="topaz logo">
+<img src="assets/logo.svg" alt="eamerald logo">
 
 # Eamerald - cloud-native authorization for modern applications and APIs
 
