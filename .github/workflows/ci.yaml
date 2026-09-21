@@ -126,7 +126,7 @@ jobs:
         with:
           distribution: goreleaser
           version: ${{ env.GO_RELEASER_VER }}
-          args: release --clean --snapshot
+          args: release --clean --nightly
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCKER_CLI_EXPERIMENTAL: "enabled"
