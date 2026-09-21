@@ -27,7 +27,7 @@ See the [docs](docs/) directory for configuration reference (`docs/config.md`) a
 * **Real-time**: gate each protected resource with an authorization call that ensures the user has the right permission.
 * **Blazing fast**: deploy the authorizer as a sidecar or microservice, right next to your app, for low latency and high availability.
 * **Comprehensive decision logging**: log every decision to facilitate audit trails, compliance, and forensics.
-* **Flexible authorization model**: Start simple, and grow from multi-tenant RBAC to ABAC or ReBAC, or a combination.
+* **Flexible authorization model**: Start simple, and grow from multi-tenant RBAC to ABAC or ReBAC, or a combination - see [authorization models](docs/authorization-models.md).
 * **Capture your domain model**: Create object types and relationships that reflect your domain model.
 * **Separation of concerns**: application developers can own the app logic, and security engineers can own the authorization policy.
 
