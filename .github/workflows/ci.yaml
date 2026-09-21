@@ -22,6 +22,7 @@ permissions:
   packages: write
 
 env:
+  GH_TOKEN: ${{ github.token }}
   GO_RELEASER_VER: "v2.18.0"
   GO_LANGCI_LINT_VER: "v2.13.2"
   SYFT_VER: "v1.13.0"
