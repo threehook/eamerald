@@ -121,15 +121,22 @@ jobs:
         with:
           syft-version: ${{ env.SYFT_VER }}
       -
+        name: Image version
+        id: image
+        run: echo "tag=v0.0.0-main.${GITHUB_RUN_NUMBER}.$(git rev-parse --short=12 HEAD)" >> "$GITHUB_OUTPUT"
+      -
+        # Publish a GHCR image for this commit without a GitHub Release.
         name: Push image to GitHub Container Registry
         uses: goreleaser/goreleaser-action@v7
         with:
           distribution: goreleaser
           version: ${{ env.GO_RELEASER_VER }}
-          args: release --clean --nightly
+          args: release --clean --skip=validate,archive,sbom
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCKER_CLI_EXPERIMENTAL: "enabled"
+          DISABLE_GITHUB_RELEASE: "true"
+          GORELEASER_CURRENT_TAG: ${{ steps.image.outputs.tag }}
 
   release:
     needs: [test]
@@ -157,6 +164,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCKER_CLI_EXPERIMENTAL: "enabled"
+          DISABLE_GITHUB_RELEASE: "false"
         with:
           distribution: goreleaser
           version: ${{ env.GO_RELEASER_VER }}

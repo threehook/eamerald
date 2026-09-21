@@ -135,6 +135,11 @@ release:
     owner: "{{ .Env.IMAGE_ORG }}"
     name: "{{ .Env.IMAGE_REPO }}"
 
+  # Branch pushes (main image publish) set DISABLE_GITHUB_RELEASE=true so we
+  # still push to GHCR without opening a GitHub Release for every commit.
+  # Tag pushes leave it unset and create a normal release.
+  disable: "{{ eq .Env.DISABLE_GITHUB_RELEASE \"true\" }}"
+
   draft: false
   prerelease: "false"
   name_template: "{{.ProjectName}} {{.Tag}}"
@@ -160,8 +165,12 @@ dockers_v2:
       - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_ORG }}/{{ .Env.IMAGE_REPO }}"
 
     tags:
+      # Semver / pre-release version (real tags, or the synthetic main tag).
       - "{{ .Version }}"
-      - "{{ if not .IsSnapshot }}latest{{ end }}"
+      # Floating tag for the tip of main — set only by the push job.
+      - "{{ if eq .Env.DISABLE_GITHUB_RELEASE \"true\" }}main{{ end }}"
+      # `latest` only for real version tags, never for main tip images.
+      - "{{ if and (not .IsSnapshot) (ne .Env.DISABLE_GITHUB_RELEASE \"true\") }}latest{{ end }}"
 
     labels:
       "org.opencontainers.image.created": "{{.Date}}"
