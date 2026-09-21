@@ -1,11 +1,9 @@
 name: CI setup
-description: Checkout, Go toolchain, and Docker QEMU/Buildx/GHCR login shared by the ci workflow's jobs
+description: Go toolchain and Docker QEMU/Buildx/GHCR login shared by the ci workflow's jobs. The
+  calling job must check the repo out itself before this step - a local action can't be the thing
+  that checks itself out.
 
 inputs:
-  fetch-depth:
-    description: git fetch depth passed to actions/checkout
-    required: false
-    default: "1"
   github-token:
     description: token used to authenticate to ghcr.io
     required: true
@@ -13,10 +11,6 @@ inputs:
 runs:
   using: composite
   steps:
-    -
-      uses: actions/checkout@v7
-      with:
-        fetch-depth: ${{ inputs.fetch-depth }}
     -
       name: Setup Go
       uses: actions/setup-go@v7
