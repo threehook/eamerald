@@ -6,29 +6,57 @@
 ![Apache 2.0](https://img.shields.io/github/license/threehook/eamerald)
 ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/threehook/eamerald)
 
-Eamerald is an open-source authorization service providing fine-grained, real-time, policy-based access control for applications and APIs.
-
-It uses the [Open Policy Agent](https://www.openpolicyagent.org/) (OPA) as its decision engine, and provides a built-in directory that is inspired by the Google [Zanzibar](https://research.google/pubs/pub48190/) data model.
-
-Authorization policies can leverage user attributes, group membership, application resources, and relationships between them. All data used for authorization is modeled and stored locally in an embedded database, so authorization decisions can be evaluated quickly and efficiently.
-
-<img src="assets/eamerald_model_viz.gif" alt="topaz model visualization">
+Eamerald is an open-source authorization service providing fine-grained, real-time, policy-based access control for applications and APIs.  
+It uses the [Open Policy Agent](https://www.openpolicyagent.org/) (OPA) as its decision engine, and provides a built-in directory that is inspired by the Google [Zanzibar](https://research.google/pubs/pub48190/) data model.  
+Authorization policies can leverage user attributes, group membership, application resources, and relationships between them. All data used for authorization is modeled and stored locally in an embedded database, so authorization decisions can be evaluated quickly and efficiently.  
+Eamerald supports multiple authorization models - Relationship-Based (ReBAC), Role-Based (RBAC), and Attribute-Based (ABAC) - and lets you combine them in a single decision.  
 
 ## Documentation and support
 
-See the [docs](docs/) directory for configuration reference (`docs/config.md`) and feature-flag documentation (`docs/fflag/`).
+See the [docs](docs/config.md) directory for configuration reference (`docs/config.md`) and feature-flag documentation (`docs/fflag/`).
 
 ## Benefits
 
-* **Authorization in one place**: a single authorization service, instead of spreading authorization logic everywhere.
-* **Fine-grained**: following the Principle of Least Privilege, assign the smallest set of fine-grained permissions to each user or group.
-* **Policy-based**: convert authorization "spaghetti code" into a policy expressed in its own domain-specific language, managed as code, and built into an immutable, signed artifact.
-* **Real-time**: gate each protected resource with an authorization call that ensures the user has the right permission.
-* **Blazing fast**: deploy the authorizer as a sidecar or microservice, right next to your app, for low latency and high availability.
-* **Comprehensive decision logging**: log every decision to facilitate audit trails, compliance, and forensics.
-* **Flexible authorization model**: Start simple, and grow from multi-tenant RBAC to ABAC or ReBAC, or a combination - see [authorization models](docs/authorization-models.md).
-* **Capture your domain model**: Create object types and relationships that reflect your domain model.
-* **Separation of concerns**: application developers can own the app logic, and security engineers can own the authorization policy.
+### Authorization in one place
+
+A single authorization service, instead of spreading authorization logic everywhere.
+
+### Fine-grained
+
+Following the Principle of Least Privilege, assign the smallest set of fine-grained permissions to each user or group.
+
+### Policy-based
+
+Convert authorization "spaghetti code" into a policy expressed in its own domain-specific language, managed as code, and built into an immutable, signed artifact.
+
+### Real-time
+
+Gate each protected resource with an authorization call that ensures the user has the right permission.
+
+### Blazing fast
+
+Deploy the authorizer as a sidecar or microservice, right next to your app, for low latency and high availability.
+
+### Comprehensive decision logging
+
+Log every decision to facilitate audit trails, compliance, and forensics.
+
+### Flexible authorization model
+
+Start simple, and grow from multi-tenant RBAC to ABAC or ReBAC, or a combination - see [authorization models](docs/authorization-models.md).
+
+### Capture your domain model
+
+Create object types and relationships that reflect your domain model.
+
+<details>
+<summary><img src="assets/video_camera.svg" alt="Play domain model visualization" width="28" height="28"></summary>
+<img src="assets/eamerald_model_viz.gif" alt="eamerald model visualization">
+</details>
+
+### Separation of concerns
+
+Application developers can own the app logic, and security engineers can own the authorization policy.
 
 ## Table of Contents
 - [Getting Eamerald](#getting-eamerald)
@@ -43,7 +71,6 @@ See the [docs](docs/) directory for configuration reference (`docs/config.md`) a
     - [Run the sample application](#run-the-sample-application)
 - [Command Line](#command-line-options)
 - [gRPC Endpoints](#grpc-endpoints)
-- [Demo video](#demo)
 - [Credits](#credits)
 - [Contribution Guidelines](#contribution-guidelines)
 
