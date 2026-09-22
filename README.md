@@ -49,16 +49,11 @@ Start simple, and grow from multi-tenant RBAC to ABAC or ReBAC, or a combination
 
 Create object types and relationships that reflect your domain model.
 
-<style>
-/* Kept by local MD preview; stripped on GitHub. */
-img.model-viz-static { display: none; }
-</style>
-
-<img class="model-viz-static" src="assets/eamerald_model_viz.gif" alt="eamerald model visualization">
-
 <details>
-<summary><img src="assets/video_camera.png" width="72" height="72" alt="Play domain model visualization"></summary>
-<img src="assets/eamerald_model_viz.gif" alt="eamerald model visualization">
+  <summary style="font-size: 1.25rem; color: #0066cc; text-decoration: underline; cursor: pointer;">
+    Eamerald model visualization
+  </summary>
+  <img src="assets/eamerald_model_viz.gif" alt="eamerald model visualization">
 </details>
 
 ### Separation of concerns
