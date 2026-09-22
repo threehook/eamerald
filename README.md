@@ -50,10 +50,10 @@ Start simple, and grow from multi-tenant RBAC to ABAC or ReBAC, or a combination
 Create object types and relationships that reflect your domain model.
 
 <details>
-  <summary style="font-size: 1.25rem; color: #0066cc; text-decoration: underline; cursor: pointer;">
+  <summary style="font-size: 1.0rem; color: #0066cc; text-decoration: underline; cursor: pointer;">
     Eamerald model visualization
   </summary>
-  <img src="assets/eamerald_model_viz.gif" alt="eamerald model visualization">
+  <img src="assets/eamerald_model_viz.gif" alt="Eamerald model visualization">
 </details>
 
 ### Separation of concerns
