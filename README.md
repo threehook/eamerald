@@ -50,13 +50,7 @@ Start simple, and grow from multi-tenant RBAC to ABAC or ReBAC, or a combination
 Create object types and relationships that reflect your domain model.
 
 <details>
-<summary>
-<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" aria-label="Play domain model visualization">
-  <rect x="2" y="6" width="13" height="12" rx="2" stroke="#9ecbff" stroke-width="1.75" fill="#21262d"/>
-  <path d="M15 10.5L21 7v10l-6-3.5v-3z" stroke="#9ecbff" stroke-width="1.75" stroke-linejoin="round" fill="#21262d"/>
-  <circle cx="8.5" cy="12" r="2" fill="#9ecbff"/>
-</svg>
-</summary>
+<summary><img src="assets/video_camera.png" width="72" height="72" alt="Play domain model visualization"></summary>
 <img src="assets/eamerald_model_viz.gif" alt="eamerald model visualization">
 </details>
 
