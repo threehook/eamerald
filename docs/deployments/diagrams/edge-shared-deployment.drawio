@@ -1,0 +1,65 @@
+<mxfile host="drawio-plugin" modified="2026-09-23T21:08:53.963Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" etag="CQ2FJ4-7VxOZr-BMQ5Sa" version="22.1.22" type="embed">
+  <diagram id="shared-edge" name="Shared edge Deployment">
+    <mxGraphModel dx="1881" dy="475" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="hub-box" value="Hub" style="swimlane;horizontal=0;startSize=28;rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="40" y="180" width="220" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="hub" value="Hub directory" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=center;" parent="hub-box" vertex="1">
+          <mxGeometry x="40" y="50" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="pg" value="Postgres" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="hub-box" vertex="1">
+          <mxGeometry x="50" y="130" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="hpg" style="endArrow=classic;startArrow=classic;html=1;rounded=0;" parent="hub-box" source="hub" target="pg" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-box" value="Edge Deployment" style="swimlane;horizontal=0;startSize=28;rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="400" y="120" width="280" height="320" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="Edge authorizer&lt;br&gt;(eameraldd)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="edge-box" vertex="1">
+          <mxGeometry x="50" y="60" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="Edge authorizer&#xa;eameraldd" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="edge-box" vertex="1">
+          <mxGeometry x="50" y="180" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a1" value="App A" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+          <mxGeometry x="780" y="100" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="a2" value="App B" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+          <mxGeometry x="780" y="200" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="a3" value="App C" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+          <mxGeometry x="780" y="340" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="s1" style="endArrow=classic;dashed=1;html=1;rounded=0;" parent="1" source="hub" target="e1" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s1l" value="sync" style="edgeLabel;html=1;align=center;fontSize=11;" parent="s1" vertex="1" connectable="0">
+          <mxGeometry x="-0.1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s2" style="endArrow=classic;dashed=1;html=1;rounded=0;" parent="1" source="hub" target="e2" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s2l" value="sync" style="edgeLabel;html=1;align=center;fontSize=11;" parent="s2" vertex="1" connectable="0">
+          <mxGeometry x="-0.1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c1" style="endArrow=classic;html=1;rounded=0;" parent="1" source="a1" target="e1" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" style="endArrow=classic;html=1;rounded=0;" parent="1" source="a2" target="e1" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" style="endArrow=classic;html=1;rounded=0;" parent="1" source="a3" target="e2" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

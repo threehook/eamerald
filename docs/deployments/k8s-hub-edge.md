@@ -31,7 +31,7 @@ Sidecar packaging for edge lives under [`sidecar-deployment/`](sidecar-deploymen
 
 Apps call a shared edge Service of **authorizers**. Those authorizers sync from the hub (Postgres-backed directory).
 
-**Draw.io:** [shared-edge-deployment.drawio](diagrams/shared-edge-deployment.drawio)
+**Draw.io:** [edge-shared-deployment.drawio](diagrams/edge-shared-deployment.drawio)
 
 ```mermaid
 flowchart LR
@@ -42,8 +42,8 @@ flowchart LR
   end
 
   subgraph EdgeDeployment["Edge Deployment"]
-    E1[Edge authorizer]
-    E2[Edge authorizer]
+    E1[Edge authorizer<br/>(eameraldd)]
+    E2[Edge authorizer<br/>(eameraldd)]
   end
 
   A1[App A] --> E1
@@ -60,7 +60,7 @@ flowchart LR
 
 Each app pod embeds an **authorizer** sidecar; the app talks to localhost; each authorizer syncs from the hub (Postgres-backed directory).
 
-**Draw.io:** [sidecar-edge.drawio](diagrams/sidecar-edge.drawio)
+**Draw.io:** [edge-sidecar-deployment.drawio](diagrams/edge-sidecar-deployment.drawio)
 
 ```mermaid
 flowchart LR
@@ -72,13 +72,13 @@ flowchart LR
 
   subgraph Pod1["App pod 1"]
     A1[App]
-    S1[Edge authorizer]
+    S1[Edge authorizer<br/>(eameraldd)]
     A1 --> S1
   end
 
   subgraph Pod2["App pod 2"]
     A2[App]
-    S2[Edge authorizer]
+    S2[Edge authorizer<br/>(eameraldd)]
     A2 --> S2
   end
 
