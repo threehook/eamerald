@@ -133,6 +133,15 @@ require-manifest:
 # the chart's built-in defaults first, then reapplies the release's own past
 # overrides on top - new keys get their chart default, existing overrides
 # (like adlDecisionLogger.otlp.endpoint below) still stick.
+#
+# --server-side=false: this Helm version defaults to server-side apply, which
+# fails to clear spec.strategy.rollingUpdate when a release's Deployment
+# switches back to strategy.type: Recreate (e.g. role: hub/postgres back to
+# role: standalone/boltdb) - Kubernetes rejects the two together, and SSA
+# leaves the prior RollingUpdate defaults in place instead of removing them
+# even though the chart's template now nulls the field out. Client-side apply
+# handles the same switch correctly. Confirmed working for fresh installs and
+# same-role redeploys too, not just the role-switch case that surfaced this.
 .PHONY: k8s-deploy
 k8s-deploy: require-manifest
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
@@ -145,7 +154,7 @@ k8s-deploy: require-manifest
 	@TAG=dev-$$(git rev-parse --short HEAD)-$$(date +%s); \
 	echo "building eamerald:$$TAG"; \
 	docker build -f k8s/Dockerfile.dev -t eamerald:$$TAG . && \
-	helm upgrade --install ${K8S_RELEASE} ${K8S_CHART} -n ${K8S_NAMESPACE} --create-namespace --reset-then-reuse-values \
+	helm upgrade --install ${K8S_RELEASE} ${K8S_CHART} -n ${K8S_NAMESPACE} --create-namespace --reset-then-reuse-values --server-side=false \
 		--set image.tag=$$TAG \
 		--set-file directory.manifest.content=$(MANIFEST) && \
 	kubectl -n ${K8S_NAMESPACE} rollout restart deployment/${K8S_RELEASE}
@@ -166,7 +175,7 @@ k8s-uninstall:
 k8s-observability-install:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
 	@helm upgrade --install ${OBS_RELEASE} ${OBS_CHART} -n ${OBS_NAMESPACE} --create-namespace --wait
-	@helm upgrade --install ${K8S_RELEASE} ${K8S_CHART} -n ${K8S_NAMESPACE} --create-namespace --reset-then-reuse-values \
+	@helm upgrade --install ${K8S_RELEASE} ${K8S_CHART} -n ${K8S_NAMESPACE} --create-namespace --reset-then-reuse-values --server-side=false \
 		--set adlDecisionLogger.otlp.endpoint=alloy.${OBS_NAMESPACE}.svc.cluster.local:4317
 	@kubectl -n ${K8S_NAMESPACE} rollout status deployment/${K8S_RELEASE}
 
