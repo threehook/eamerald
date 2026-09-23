@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/threehook/eamerald/internal/eds"
-	"github.com/threehook/eamerald/internal/eds/pkg/directory"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -20,24 +19,22 @@ func (cmd *InitCmd) Run(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	if fi, err := os.Stat(cmd.DBFile); err == nil {
-		if fi.IsDir() {
-			return errors.Errorf("%s is a directory", cmd.DBFile)
+	if !isPostgresDSN(cmd.Target) {
+		if fi, err := os.Stat(cmd.Target); err == nil {
+			if fi.IsDir() {
+				return errors.Errorf("%s is a directory", cmd.Target)
+			}
+
+			return errors.Errorf("%s already exists", cmd.Target)
 		}
-
-		return errors.Errorf("%s already exists", cmd.DBFile)
-	}
-
-	cfg := &directory.Config{
-		DBPath:         cmd.DBFile,
-		RequestTimeout: requestTimeout,
 	}
 
 	logger := zerolog.New(io.Discard)
 
-	dir, err := eds.New(ctx, cfg, &logger, nil)
+	dir, err := eds.New(ctx, configForTarget(cmd.Target), &logger, nil)
 	if err != nil {
-		log.Error().Err(err).Str("db_file", cmd.DBFile).Msg("init_cmd")
+		log.Error().Err(err).Str("target", cmd.Target).Msg("init_cmd")
+		return err
 	}
 	defer dir.Close()
 

@@ -1,37 +1,67 @@
 # Default values for the eamerald chart.
 
+# What this install actually runs:
+#   standalone - directory + authorizer + console in one instance (today's behavior). Fine for local dev or a deployment with no HA requirement.
+#   hub        - directory only (no authorizer): the central source of truth. Pairs with one or more role: edge installs syncing from it.
+#                Set directory.backend: postgres to allow replicaCount > 1.
+#   edge       - authorizer + a local, disposable directory cache, kept in sync from a hub via the aserto_edge plugin
+#                (edge.hub.* below). No writes accepted locally, no PVC: the cache is fully rebuilt by a sync on every restart.
+role: standalone
+
 image:
-  # For local iteration on Docker Desktop's Kubernetes, prefer `make k8s-deploy`
-  # over building this "dev" tag by hand: Docker Desktop's Kubernetes caches
-  # images by tag *separately* from the Docker CLI's daemon-visible store, so
-  # with pullPolicy: IfNotPresent (needed here since this image is never
-  # pushed to a registry), rebuilding under this same static tag can silently
-  # never reach the running Pod - it just keeps the old image indefinitely,
-  # with no error. `make k8s-deploy` avoids this by building under a fresh,
-  # unique tag every run and passing it to Helm explicitly. This "dev" tag/
-  # `make k8s-build` still exist for quick manual builds, just don't expect a
-  # `kubectl delete pod` alone to pick up a rebuild under this same tag.
+  # For local iteration on Docker Desktop's Kubernetes, prefer `make k8s-deploy` over building this "dev" tag by hand: Docker Desktop's
+  # Kubernetes caches images by tag *separately* from the Docker CLI's daemon-visible store, so with pullPolicy: IfNotPresent (needed here
+  # since this image is never pushed to a registry), rebuilding under this same static tag can silently never reach the running Pod - it just
+  # keeps the old image indefinitely, with no error.
+  # `make k8s-deploy` avoids this by building under a fresh, unique tag every run and passing it to Helm explicitly.
+  # The "dev" tag and `make k8s-build` still exist for quick manual builds; just don't expect a `kubectl delete pod` alone to pick up a rebuild
+  # under this same tag.
   #
-  # To use a published image instead (e.g. ghcr.io/threehook/eamerald once
-  # you publish one), override repository/tag. If that tag is ever reused/
-  # overwritten in the registry (e.g. `:latest`), set pullPolicy: Always, or
-  # you'll hit the exact same staleness problem against a real registry.
-  # Preferring a unique, never-reused tag per image (a git SHA, a semver) for
-  # published images too sidesteps this more robustly than relying on
-  # pullPolicy: Always, and remains compatible with IfNotPresent's more
-  # efficient (no registry round trip) local-cache behavior.
+  # To use a published image instead (e.g. ghcr.io/threehook/eamerald once you publish one), override repository/tag.
+  # If that tag is ever reused/overwritten in the registry (e.g. `:latest`), set pullPolicy: Always, or you'll hit the exact same staleness problem
+  # against a real registry.
+  # Preferring a unique, never-reused tag per image (a git SHA, a semver) for published images too sidesteps this more robustly than relying on
+  # pullPolicy: Always, and remains compatible with IfNotPresent's more efficient (no registry round trip) local-cache behavior.
   repository: eamerald
   tag: dev
   pullPolicy: IfNotPresent
 
-# eameraldd's directory service uses an embedded, single-writer BoltDB file, so
-# this chart is not meant to be scaled beyond one replica.
+# eameraldd's directory service uses an embedded, single-writer BoltDB file by default, so this chart is not meant to be scaled beyond one
+# replica unless directory.backend is postgres (role: hub) or role is edge, whose local storage is disposable per-pod and safe to run as many
+# independent replicas.
 replicaCount: 1
 
+# eameraldd's directory storage backend.
+directory:
+  # boltdb   - embedded, single-writer file. The only sane choice for role: standalone/edge
+  #            (an edge's copy is disposable and rebuilt via sync anyway, so there's nothing to gain from a shared DB).
+  # postgres - shared, concurrent-safe. Only meaningful for role: hub, to allow replicaCount > 1.
+  backend: boltdb
+  postgres:
+    # Name of a Secret you create yourself (not managed by this chart) with a `dsn` key, e.g.:
+    #   kubectl create secret generic eamerald-postgres --from-literal=dsn=postgres://user:pass@host:5432/eamerald
+    # Required when directory.backend is postgres. Same convention as entra.existingSecretName below - this chart never handles credential
+    # material directly.
+    existingSecretName: ""
+  manifest:
+    # The directory model: object types, relations and permissions.
+    # Required for role: standalone/hub. Set it with `make k8s-deploy MANIFEST=<path>`.
+    #
+    # It is re-applied on every pod start. A changed model can clash with existing data, so k8s-deploy wipes the data volume first.
+    content: ""
+
+# Where role: edge syncs from. Required (edge.hub.address) when role: edge;
+# unused otherwise.
+edge:
+  hub:
+    # The hub's in-cluster directory address, e.g. eamerald-hub.default.svc.cluster.local:9292
+    address: ""
+    insecure: true
+  syncIntervalMinutes: 1
+
 service:
-  # Docker Desktop's Kubernetes maps LoadBalancer services to localhost
-  # automatically, so this "just works" without port-forwarding. Set to
-  # ClusterIP on clusters without that (use `kubectl port-forward` instead).
+  # Docker Desktop's Kubernetes maps LoadBalancer services to localhost  automatically, so this "just works" without port-forwarding.
+  # Set to ClusterIP on clusters without that (use `kubectl port-forward` instead).
   type: LoadBalancer
   ports:
     health: 9494
@@ -56,16 +86,6 @@ persistence:
 
 logging:
   level: info
-
-# The directory manifest: object types, relations, and permissions.
-directory:
-  manifest:
-    # The directory model: object types, relations and permissions.
-    # Required. Set it with `make k8s-deploy MANIFEST=<path>`.
-    #
-    # It is re-applied on every pod start. A changed model can clash with
-    # existing data, so k8s-deploy wipes the data volume first.
-    content: ""
 
 # microsoft entra id (azure ad) directory sync plugin. The client secret is
 # never set here: create it yourself as a Kubernetes Secret first, e.g.

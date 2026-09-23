@@ -15,6 +15,7 @@ spec:
     - name: metrics
       port: {{ .Values.service.ports.metrics }}
       targetPort: metrics
+  {{- if eq (include "eamerald.hasDirectory" .) "true" }}
     - name: dir-grpc
       port: {{ .Values.service.ports.directoryGRPC }}
       targetPort: dir-grpc
@@ -27,9 +28,12 @@ spec:
     - name: console-gateway
       port: {{ .Values.service.ports.consoleGateway }}
       targetPort: console-gateway
+  {{- end }}
+  {{- if eq (include "eamerald.hasAuthorizer" .) "true" }}
     - name: authz-grpc
       port: {{ .Values.service.ports.authorizerGRPC }}
       targetPort: authz-grpc
     - name: authz-gateway
       port: {{ .Values.service.ports.authorizerGateway }}
       targetPort: authz-gateway
+  {{- end }}

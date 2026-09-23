@@ -7,7 +7,6 @@ import (
 
 	"github.com/threehook/eamerald/internal/eds"
 	"github.com/threehook/eamerald/internal/eds/pkg/datasync"
-	"github.com/threehook/eamerald/internal/eds/pkg/directory"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -36,14 +35,9 @@ func (cmd *SyncCmd) Run(ctx context.Context) error {
 	}
 	defer conn.Close()
 
-	cfg := &directory.Config{
-		DBPath:         cmd.DBFile,
-		RequestTimeout: requestTimeout,
-	}
-
 	logger := zerolog.New(os.Stderr).Level(zerolog.InfoLevel)
 
-	dir, err := eds.New(ctx, cfg, &logger, nil)
+	dir, err := eds.New(ctx, configForTarget(cmd.Target), &logger, nil)
 	if err != nil {
 		return err
 	}

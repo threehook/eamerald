@@ -124,6 +124,15 @@ require-manifest:
 # CLI's daemon-visible store; with imagePullPolicy: IfNotPresent (required
 # for a registry-less local image), a static tag means a rebuild can silently
 # never reach the running Pod. A unique tag sidesteps that by construction.
+#
+# --reset-then-reuse-values (not --reuse-values): --reuse-values reuses the
+# last release's stored value blob as-is and never falls back to the chart's
+# own values.yaml for a key that blob doesn't have - so a chart upgrade that
+# adds a new values.yaml key (e.g. `role`) silently renders it empty forever
+# on an existing release, not defaulted. --reset-then-reuse-values resets to
+# the chart's built-in defaults first, then reapplies the release's own past
+# overrides on top - new keys get their chart default, existing overrides
+# (like adlDecisionLogger.otlp.endpoint below) still stick.
 .PHONY: k8s-deploy
 k8s-deploy: require-manifest
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
@@ -136,7 +145,7 @@ k8s-deploy: require-manifest
 	@TAG=dev-$$(git rev-parse --short HEAD)-$$(date +%s); \
 	echo "building eamerald:$$TAG"; \
 	docker build -f k8s/Dockerfile.dev -t eamerald:$$TAG . && \
-	helm upgrade --install ${K8S_RELEASE} ${K8S_CHART} -n ${K8S_NAMESPACE} --create-namespace --reuse-values \
+	helm upgrade --install ${K8S_RELEASE} ${K8S_CHART} -n ${K8S_NAMESPACE} --create-namespace --reset-then-reuse-values \
 		--set image.tag=$$TAG \
 		--set-file directory.manifest.content=$(MANIFEST) && \
 	kubectl -n ${K8S_NAMESPACE} rollout restart deployment/${K8S_RELEASE}
@@ -157,7 +166,7 @@ k8s-uninstall:
 k8s-observability-install:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
 	@helm upgrade --install ${OBS_RELEASE} ${OBS_CHART} -n ${OBS_NAMESPACE} --create-namespace --wait
-	@helm upgrade --install ${K8S_RELEASE} ${K8S_CHART} -n ${K8S_NAMESPACE} --create-namespace --reuse-values \
+	@helm upgrade --install ${K8S_RELEASE} ${K8S_CHART} -n ${K8S_NAMESPACE} --create-namespace --reset-then-reuse-values \
 		--set adlDecisionLogger.otlp.endpoint=alloy.${OBS_NAMESPACE}.svc.cluster.local:4317
 	@kubectl -n ${K8S_NAMESPACE} rollout status deployment/${K8S_RELEASE}
 

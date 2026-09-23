@@ -15,14 +15,21 @@ data:
       log_level: {{ .Values.logging.level }}
 
     directory:
+      backend: {{ .Values.directory.backend | quote }}
       db_path: ${EAMERALD_DB_DIR}/directory.db
+      {{- if eq .Values.directory.backend "postgres" }}
+      postgres:
+        dsn: ${EAMERALD_DIRECTORY_POSTGRES_DSN}
+      {{- end }}
       request_timeout: 5s
       seed_metadata: false
 
+    {{- if eq (include "eamerald.hasAuthorizer" .) "true" }}
     # remote directory is used to resolve the identity for the authorizer.
     remote_directory:
       address: "0.0.0.0:{{ .Values.service.ports.directoryGRPC }}"
       insecure: true
+    {{- end }}
 
     jwt:
       acceptable_time_skew_seconds: 5
@@ -34,6 +41,7 @@ data:
         listen_address: "0.0.0.0:{{ .Values.service.ports.metrics }}"
         zpages: true
       services:
+        {{- if eq (include "eamerald.hasDirectory" .) "true" }}
         console:
           gateway:
             listen_address: "0.0.0.0:{{ .Values.service.ports.consoleGateway }}"
@@ -52,6 +60,7 @@ data:
               tls_key_path: "${EAMERALD_CERTS_DIR}/grpc.key"
               tls_cert_path: "${EAMERALD_CERTS_DIR}/grpc.crt"
               tls_ca_cert_path: "${EAMERALD_CERTS_DIR}/grpc-ca.crt"
+        {{- end }}
         reader:
           grpc:
             listen_address: "0.0.0.0:{{ .Values.service.ports.directoryGRPC }}"
@@ -75,6 +84,7 @@ data:
             read_header_timeout: 2s
             write_timeout: 2s
             idle_timeout: 30s
+        {{- if eq (include "eamerald.hasDirectory" .) "true" }}
         writer:
           grpc:
             listen_address: "0.0.0.0:{{ .Values.service.ports.directoryGRPC }}"
@@ -167,7 +177,9 @@ data:
             read_header_timeout: 2s
             write_timeout: 2s
             idle_timeout: 30s
+        {{- end }}
 
+        {{- if eq (include "eamerald.hasAuthorizer" .) "true" }}
         authorizer:
           needs:
             - reader
@@ -194,6 +206,7 @@ data:
             read_header_timeout: 2s
             write_timeout: 2s
             idle_timeout: 30s
+        {{- end }}
 
     opa:
       instance_id: "-"
@@ -206,7 +219,7 @@ data:
         decision_logs:
           console: false
         plugins:
-        {{- if .Values.entra.enabled }}
+        {{- if and .Values.entra.enabled (eq (include "eamerald.hasDirectory" .) "true") }}
           # microsoft entra id (azure ad) directory sync plugin configuration
           entra:
             enabled: true
@@ -218,7 +231,18 @@ data:
             group_object_type: "{{ .Values.entra.groupObjectType }}"
             member_relation: "{{ .Values.entra.memberRelation }}"
         {{- end }}
-        {{- if .Values.git.enabled }}
+        {{- if eq .Values.role "edge" }}
+          # aserto-edge directory sync plugin configuration: pulls objects,
+          # relations and the manifest from the hub named in edge.hub.address
+          # on an interval, into this instance's local directory cache.
+          aserto_edge:
+            enabled: true
+            addr: {{ required "edge.hub.address is required when role: edge" .Values.edge.hub.address | quote }}
+            timeout: 5
+            sync_interval: {{ .Values.edge.syncIntervalMinutes }}
+            insecure: {{ .Values.edge.hub.insecure }}
+        {{- end }}
+        {{- if and .Values.git.enabled (eq (include "eamerald.hasAuthorizer" .) "true") }}
           # git policy source plugin configuration
           git:
             enabled: true
@@ -227,7 +251,7 @@ data:
             path: "{{ .Values.git.path }}"
             poll_interval_seconds: {{ .Values.git.pollIntervalSeconds }}
         {{- end }}
-        {{- if .Values.adlDecisionLogger.enabled }}
+        {{- if and .Values.adlDecisionLogger.enabled (eq (include "eamerald.hasAuthorizer" .) "true") }}
           # logius adl level 1 decision logger plugin configuration
           adl_decision_logger:
             enabled: true

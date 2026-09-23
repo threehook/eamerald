@@ -32,8 +32,7 @@ func newWatermark() *watermark {
 }
 
 // getFilterSize determine the number of entries for the cuckoo filter.
-// a filter size of 1 mln entries results in a ~= 2Mib memory allocation
-// the default and minimum filterSize configure is 100K entries.
+// A filter size of 1 mln entries results in a ~= 2Mib memory allocation the default and minimum filterSize configure is 100K entries.
 func (wm *watermark) getFilterSize() uint {
 	const (
 		initFilterSize uint = 100000

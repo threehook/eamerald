@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 
 	"github.com/threehook/eamerald/db/pkg/inproc"
-	"github.com/threehook/eamerald/internal/eds/pkg/directory"
 	dsc "github.com/threehook/eamerald/mrld/clients/directory"
 
 	"github.com/rs/zerolog"
@@ -16,14 +15,9 @@ func (cmd *LoadCmd) Run(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	cfg := &directory.Config{
-		DBPath:         cmd.DBFile,
-		RequestTimeout: requestTimeout,
-	}
-
 	logger := zerolog.New(io.Discard)
 
-	conn, cleanup := inproc.NewServer(ctx, &logger, cfg)
+	conn, cleanup := inproc.NewServer(ctx, &logger, configForTarget(cmd.Target))
 	defer cleanup()
 
 	dsClient := dsc.New(conn)

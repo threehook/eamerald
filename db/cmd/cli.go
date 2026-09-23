@@ -11,22 +11,22 @@ type CLI struct {
 }
 
 type InitCmd struct {
-	DBFile string `arg:"" help:"db file name"`
+	Target string `arg:"" help:"db file path, or a postgres:// / postgresql:// connection string"`
 }
 
 type SetCmd struct {
-	DBFile   string `arg:"" help:"db file name" type:"existingfile"`
+	Target   string `arg:"" help:"db file path, or a postgres:// / postgresql:// connection string"`
 	Manifest string `arg:"" help:"manifest file path" type:"existingfile"`
 }
 
 type LoadCmd struct {
-	DBFile  string `arg:"" help:"db file name" type:"existingfile"`
+	Target  string `arg:"" help:"db file path, or a postgres:// / postgresql:// connection string"`
 	DataDir string `arg:"" help:"data file directory" type:"existingdir"`
 }
 
 type SyncCmd struct {
 	dsc.Config
 
-	DBFile string   `arg:"" help:"db file name" type:"existingfile"`
+	Target string   `arg:"" help:"db file path, or a postgres:// / postgresql:// connection string (must be boltdb-backed; sync targets an edge)"`
 	Mode   []string `flag:"" short:"m" enum:"manifest,full,diff,watermark" required:"" help:"sync mode"`
 }

@@ -1,4 +1,11 @@
-{{- if .Values.persistence.enabled }}
+{{- /*
+Only for a boltdb-backed standalone/hub install with persistence enabled -
+i.e. only when replicaCount is expected to stay 1. A postgres-backed hub or
+any role: edge install runs multiple replicas, and a single ReadWriteOnce
+PVC can only ever bind to one Pod - the Deployment's volumes fall back to
+emptyDir for both in that case (see templates/deployment.yaml).
+*/}}
+{{- if and .Values.persistence.enabled (ne .Values.directory.backend "postgres") (ne .Values.role "edge") }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

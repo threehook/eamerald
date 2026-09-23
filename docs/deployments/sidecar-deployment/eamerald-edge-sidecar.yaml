@@ -1,0 +1,118 @@
+# Example eamerald sidecar container, configured as an edge instance synced from a central hub (see k8s/eamerald's `role: hub` chart install)
+# via the aserto_edge plugin, rather than the pre-baked citadel.db demo used by eamerald-configmap.yaml/deployment.yaml alongside it.
+#
+# Unlike that demo, this is not a full worked example - it's a container spec and matching ConfigMap meant to be copied into your own app's
+# Deployment, next to your app container, sharing its pod. No local writes are accepted; all data comes from the hub on the interval configured below.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: eamerald-edge-config
+data:
+  config.yaml: |
+    version: 2
+
+    logging:
+      prod: true
+      log_level: info
+
+    directory:
+      backend: boltdb
+      db_path: /db/edge.db
+      request_timeout: 5s
+
+    # remote directory is used to resolve the identity for the authorizer.
+    remote_directory:
+      address: "0.0.0.0:9292"
+      insecure: true
+
+    jwt:
+      acceptable_time_skew_seconds: 5
+
+    api:
+      health:
+        listen_address: "0.0.0.0:9494"
+      services:
+        # Only reader + authorizer: an edge accepts no direct writes and runs no console - all data arrives via the aserto_edge plugin below.
+        reader:
+          grpc:
+            listen_address: "0.0.0.0:9292"
+            certs:
+              tls_key_path: "/root/.config/eamerald/certs/grpc.key"
+              tls_cert_path: "/root/.config/eamerald/certs/grpc.crt"
+              tls_ca_cert_path: "/root/.config/eamerald/certs/grpc-ca.crt"
+        authorizer:
+          needs:
+            - reader
+          grpc:
+            connection_timeout_seconds: 2
+            listen_address: "0.0.0.0:8282"
+            certs:
+              tls_key_path: "/root/.config/eamerald/certs/grpc.key"
+              tls_cert_path: "/root/.config/eamerald/certs/grpc.crt"
+              tls_ca_cert_path: "/root/.config/eamerald/certs/grpc-ca.crt"
+          gateway:
+            listen_address: "0.0.0.0:8383"
+            certs:
+              tls_key_path: "/root/.config/eamerald/certs/gateway.key"
+              tls_cert_path: "/root/.config/eamerald/certs/gateway.crt"
+              tls_ca_cert_path: "/root/.config/eamerald/certs/gateway-ca.crt"
+            http: false
+
+    opa:
+      instance_id: "-"
+      graceful_shutdown_period_seconds: 2
+      local_bundles:
+        paths: []
+        skip_verification: true
+      config:
+        services:
+          ghcr:
+            url: https://ghcr.io
+            type: "oci"
+        bundles:
+          # replace with your own policy bundle
+          my-app:
+            service: ghcr
+            resource: "ghcr.io/your-org/your-policy-bundle:latest"
+            persist: false
+        plugins:
+          # pulls objects, relations and the manifest from the hub on an interval. Point addr at the hub's in-cluster Service address
+          # (e.g. eamerald-hub.default.svc.cluster.local:9292).
+          aserto_edge:
+            enabled: true
+            addr: "eamerald-hub.default.svc.cluster.local:9292"
+            timeout: 5
+            sync_interval: 1
+            insecure: true
+---
+# Container spec to add to your app's own pod, alongside your app container.
+# The db volume is intentionally emptyDir: this cache is fully rebuilt by a sync on every restart, so it never needs to persist across Pod restarts.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: eamerald-edge-sidecar-example
+spec:
+  containers:
+    - name: eamerald-edge
+      image: ghcr.io/threehook/eamerald:latest
+      command: ["/app/eameraldd"]
+      args: ["run", "-c", "/config/config.yaml"]
+      ports:
+        - containerPort: 8282 # authorizer gRPC - your app calls this over localhost
+        - containerPort: 8383 # authorizer REST gateway
+      volumeMounts:
+        - name: eamerald-edge-config
+          mountPath: "/config/config.yaml"
+          subPath: "config.yaml"
+        - name: eamerald-edge-certs
+          mountPath: "/root/.config/eamerald/certs"
+        - name: eamerald-edge-db
+          mountPath: "/db"
+  volumes:
+    - name: eamerald-edge-config
+      configMap:
+        name: "eamerald-edge-config"
+    - name: eamerald-edge-certs
+      emptyDir: {}
+    - name: eamerald-edge-db
+      emptyDir: {}
