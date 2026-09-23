@@ -192,7 +192,7 @@ func (s *Access) actionSearch(ctx context.Context, req *dsa.ActionSearchRequest)
 	assignable := []cache.RelationName{}
 
 	if inclRelations {
-		assignableRelations, err := s.reader.store.MC().AssignableRelations(
+		assignableRelations, err := s.reader.mc.AssignableRelations(
 			cache.ObjectName(graphReq.GetObjectType()),
 			cache.ObjectName(graphReq.GetSubjectType()),
 		)
@@ -203,7 +203,7 @@ func (s *Access) actionSearch(ctx context.Context, req *dsa.ActionSearchRequest)
 		assignable = append(assignable, assignableRelations...)
 	}
 
-	availablePermissions, err := s.reader.store.MC().AvailablePermissions(
+	availablePermissions, err := s.reader.mc.AvailablePermissions(
 		cache.ObjectName(graphReq.GetObjectType()),
 		cache.ObjectName(graphReq.GetSubjectType()),
 	)

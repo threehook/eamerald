@@ -13,6 +13,9 @@ logging:
 directory:
   db_path: '${EAMERALD_DB_DIR}/test-no-tls.db'
   request_timeout: 5s # set as default, 5 secs.
+  backend: '${EAMERALD_DIRECTORY_BACKEND}' # boltdb (default, when unset) | postgres
+  postgres:
+    dsn: '${EAMERALD_DIRECTORY_POSTGRES_DSN}' # used when backend is postgres
 
 # remote directory is used to resolve the identity for the authorizer.
 remote_directory:

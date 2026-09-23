@@ -9,8 +9,8 @@ import (
 	"github.com/aserto-dev/azm/safe"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/aserto-dev/go-directory/pkg/prop"
+	"github.com/threehook/eamerald/internal/eds/pkg/store"
 
-	bolt "go.etcd.io/bbolt"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -30,7 +30,7 @@ func (i *checks) Validate(mc *cache.Cache) error {
 	return nil
 }
 
-func (i *checks) Exec(ctx context.Context, tx *bolt.Tx, mc *cache.Cache) (*dsr.ChecksResponse, error) {
+func (i *checks) Exec(ctx context.Context, tx store.Tx, mc *cache.Cache) (*dsr.ChecksResponse, error) {
 	consumer := func(in *dsr.CheckRequest) *dsr.CheckResponse {
 		check := Check(in)
 		if err := check.Validate(mc); err != nil {

@@ -7,6 +7,7 @@ import (
 	"io"
 	"strconv"
 
+	"github.com/aserto-dev/azm/cache"
 	azmModel "github.com/aserto-dev/azm/model"
 	manifest "github.com/aserto-dev/azm/v3"
 	dsm "github.com/aserto-dev/go-directory/aserto/directory/model/v3"
@@ -15,15 +16,14 @@ import (
 	mnfst "github.com/aserto-dev/go-directory/pkg/manifest"
 	"github.com/aserto-dev/go-directory/pkg/pb"
 	"github.com/aserto-dev/go-directory/pkg/validator"
-	"github.com/threehook/eamerald/internal/eds/pkg/bdb"
 	"github.com/threehook/eamerald/internal/eds/pkg/ds"
+	"github.com/threehook/eamerald/internal/eds/pkg/store"
 
 	"github.com/go-http-utils/headers"
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
-	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -33,7 +33,8 @@ import (
 
 type Model struct {
 	logger *zerolog.Logger
-	store  *bdb.BoltDB
+	store  store.Store
+	mc     *cache.Cache
 }
 
 var _ dsm.ModelServer = (*Model)(nil)
@@ -48,10 +49,11 @@ var _ dsm.ModelServer = (*Model)(nil)
 // _manifest/default/0.0.1/manifest		-- contains the manifest raw byte stream
 // _manifest/default/0.0.1/model		-- contains the serialized model representation of the manifest byte stream
 
-func NewModel(logger *zerolog.Logger, store *bdb.BoltDB) *Model {
+func NewModel(logger *zerolog.Logger, store store.Store, mc *cache.Cache) *Model {
 	return &Model{
 		logger: logger,
 		store:  store,
+		mc:     mc,
 	}
 }
 
@@ -64,7 +66,7 @@ func (s *Model) GetManifest(req *dsm.GetManifestRequest, stream dsm.Model_GetMan
 
 	md := &dsm.Metadata{UpdatedAt: timestamppb.Now(), Etag: ""}
 
-	modelErr := s.store.DB().View(func(tx *bolt.Tx) error {
+	modelErr := s.store.View(stream.Context(), func(tx store.Tx) error {
 		manifest, err := ds.Manifest(md).Get(stream.Context(), tx)
 
 		switch {
@@ -127,7 +129,7 @@ func (s *Model) SetManifest(stream dsm.Model_SetManifestServer) error {
 
 	// optimistic concurrency check
 	etag := metautils.ExtractIncoming(stream.Context()).Get(headers.IfMatch)
-	if etag != "" && etag != s.store.MC().Metadata().ETag {
+	if etag != "" && etag != s.mc.Metadata().ETag {
 		return derr.ErrHashMismatch
 	}
 
@@ -177,7 +179,7 @@ func (s *Model) SetManifest(stream dsm.Model_SetManifestServer) error {
 		return derr.ErrInvalidArgument.Msg(err.Error())
 	}
 
-	if err := s.store.DB().Update(func(tx *bolt.Tx) error {
+	if err := s.store.Update(stream.Context(), func(tx store.Tx) error {
 		return s.setManifest(stream, tx, m, md, data)
 	}); err != nil {
 		return err
@@ -185,7 +187,7 @@ func (s *Model) SetManifest(stream dsm.Model_SetManifestServer) error {
 
 	logger.Info().Msg("manifest updated")
 
-	return s.store.MC().UpdateModel(m)
+	return s.mc.UpdateModel(m)
 }
 
 func (s *Model) DeleteManifest(ctx context.Context, req *dsm.DeleteManifestRequest) (*dsm.DeleteManifestResponse, error) {
@@ -210,7 +212,7 @@ func (s *Model) DeleteManifest(ctx context.Context, req *dsm.DeleteManifestReque
 		return resp, derr.ErrInvalidArgument.Msg(err.Error())
 	}
 
-	if err := s.store.DB().Update(func(tx *bolt.Tx) error {
+	if err := s.store.Update(ctx, func(tx store.Tx) error {
 		// optimistic concurrency check
 		ifMatchHeader := metautils.ExtractIncoming(ctx).Get(headers.IfMatch)
 		if ifMatchHeader != "" {
@@ -246,7 +248,7 @@ func (s *Model) DeleteManifest(ctx context.Context, req *dsm.DeleteManifestReque
 	return &dsm.DeleteManifestResponse{Result: &emptypb.Empty{}}, nil
 }
 
-func (*Model) getModel(stream dsm.Model_GetManifestServer, tx *bolt.Tx, md *dsm.Metadata) error {
+func (*Model) getModel(stream dsm.Model_GetManifestServer, tx store.Tx, md *dsm.Metadata) error {
 	model, err := ds.Manifest(md).GetModel(stream.Context(), tx)
 
 	switch {
@@ -278,13 +280,13 @@ func (*Model) getModel(stream dsm.Model_GetManifestServer, tx *bolt.Tx, md *dsm.
 	return nil
 }
 
-func (s *Model) setManifest(stream dsm.Model_SetManifestServer, tx *bolt.Tx, m *azmModel.Model, md *dsm.Metadata, data *bytes.Buffer) error {
+func (s *Model) setManifest(stream dsm.Model_SetManifestServer, tx store.Tx, m *azmModel.Model, md *dsm.Metadata, data *bytes.Buffer) error {
 	stats, err := ds.CalculateStats(stream.Context(), tx)
 	if err != nil {
 		return derr.ErrUnknown.Msgf("failed to calculate stats: %s", err.Error())
 	}
 
-	if err := s.store.MC().CanUpdate(m, stats); err != nil {
+	if err := s.mc.CanUpdate(m, stats); err != nil {
 		return err
 	}
 

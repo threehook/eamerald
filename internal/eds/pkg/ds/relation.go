@@ -9,8 +9,10 @@ import (
 	"github.com/aserto-dev/azm/safe"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
-	"github.com/threehook/eamerald/internal/eds/pkg/bdb"
+	"github.com/threehook/eamerald/internal/eds/pkg/store"
 )
+
+const maxRelationIdentifierSize = 384
 
 // Relation identifier.
 type relation struct {
@@ -101,243 +103,106 @@ func (i *relation) SubKey() []byte {
 	return buf.Bytes()
 }
 
-func (i *relation) PathAndFilter(filter *bytes.Buffer) ([]string, error) {
-	switch {
-	case ObjectSelector(i.Object()).IsComplete():
-		i.ObjFilter(filter)
-		return bdb.RelationsObjPath, nil
-	case ObjectSelector(i.Subject()).IsComplete():
-		i.SubFilter(filter)
-		return bdb.RelationsSubPath, nil
-	default:
-		return []string{}, ErrNoCompleteObjectIdentifier
+// PathAndFilter returns the direction and filter for a singleton relation lookup (GetRelation), erroring when neither
+// the object nor the subject identifier is complete.
+func (i *relation) PathAndFilter() (store.Direction, store.RelationFilter, error) {
+	dir, ok := i.direction()
+	if !ok {
+		return dir, store.RelationFilter{}, ErrNoCompleteObjectIdentifier
 	}
+
+	return dir, i.asFilter(), nil
 }
 
-// ObjFilter
-// format: obj_type : obj_id # relation @ sub_type : sub_id (# sub_relation).
-func (i *relation) ObjFilter(buf *bytes.Buffer) {
-	buf.WriteString(i.GetObjectType())
-	buf.WriteByte(TypeIDSeparator)
-	buf.WriteString(i.GetObjectId())
-	buf.WriteByte(InstanceSeparator)
-
-	if IsNotSet(i.GetRelation()) {
-		return
-	}
-
-	buf.WriteString(i.GetRelation())
-	buf.WriteByte(InstanceSeparator)
-
-	if IsNotSet(i.GetSubjectType()) {
-		return
-	}
-
-	buf.WriteString(i.GetSubjectType())
-	buf.WriteByte(TypeIDSeparator)
-
-	if IsNotSet(i.GetSubjectId()) {
-		return
-	}
-
-	buf.WriteString(i.GetSubjectId())
+// Filter returns the direction, filter and value-filter closure for the check/graph hot path (RelationReader), when
+// neither the object nor the subject identifier is complete it falls back to an unfiltered object-indexed scan,
+// matched entirely by the value filter.
+func (i *relation) Filter() (store.Direction, store.RelationFilter, func(*dsc.RelationIdentifier) bool) {
+	dir, _ := i.direction()
+	return dir, i.asFilter(), i.identifierValueFilter()
 }
 
-// SubFilter
-// format: sub_type : sub_id (# sub_relation) | obj_type : obj_id # relation.
-func (i *relation) SubFilter(buf *bytes.Buffer) {
-	buf.WriteString(i.GetSubjectType())
-	buf.WriteByte(TypeIDSeparator)
-	buf.WriteString(i.GetSubjectId())
-	buf.WriteByte(InstanceSeparator)
-
-	if IsNotSet(i.GetRelation()) {
-		return
-	}
-
-	buf.WriteString(i.GetRelation())
-	buf.WriteByte(InstanceSeparator)
-
-	if IsNotSet(i.GetObjectType()) {
-		return
-	}
-
-	buf.WriteString(i.GetObjectType())
-	buf.WriteByte(TypeIDSeparator)
-
-	if IsNotSet(i.GetObjectId()) {
-		return
-	}
-
-	buf.WriteString(i.GetObjectId())
+// RelationValueFilter returns the direction, filter and value-filter closure for a paginated relation scan
+// (GetRelations), with the same fallback as Filter.
+func (i *relation) RelationValueFilter() (store.Direction, store.RelationFilter, func(*dsc.Relation) bool) {
+	dir, _ := i.direction()
+	return dir, i.asFilter(), i.relationValueFilter()
 }
 
-const relationFilterCount int = 6
+// relLike is satisfied by both *dsc.Relation and *dsc.RelationIdentifier, which share this field-getter shape.
+type relLike interface {
+	GetObjectType() string
+	GetObjectId() string
+	GetRelation() string
+	GetSubjectType() string
+	GetSubjectId() string
+	GetSubjectRelation() string
+}
 
-func (i *relation) Filter(keyFilter *bytes.Buffer) (bdb.Path, func(*dsc.RelationIdentifier) bool) {
-	var (
-		path        bdb.Path
-		valueFilter func(*dsc.RelationIdentifier) bool
-	)
+// valueFilter builds a closure that accepts an item iff every field i has set matches the corresponding field on item;
+// shared by identifierValueFilter (candidate *dsc.RelationIdentifier rows) and relationValueFilter (scanned *dsc.Relation rows).
+func valueFilter[T relLike](i *relation) func(T) bool {
+	return func(item T) bool {
+		if fv := i.GetObjectType(); fv != "" && strings.Compare(item.GetObjectType(), fv) != 0 {
+			return false
+		}
 
-	// #1  determine if object identifier is complete (has type+id)
-	// set index path accordingly
-	// set keyFilter to match covering path
-	// when no complete object identifier, fallback to a full table scan
-	switch {
-	case ObjectIdentifier(i.Object()).IsComplete():
-		path = bdb.RelationsObjPath
+		if fv := i.GetObjectId(); fv != "" && strings.Compare(fv, item.GetObjectId()) != 0 {
+			return false
+		}
 
-		i.ObjFilter(keyFilter)
-	case ObjectIdentifier(i.Subject()).IsComplete():
-		path = bdb.RelationsSubPath
+		if fv := i.GetRelation(); fv != "" && strings.Compare(item.GetRelation(), fv) != 0 {
+			return false
+		}
 
-		i.SubFilter(keyFilter)
-	default:
-		path = bdb.RelationsObjPath
-	}
+		if fv := i.GetSubjectType(); fv != "" && strings.Compare(item.GetSubjectType(), fv) != 0 {
+			return false
+		}
 
-	// #2 build valueFilter function
-	filters := make([]func(item *dsc.RelationIdentifier) bool, 0, relationFilterCount)
+		if fv := i.GetSubjectId(); fv != "" && strings.Compare(fv, item.GetSubjectId()) != 0 {
+			return false
+		}
 
-	if fv := i.GetObjectType(); fv != "" {
-		filters = append(filters, func(item *dsc.RelationIdentifier) bool {
-			equal := strings.Compare(item.GetObjectType(), fv)
-			return equal == 0
-		})
-	}
-
-	if fv := i.GetObjectId(); fv != "" {
-		filters = append(filters, func(item *dsc.RelationIdentifier) bool {
-			equal := strings.Compare(fv, item.GetObjectId())
-			return equal == 0
-		})
-	}
-
-	if fv := i.GetRelation(); fv != "" {
-		filters = append(filters, func(item *dsc.RelationIdentifier) bool {
-			equal := strings.Compare(item.GetRelation(), fv)
-			return equal == 0
-		})
-	}
-
-	if fv := i.GetSubjectType(); fv != "" {
-		filters = append(filters, func(item *dsc.RelationIdentifier) bool {
-			equal := strings.Compare(item.GetSubjectType(), fv)
-			return equal == 0
-		})
-	}
-
-	if fv := i.GetSubjectId(); fv != "" {
-		filters = append(filters, func(item *dsc.RelationIdentifier) bool {
-			equal := strings.Compare(fv, item.GetSubjectId())
-			return equal == 0
-		})
-	}
-
-	if i.HasSubjectRelation {
-		fv := i.GetSubjectRelation()
-
-		filters = append(filters, func(item *dsc.RelationIdentifier) bool {
-			equal := strings.Compare(item.GetSubjectRelation(), fv)
-			return equal == 0
-		})
-	}
-
-	valueFilter = func(i *dsc.RelationIdentifier) bool {
-		for _, filter := range filters {
-			if !filter(i) {
-				return false
-			}
+		if i.HasSubjectRelation && strings.Compare(item.GetSubjectRelation(), i.GetSubjectRelation()) != 0 {
+			return false
 		}
 
 		return true
 	}
-
-	return path, valueFilter
 }
 
-func (i *relation) RelationValueFilter(keyFilter *bytes.Buffer) (bdb.Path, func(*dsc.Relation) bool) {
-	var (
-		path        bdb.Path
-		valueFilter func(*dsc.Relation) bool
-	)
+func (i *relation) identifierValueFilter() func(*dsc.RelationIdentifier) bool {
+	return valueFilter[*dsc.RelationIdentifier](i)
+}
 
-	// #1  determine if object identifier is complete (has type+id)
-	// set index path accordingly
-	// set keyFilter to match covering path
-	// when no complete object identifier, fallback to a full table scan
+func (i *relation) relationValueFilter() func(*dsc.Relation) bool {
+	return valueFilter[*dsc.Relation](i)
+}
+
+// direction picks which index (object- or subject-indexed) a scan should be anchored on: object identifier first,
+// subject identifier second, falling back to a full, unfiltered object-indexed scan when neither is complete (ok
+// reports whether one of the two was actually complete).
+func (i *relation) direction() (store.Direction, bool) {
 	switch {
 	case ObjectIdentifier(i.Object()).IsComplete():
-		path = bdb.RelationsObjPath
-
-		i.ObjFilter(keyFilter)
+		return store.ByObject, true
 	case ObjectIdentifier(i.Subject()).IsComplete():
-		path = bdb.RelationsSubPath
-
-		i.SubFilter(keyFilter)
+		return store.BySubject, true
 	default:
-		path = bdb.RelationsObjPath
+		return store.ByObject, false
 	}
+}
 
-	// #2 build valueFilter function
-	filters := []func(item *dsc.Relation) bool{}
-
-	if fv := i.GetObjectType(); fv != "" {
-		filters = append(filters, func(item *dsc.Relation) bool {
-			equal := strings.Compare(item.GetObjectType(), fv)
-			return equal == 0
-		})
+func (i *relation) asFilter() store.RelationFilter {
+	return store.RelationFilter{
+		ObjectType:         i.GetObjectType(),
+		ObjectID:           i.GetObjectId(),
+		Relation:           i.GetRelation(),
+		SubjectType:        i.GetSubjectType(),
+		SubjectID:          i.GetSubjectId(),
+		SubjectRelation:    i.GetSubjectRelation(),
+		HasSubjectRelation: i.HasSubjectRelation,
 	}
-
-	if fv := i.GetObjectId(); fv != "" {
-		filters = append(filters, func(item *dsc.Relation) bool {
-			equal := strings.Compare(fv, item.GetObjectId())
-			return equal == 0
-		})
-	}
-
-	if fv := i.GetRelation(); fv != "" {
-		filters = append(filters, func(item *dsc.Relation) bool {
-			equal := strings.Compare(item.GetRelation(), fv)
-			return equal == 0
-		})
-	}
-
-	if fv := i.GetSubjectType(); fv != "" {
-		filters = append(filters, func(item *dsc.Relation) bool {
-			equal := strings.Compare(item.GetSubjectType(), fv)
-			return equal == 0
-		})
-	}
-
-	if fv := i.GetSubjectId(); fv != "" {
-		filters = append(filters, func(item *dsc.Relation) bool {
-			equal := strings.Compare(fv, item.GetSubjectId())
-			return equal == 0
-		})
-	}
-
-	if i.HasSubjectRelation {
-		fv := i.GetSubjectRelation()
-
-		filters = append(filters, func(item *dsc.Relation) bool {
-			equal := strings.Compare(item.GetSubjectRelation(), fv)
-			return equal == 0
-		})
-	}
-
-	valueFilter = func(i *dsc.Relation) bool {
-		for _, filter := range filters {
-			if !filter(i) {
-				return false
-			}
-		}
-
-		return true
-	}
-
-	return path, valueFilter
 }
 
 func newRelationBuffer() *bytes.Buffer {

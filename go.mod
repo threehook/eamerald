@@ -25,6 +25,7 @@ require (
 	github.com/go-git/go-git/v5 v5.19.2
 	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a
 	github.com/go-viper/mapstructure/v2 v2.5.0
+	github.com/golang-migrate/migrate/v4 v4.20.1
 	github.com/gonvenience/ytbx v1.5.0
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
@@ -33,6 +34,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.30.0
 	github.com/homeport/dyff v1.12.0
 	github.com/itchyny/gojq v0.12.19
+	github.com/jackc/pgx/v5 v5.11.0
 	github.com/jwx-go/jwkfetch/v4 v4.0.4
 	github.com/lestrrat-go/httprc/v3 v3.0.6
 	github.com/lestrrat-go/jwx/v4 v4.5.0
@@ -133,6 +135,10 @@ require (
 	github.com/huandu/xstrings v1.5.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/itchyny/timefmt-go v0.1.8 // indirect
+	github.com/jackc/pgerrcode v0.0.0-20220416144525-469b46aa5efa // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/klauspost/compress v1.19.1 // indirect

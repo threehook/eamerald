@@ -20,3 +20,17 @@ func New(
 
 	return ds, nil
 }
+
+// Open is New's non-singleton counterpart; see directory.Open.
+func Open(
+	ctx context.Context, config *directory.Config, logger *zerolog.Logger, adlLogger *adl.Logger,
+) (*directory.Directory, error) {
+	newLogger := logger.With().Str("component", "edge-ds").Logger()
+
+	ds, err := directory.Open(ctx, config, &newLogger, adlLogger)
+	if err != nil {
+		return nil, err
+	}
+
+	return ds, nil
+}

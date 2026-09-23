@@ -6,22 +6,23 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/aserto-dev/azm/cache"
 	aerr "github.com/aserto-dev/errors"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsi "github.com/aserto-dev/go-directory/aserto/directory/importer/v3"
 	"github.com/aserto-dev/go-directory/pkg/derr"
 	"github.com/aserto-dev/go-directory/pkg/validator"
-	"github.com/threehook/eamerald/internal/eds/pkg/bdb"
 	"github.com/threehook/eamerald/internal/eds/pkg/ds"
+	"github.com/threehook/eamerald/internal/eds/pkg/store"
 
 	"github.com/rs/zerolog"
-	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc/status"
 )
 
 type Importer struct {
 	logger *zerolog.Logger
-	store  *bdb.BoltDB
+	store  store.Store
+	mc     *cache.Cache
 }
 
 var _ dsi.ImporterServer = (*Importer)(nil)
@@ -33,10 +34,11 @@ const (
 
 type counters map[string]*dsi.ImportCounter
 
-func NewImporter(logger *zerolog.Logger, store *bdb.BoltDB) *Importer {
+func NewImporter(logger *zerolog.Logger, store store.Store, mc *cache.Cache) *Importer {
 	return &Importer{
 		logger: logger,
 		store:  store,
+		mc:     mc,
 	}
 }
 
@@ -48,7 +50,7 @@ func (s *Importer) Import(stream dsi.Importer_ImportServer) error {
 		relation: {Type: relation},
 	}
 
-	importErr := s.store.DB().Batch(func(tx *bolt.Tx) error {
+	importErr := s.store.Batch(ctx, func(tx store.Tx) error {
 		for {
 			select {
 			case <-ctx.Done(): // exit if context is done
@@ -95,7 +97,7 @@ func (s *Importer) Import(stream dsi.Importer_ImportServer) error {
 	return importErr
 }
 
-func (s *Importer) handleImportRequest(ctx context.Context, tx *bolt.Tx, req *dsi.ImportRequest, ctr counters) error {
+func (s *Importer) handleImportRequest(ctx context.Context, tx store.Tx, req *dsi.ImportRequest, ctr counters) error {
 	switch m := req.GetMsg().(type) {
 	case *dsi.ImportRequest_Object:
 		if req.GetOpCode() == dsi.Opcode_OPCODE_SET {
@@ -147,7 +149,8 @@ func (s *Importer) handleImportRequest(ctx context.Context, tx *bolt.Tx, req *ds
 	}
 }
 
-func (s *Importer) objectSetHandler(ctx context.Context, tx *bolt.Tx, req *dsc.Object) error {
+//nolint:dupl // structurally mirrors relationSetHandler; Object and Relation share no common interface to unify against.
+func (s *Importer) objectSetHandler(ctx context.Context, tx store.Tx, req *dsc.Object) error {
 	s.logger.Debug().Interface("object", req).Msg("ImportObject")
 
 	if req == nil {
@@ -159,13 +162,13 @@ func (s *Importer) objectSetHandler(ctx context.Context, tx *bolt.Tx, req *dsc.O
 	}
 
 	obj := ds.Object(req)
-	if err := obj.Validate(s.store.MC()); err != nil {
+	if err := obj.Validate(s.mc); err != nil {
 		return modelValidateError(err)
 	}
 
 	etag := obj.Hash()
 
-	updReq, err := ds.UpdateMetadataObject(ctx, tx, bdb.ObjectsPath, obj.Key(), req)
+	updReq, err := ds.UpdateMetadataObject(ctx, tx, req)
 	if err != nil {
 		return err
 	}
@@ -177,14 +180,14 @@ func (s *Importer) objectSetHandler(ctx context.Context, tx *bolt.Tx, req *dsc.O
 
 	updReq.Etag = etag
 
-	if _, err := bdb.Set[dsc.Object](ctx, tx, bdb.ObjectsPath, ds.Object(updReq).Key(), updReq); err != nil {
+	if _, err := tx.SetObject(ctx, updReq); err != nil {
 		return derr.ErrInvalidObject.Msg("set")
 	}
 
 	return nil
 }
 
-func (s *Importer) objectDeleteHandler(ctx context.Context, tx *bolt.Tx, req *dsc.Object) error {
+func (s *Importer) objectDeleteHandler(ctx context.Context, tx store.Tx, req *dsc.Object) error {
 	s.logger.Debug().Interface("object", req).Msg("ImportObject")
 
 	if req == nil {
@@ -196,18 +199,18 @@ func (s *Importer) objectDeleteHandler(ctx context.Context, tx *bolt.Tx, req *ds
 	}
 
 	obj := ds.Object(req)
-	if err := obj.Validate(s.store.MC()); err != nil {
+	if err := obj.Validate(s.mc); err != nil {
 		return modelValidateError(err)
 	}
 
-	if err := bdb.Delete(ctx, tx, bdb.ObjectsPath, obj.Key()); err != nil {
+	if err := tx.DeleteObject(ctx, req.GetType(), req.GetId()); err != nil {
 		return derr.ErrInvalidObject.Msg("delete")
 	}
 
 	return nil
 }
 
-func (s *Importer) objectDeleteWithRelationsHandler(ctx context.Context, tx *bolt.Tx, req *dsc.Object) error {
+func (s *Importer) objectDeleteWithRelationsHandler(ctx context.Context, tx store.Tx, req *dsc.Object) error {
 	s.logger.Debug().Interface("object", req).Msg("ImportObject")
 
 	if req == nil {
@@ -219,51 +222,29 @@ func (s *Importer) objectDeleteWithRelationsHandler(ctx context.Context, tx *bol
 	}
 
 	obj := ds.Object(req)
-	if err := obj.Validate(s.store.MC()); err != nil {
+	if err := obj.Validate(s.mc); err != nil {
 		return modelValidateError(err)
 	}
 
-	if err := bdb.Delete(ctx, tx, bdb.ObjectsPath, obj.Key()); err != nil {
+	if err := tx.DeleteObject(ctx, req.GetType(), req.GetId()); err != nil {
 		return derr.ErrInvalidObject.Msg("delete")
 	}
 
 	// incoming object relations of object instance (result.type == incoming.subject.type && result.key == incoming.subject.key)
-	if err := s.deleteObjectRelations(ctx, tx, bdb.RelationsSubPath, req); err != nil {
+	if err := deleteRelationsWithPrefix(ctx, tx, store.BySubject, req.GetType(), req.GetId()); err != nil {
 		return err
 	}
 
 	// outgoing object relations of object instance (result.type == outgoing.object.type && result.key == outgoing.object.key)
-	if err := s.deleteObjectRelations(ctx, tx, bdb.RelationsObjPath, req); err != nil {
+	if err := deleteRelationsWithPrefix(ctx, tx, store.ByObject, req.GetType(), req.GetId()); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (*Importer) deleteObjectRelations(ctx context.Context, tx *bolt.Tx, path bdb.Path, obj *dsc.Object) error {
-	iter, err := bdb.NewScanIterator[dsc.Relation](
-		ctx, tx, path,
-		bdb.WithKeyFilter(append(ds.Object(obj).Key(), ds.InstanceSeparator)),
-	)
-	if err != nil {
-		return err
-	}
-
-	for iter.Next() {
-		rel := ds.Relation(iter.Value())
-		if err := bdb.Delete(ctx, tx, bdb.RelationsObjPath, rel.ObjKey()); err != nil {
-			return err
-		}
-
-		if err := bdb.Delete(ctx, tx, bdb.RelationsSubPath, rel.SubKey()); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (s *Importer) relationSetHandler(ctx context.Context, tx *bolt.Tx, req *dsc.Relation) error {
+//nolint:dupl // structurally mirrors objectSetHandler; Object and Relation share no common interface to unify against.
+func (s *Importer) relationSetHandler(ctx context.Context, tx store.Tx, req *dsc.Relation) error {
 	s.logger.Debug().Interface("relation", req).Msg("ImportRelation")
 
 	if req == nil {
@@ -275,13 +256,13 @@ func (s *Importer) relationSetHandler(ctx context.Context, tx *bolt.Tx, req *dsc
 	}
 
 	rel := ds.Relation(req)
-	if err := rel.Validate(s.store.MC()); err != nil {
+	if err := rel.Validate(s.mc); err != nil {
 		return modelValidateError(err)
 	}
 
 	etag := rel.Hash()
 
-	updReq, err := ds.UpdateMetadataRelation(ctx, tx, bdb.RelationsObjPath, rel.ObjKey(), req)
+	updReq, err := ds.UpdateMetadataRelation(ctx, tx, req)
 	if err != nil {
 		return err
 	}
@@ -293,18 +274,14 @@ func (s *Importer) relationSetHandler(ctx context.Context, tx *bolt.Tx, req *dsc
 
 	updReq.Etag = etag
 
-	if _, err := bdb.Set[dsc.Relation](ctx, tx, bdb.RelationsObjPath, ds.Relation(updReq).ObjKey(), updReq); err != nil {
-		return derr.ErrInvalidRelation.Msg("set")
-	}
-
-	if _, err := bdb.Set[dsc.Relation](ctx, tx, bdb.RelationsSubPath, ds.Relation(updReq).SubKey(), updReq); err != nil {
+	if _, err := tx.SetRelation(ctx, updReq); err != nil {
 		return derr.ErrInvalidRelation.Msg("set")
 	}
 
 	return nil
 }
 
-func (s *Importer) relationDeleteHandler(ctx context.Context, tx *bolt.Tx, req *dsc.Relation) error {
+func (s *Importer) relationDeleteHandler(ctx context.Context, tx store.Tx, req *dsc.Relation) error {
 	s.logger.Debug().Interface("relation", req).Msg("ImportRelation")
 
 	if req == nil {
@@ -316,15 +293,18 @@ func (s *Importer) relationDeleteHandler(ctx context.Context, tx *bolt.Tx, req *
 	}
 
 	rel := ds.Relation(req)
-	if err := rel.Validate(s.store.MC()); err != nil {
+	if err := rel.Validate(s.mc); err != nil {
 		return modelValidateError(err)
 	}
 
-	if err := bdb.Delete(ctx, tx, bdb.RelationsObjPath, rel.ObjKey()); err != nil {
-		return derr.ErrInvalidRelation.Msg("delete")
-	}
-
-	if err := bdb.Delete(ctx, tx, bdb.RelationsSubPath, rel.SubKey()); err != nil {
+	if err := tx.DeleteRelation(ctx, &dsc.RelationIdentifier{
+		ObjectType:      req.GetObjectType(),
+		ObjectId:        req.GetObjectId(),
+		Relation:        req.GetRelation(),
+		SubjectType:     req.GetSubjectType(),
+		SubjectId:       req.GetSubjectId(),
+		SubjectRelation: req.GetSubjectRelation(),
+	}); err != nil {
 		return derr.ErrInvalidRelation.Msg("delete")
 	}
 

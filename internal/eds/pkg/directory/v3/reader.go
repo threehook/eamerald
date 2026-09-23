@@ -3,18 +3,19 @@ package v3
 import (
 	"context"
 
+	"github.com/aserto-dev/azm/cache"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/aserto-dev/go-directory/pkg/validator"
 	"github.com/pkg/errors"
 	"github.com/threehook/eamerald/internal/eds/pkg/bdb"
 	"github.com/threehook/eamerald/internal/eds/pkg/ds"
+	"github.com/threehook/eamerald/internal/eds/pkg/store"
 	"github.com/threehook/eamerald/internal/eds/pkg/x"
 
 	"github.com/go-http-utils/headers"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
-	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -23,15 +24,17 @@ import (
 
 type Reader struct {
 	logger *zerolog.Logger
-	store  *bdb.BoltDB
+	store  store.Store
+	mc     *cache.Cache
 }
 
 var _ dsr.ReaderServer = (*Reader)(nil)
 
-func NewReader(logger *zerolog.Logger, store *bdb.BoltDB) *Reader {
+func NewReader(logger *zerolog.Logger, store store.Store, mc *cache.Cache) *Reader {
 	return &Reader{
 		logger: logger,
 		store:  store,
+		mc:     mc,
 	}
 }
 
@@ -44,12 +47,12 @@ func (s *Reader) GetObject(ctx context.Context, req *dsr.GetObjectRequest) (*dsr
 	}
 
 	objIdent := ds.ObjectIdentifier(&dsc.ObjectIdentifier{ObjectType: req.GetObjectType(), ObjectId: req.GetObjectId()})
-	if err := objIdent.Validate(s.store.MC()); err != nil {
+	if err := objIdent.Validate(s.mc); err != nil {
 		return resp, err
 	}
 
-	err := s.store.DB().View(func(tx *bolt.Tx) error {
-		obj, err := bdb.Get[dsc.Object](ctx, tx, bdb.ObjectsPath, objIdent.Key())
+	err := s.store.View(ctx, func(tx store.Tx) error {
+		obj, err := tx.GetObject(ctx, req.GetObjectType(), req.GetObjectId())
 		if err != nil {
 			return err
 		}
@@ -63,18 +66,16 @@ func (s *Reader) GetObject(ctx context.Context, req *dsr.GetObjectRequest) (*dsr
 		}
 
 		if req.GetWithRelations() {
-			// incoming object relations of object instance
-			// (result.type == incoming.subject.type && result.key == incoming.subject.key)
-			incoming, err := bdb.Scan[dsc.Relation](ctx, tx, bdb.RelationsSubPath, ds.Object(obj).Key())
+			// incoming object relations of object instance (result.type == incoming.subject.type && result.key == incoming.subject.key)
+			incoming, err := relationsByObject(ctx, tx, store.BySubject, obj.GetType(), obj.GetId())
 			if err != nil {
 				return err
 			}
 
 			resp.Relations = append(resp.Relations, incoming...)
 
-			// outgoing object relations of object instance
-			// (result.type == outgoing.object.type && result.key == outgoing.object.key)
-			outgoing, err := bdb.Scan[dsc.Relation](ctx, tx, bdb.RelationsObjPath, ds.Object(obj).Key())
+			// outgoing object relations of object instance (result.type == outgoing.object.type && result.key == outgoing.object.key)
+			outgoing, err := relationsByObject(ctx, tx, store.ByObject, obj.GetType(), obj.GetId())
 			if err != nil {
 				return err
 			}
@@ -102,14 +103,14 @@ func (s *Reader) GetObjectMany(ctx context.Context, req *dsr.GetObjectManyReques
 
 	// validate all object identifiers first.
 	for _, i := range req.GetParam() {
-		if err := ds.ObjectIdentifier(i).Validate(s.store.MC()); err != nil {
+		if err := ds.ObjectIdentifier(i).Validate(s.mc); err != nil {
 			return resp, err
 		}
 	}
 
-	err := s.store.DB().View(func(tx *bolt.Tx) error {
+	err := s.store.View(ctx, func(tx store.Tx) error {
 		for _, i := range req.GetParam() {
-			obj, err := bdb.Get[dsc.Object](ctx, tx, bdb.ObjectsPath, ds.ObjectIdentifier(i).Key())
+			obj, err := tx.GetObject(ctx, i.GetObjectType(), i.GetObjectId())
 			if err != nil {
 				return err
 			}
@@ -135,33 +136,31 @@ func (s *Reader) GetObjects(ctx context.Context, req *dsr.GetObjectsRequest) (*d
 		req.Page = &dsc.PaginationRequest{Size: x.MaxPageSize}
 	}
 
-	opts := []bdb.ScanOption{
-		bdb.WithPageSize(req.GetPage().GetSize()),
-		bdb.WithPageToken(req.GetPage().GetToken()),
-	}
+	objectType := ""
 
 	if req.GetObjectType() != "" {
 		oid := ds.ObjectIdentifier(&dsc.ObjectIdentifier{ObjectType: req.GetObjectType()})
-		if err := ds.ObjectSelector(oid.ObjectIdentifier).Validate(s.store.MC()); err != nil {
+		if err := ds.ObjectSelector(oid.ObjectIdentifier).Validate(s.mc); err != nil {
 			return resp, err
 		}
 
-		opts = append(opts, bdb.WithKeyFilter(oid.Key()))
+		objectType = req.GetObjectType()
 	}
 
-	err := s.store.DB().View(func(tx *bolt.Tx) error {
-		iter, err := bdb.NewPageIterator[dsc.Object](ctx, tx, bdb.ObjectsPath, opts...)
+	err := s.store.View(ctx, func(tx store.Tx) error {
+		iter, err := tx.ScanObjects(ctx, objectType, req.GetPage().GetToken())
 		if err != nil {
 			return err
 		}
+		defer iter.Close()
 
-		iter.Next()
+		values, nextToken := store.Page(iter, req.GetPage().GetSize())
 
-		resp.Results = lo.Map(iter.Value(), func(x *dsc.Object, _ int) *dsc.Object {
+		resp.Results = lo.Map(values, func(x *dsc.Object, _ int) *dsc.Object {
 			return ds.PatchObjectRead(x)
 		})
 
-		resp.Page = &dsc.PaginationResponse{NextToken: iter.NextToken()}
+		resp.Page = &dsc.PaginationResponse{NextToken: nextToken}
 
 		return nil
 	})
@@ -181,22 +180,25 @@ func (s *Reader) GetRelation(ctx context.Context, req *dsr.GetRelationRequest) (
 	}
 
 	getRelation := ds.GetRelation(req)
-	if err := getRelation.Validate(s.store.MC()); err != nil {
+	if err := getRelation.Validate(s.mc); err != nil {
 		return resp, err
 	}
 
-	filter := ds.RelationIdentifierBuffer()
-	defer ds.ReturnRelationIdentifierBuffer(filter)
-
-	path, err := getRelation.PathAndFilter(filter)
+	dir, filter, err := getRelation.PathAndFilter()
 	if err != nil {
 		return resp, err
 	}
 
-	err = s.store.DB().View(func(tx *bolt.Tx) error {
-		relations, err := bdb.Scan[dsc.Relation](ctx, tx, path, filter.Bytes())
+	err = s.store.View(ctx, func(tx store.Tx) error {
+		iter, err := tx.ScanRelations(ctx, dir, filter, "")
 		if err != nil {
 			return err
+		}
+		defer iter.Close()
+
+		var relations []*dsc.Relation
+		for iter.Next() {
+			relations = append(relations, iter.Value())
 		}
 
 		if len(relations) == 0 {
@@ -245,25 +247,18 @@ func (s *Reader) GetRelations(ctx context.Context, req *dsr.GetRelationsRequest)
 	}
 
 	getRelations := ds.GetRelations(req)
-	if err := getRelations.Validate(s.store.MC()); err != nil {
+	if err := getRelations.Validate(s.mc); err != nil {
 		return resp, err
 	}
 
-	keyFilter := ds.RelationIdentifierBuffer()
-	defer ds.ReturnRelationIdentifierBuffer(keyFilter)
+	dir, filter, valueFilter := getRelations.RelationValueFilter()
 
-	path, valueFilter := getRelations.RelationValueFilter(keyFilter)
-
-	opts := []bdb.ScanOption{
-		bdb.WithPageToken(req.GetPage().GetToken()),
-		bdb.WithKeyFilter(keyFilter.Bytes()),
-	}
-
-	err := s.store.DB().View(func(tx *bolt.Tx) error {
-		iter, err := bdb.NewScanIterator[dsc.Relation](ctx, tx, path, opts...)
+	err := s.store.View(ctx, func(tx store.Tx) error {
+		iter, err := tx.ScanRelations(ctx, dir, filter, req.GetPage().GetToken())
 		if err != nil {
 			return err
 		}
+		defer iter.Close()
 
 		for iter.Next() {
 			if !valueFilter(iter.Value()) {
@@ -274,11 +269,17 @@ func (s *Reader) GetRelations(ctx context.Context, req *dsr.GetRelationsRequest)
 
 			if int64(req.GetPage().GetSize()) == int64(len(resp.GetResults())) {
 				if iter.Next() {
-					resp.Page.NextToken = iter.Key()
+					resp.Page.NextToken = iter.Token()
 				}
 
 				break
 			}
+		}
+
+		// Close before any further query on tx: a SQL-backed Tx can't issue a new query while this scan's
+		// result set is still open, even mid-transaction.
+		if err := iter.Close(); err != nil {
+			return err
 		}
 
 		if req.GetWithObjects() {
@@ -303,7 +304,7 @@ func (s *Reader) Check(ctx context.Context, req *dsr.CheckRequest) (*dsr.CheckRe
 	}
 
 	check := ds.Check(req)
-	if err := check.Validate(s.store.MC()); err != nil {
+	if err := check.Validate(s.mc); err != nil {
 		resp.Check = false
 
 		if err := errors.Unwrap(err); err != nil {
@@ -316,10 +317,10 @@ func (s *Reader) Check(ctx context.Context, req *dsr.CheckRequest) (*dsr.CheckRe
 		return resp, nil
 	}
 
-	err := s.store.DB().View(func(tx *bolt.Tx) error {
+	err := s.store.View(ctx, func(tx store.Tx) error {
 		var err error
 
-		resp, err = check.Exec(ctx, tx, s.store.MC())
+		resp, err = check.Exec(ctx, tx, s.mc)
 
 		return err
 	})
@@ -335,14 +336,14 @@ func (s *Reader) Checks(ctx context.Context, req *dsr.ChecksRequest) (*dsr.Check
 	resp := &dsr.ChecksResponse{}
 
 	checks := ds.Checks(req)
-	if err := checks.Validate(s.store.MC()); err != nil {
+	if err := checks.Validate(s.mc); err != nil {
 		return resp, err
 	}
 
-	err := s.store.DB().View(func(tx *bolt.Tx) error {
+	err := s.store.View(ctx, func(tx store.Tx) error {
 		var err error
 
-		resp, err = checks.Exec(ctx, tx, s.store.MC())
+		resp, err = checks.Exec(ctx, tx, s.mc)
 
 		return err
 	})
@@ -372,14 +373,14 @@ func (s *Reader) GetGraph(ctx context.Context, req *dsr.GetGraphRequest) (*dsr.G
 	}
 
 	getGraph := ds.GetGraph(req)
-	if err := getGraph.Validate(s.store.MC()); err != nil {
+	if err := getGraph.Validate(s.mc); err != nil {
 		return resp, err
 	}
 
-	err := s.store.DB().View(func(tx *bolt.Tx) error {
+	err := s.store.View(ctx, func(tx store.Tx) error {
 		var err error
 
-		results, err := getGraph.Exec(ctx, tx, s.store.MC())
+		results, err := getGraph.Exec(ctx, tx, s.mc)
 		if err != nil {
 			return err
 		}
@@ -392,22 +393,22 @@ func (s *Reader) GetGraph(ctx context.Context, req *dsr.GetGraphRequest) (*dsr.G
 	return resp, err
 }
 
-func (*Reader) getWithObjects(ctx context.Context, tx *bolt.Tx, relations []*dsc.Relation) map[string]*dsc.Object {
+func (*Reader) getWithObjects(ctx context.Context, tx store.Tx, relations []*dsc.Relation) map[string]*dsc.Object {
 	objects := map[string]*dsc.Object{}
 
 	for _, r := range relations {
 		rel := ds.Relation(r)
 
-		sub, err := bdb.Get[dsc.Object](ctx, tx, bdb.ObjectsPath, ds.ObjectIdentifier(rel.Subject()).Key())
+		sub, err := tx.GetObject(ctx, rel.GetSubjectType(), rel.GetSubjectId())
 		if err != nil {
-			sub = &dsc.Object{Type: rel.SubjectType, Id: rel.SubjectId}
+			sub = &dsc.Object{Type: rel.GetSubjectType(), Id: rel.GetSubjectId()}
 		}
 
 		objects[ds.Object(sub).StrKey()] = sub
 
-		obj, err := bdb.Get[dsc.Object](ctx, tx, bdb.ObjectsPath, ds.ObjectIdentifier(rel.Object()).Key())
+		obj, err := tx.GetObject(ctx, rel.GetObjectType(), rel.GetObjectId())
 		if err != nil {
-			obj = &dsc.Object{Type: rel.ObjectType, Id: rel.ObjectId}
+			obj = &dsc.Object{Type: rel.GetObjectType(), Id: rel.GetObjectId()}
 		}
 
 		objects[ds.Object(obj).StrKey()] = obj

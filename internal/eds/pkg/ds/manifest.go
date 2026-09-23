@@ -9,8 +9,7 @@ import (
 	"github.com/aserto-dev/azm/model"
 	dsm "github.com/aserto-dev/go-directory/aserto/directory/model/v3"
 	"github.com/threehook/eamerald/internal/eds/pkg/bdb"
-
-	bolt "go.etcd.io/bbolt"
+	"github.com/threehook/eamerald/internal/eds/pkg/store"
 )
 
 type manifest struct {
@@ -25,20 +24,18 @@ func Manifest(metadata *dsm.Metadata) *manifest {
 	}
 }
 
-// Get, hydrates the manifest from the _manifest bucket
-// _metadata/{name}/{version}/metadata
-// _metadata/{name}/{version}/body.
-func (m *manifest) Get(ctx context.Context, tx *bolt.Tx) (*manifest, error) {
-	if ok, _ := bdb.BucketExists(tx, bdb.ManifestPath); !ok {
+// Get, hydrates the manifest from the manifest table/bucket.
+func (m *manifest) Get(ctx context.Context, tx store.Tx) (*manifest, error) {
+	if ok, _ := tx.ManifestExists(ctx); !ok {
 		return nil, bdb.ErrPathNotFound
 	}
 
-	metadata, err := bdb.Get[dsm.Metadata](ctx, tx, bdb.ManifestPath, bdb.MetadataKey)
+	metadata, err := tx.GetManifestMetadata(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	body, err := bdb.Get[dsm.Body](ctx, tx, bdb.ManifestPath, bdb.BodyKey)
+	body, err := tx.GetManifestBody(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -46,14 +43,13 @@ func (m *manifest) Get(ctx context.Context, tx *bolt.Tx) (*manifest, error) {
 	return &manifest{Metadata: metadata, Body: body}, nil
 }
 
-// GetModel, hydrates the model cache from the _manifest
-// _metadata/{name}/{version}/model.
-func (m *manifest) GetModel(ctx context.Context, tx *bolt.Tx) (*model.Model, error) {
-	if ok, _ := bdb.BucketExists(tx, bdb.ManifestPath); !ok {
+// GetModel, hydrates the model cache from the manifest table/bucket.
+func (m *manifest) GetModel(ctx context.Context, tx store.Tx) (*model.Model, error) {
+	if ok, _ := tx.ManifestExists(ctx); !ok {
 		return nil, bdb.ErrPathNotFound
 	}
 
-	mod, err := bdb.GetAny[model.Model](ctx, tx, bdb.ManifestPath, bdb.ModelKey)
+	mod, err := tx.GetManifestModel(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -61,29 +57,15 @@ func (m *manifest) GetModel(ctx context.Context, tx *bolt.Tx) (*model.Model, err
 	return mod, nil
 }
 
-// Set, persists the manifest body in the _manifest bucket
-// _metadata/{name}/{version}/metadata
-// _metadata/{name}/{version}/body.
-func (m *manifest) Set(ctx context.Context, tx *bolt.Tx, buf *bytes.Buffer) error {
-	if _, err := bdb.CreateBucket(tx, bdb.ManifestPath); err != nil {
-		return err
-	}
-
-	if _, err := bdb.Set(ctx, tx, bdb.ManifestPath, bdb.MetadataKey, m.Metadata); err != nil {
-		return err
-	}
-
+// Set, persists the manifest metadata and body.
+func (m *manifest) Set(ctx context.Context, tx store.Tx, buf *bytes.Buffer) error {
 	m.Body = &dsm.Body{Data: buf.Bytes()}
-	if _, err := bdb.Set(ctx, tx, bdb.ManifestPath, bdb.BodyKey, m.Body); err != nil {
-		return err
-	}
 
-	return nil
+	return tx.SetManifest(ctx, m.Metadata, m.Body)
 }
 
-// SetModel, persists the model cache in the _manifest bucket
-// _metadata/{name}/{version}/model.
-func (m *manifest) SetModel(ctx context.Context, tx *bolt.Tx, mod *model.Model) error {
+// SetModel, persists the model cache derived from the manifest.
+func (m *manifest) SetModel(ctx context.Context, tx store.Tx, mod *model.Model) error {
 	if mod.Metadata == nil {
 		mod.Metadata = &model.Metadata{}
 	}
@@ -91,54 +73,16 @@ func (m *manifest) SetModel(ctx context.Context, tx *bolt.Tx, mod *model.Model) 
 	mod.Metadata.ETag = m.Metadata.GetEtag()
 	mod.Metadata.UpdatedAt = m.Metadata.GetUpdatedAt().AsTime()
 
-	if _, err := bdb.SetAny(ctx, tx, bdb.ManifestPath, bdb.ModelKey, mod); err != nil {
-		return err
-	}
-
-	return nil
+	return tx.SetManifestModel(ctx, mod)
 }
 
 // Delete
 //
 // !!! NOTE: delete manifest is a destructive operation !!!
 //
-// sets the manifest to an empty manifest,
-// updates the model accordingly,
-// deletes and recreates the objects and relations buckets.
-func (m *manifest) Delete(ctx context.Context, tx *bolt.Tx) error {
-	if err := bdb.DeleteBucket(tx, bdb.ManifestPath); err != nil {
-		return err
-	}
-
-	if _, err := bdb.CreateBucket(tx, bdb.ManifestPath); err != nil {
-		return err
-	}
-
-	if err := bdb.DeleteBucket(tx, bdb.ObjectsPath); err != nil {
-		return err
-	}
-
-	if _, err := bdb.CreateBucket(tx, bdb.ObjectsPath); err != nil {
-		return err
-	}
-
-	if err := bdb.DeleteBucket(tx, bdb.RelationsObjPath); err != nil {
-		return err
-	}
-
-	if _, err := bdb.CreateBucket(tx, bdb.RelationsObjPath); err != nil {
-		return err
-	}
-
-	if err := bdb.DeleteBucket(tx, bdb.RelationsSubPath); err != nil {
-		return err
-	}
-
-	if _, err := bdb.CreateBucket(tx, bdb.RelationsSubPath); err != nil {
-		return err
-	}
-
-	return nil
+// sets the manifest to an empty manifest, updates the model accordingly, deletes and recreates the objects and relations buckets.
+func (m *manifest) Delete(ctx context.Context, tx store.Tx) error {
+	return tx.DeleteManifest(ctx)
 }
 
 func (m *manifest) Hash() string {

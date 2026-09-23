@@ -6,8 +6,7 @@ import (
 	"github.com/aserto-dev/azm/cache"
 	"github.com/aserto-dev/azm/safe"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
-
-	bolt "go.etcd.io/bbolt"
+	"github.com/threehook/eamerald/internal/eds/pkg/store"
 )
 
 type getGraph struct {
@@ -18,6 +17,6 @@ func GetGraph(i *dsr.GetGraphRequest) *getGraph {
 	return &getGraph{safe.GetGraph(i)}
 }
 
-func (i *getGraph) Exec(ctx context.Context, tx *bolt.Tx, mc *cache.Cache) (*dsr.GetGraphResponse, error) {
+func (i *getGraph) Exec(ctx context.Context, tx store.Tx, mc *cache.Cache) (*dsr.GetGraphResponse, error) {
 	return mc.GetGraph(i.GetGraphRequest, getRelations(ctx, tx))
 }

@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/aserto-dev/azm/cache"
+	"github.com/aserto-dev/azm/model"
 	cerr "github.com/aserto-dev/errors"
 	"github.com/threehook/eamerald/internal/eds/pkg/bdb"
 	"github.com/threehook/eamerald/internal/eds/pkg/bdb/migrations/common"
@@ -56,7 +58,7 @@ func CheckSchemaVersion(config *bdb.Config, logger *zerolog.Logger, reqVersion *
 		return true, nil
 	}
 
-	boltdb, err := bdb.New(config, logger)
+	boltdb, err := bdb.New(config, logger, cache.New(&model.Model{}))
 	if err != nil {
 		return false, err
 	}
@@ -135,7 +137,7 @@ func Migrate(config *bdb.Config, logger *zerolog.Logger, reqVersion *semver.Vers
 }
 
 func getCurrent(config *bdb.Config, logger *zerolog.Logger) (*semver.Version, error) {
-	boltdb, err := bdb.New(config, logger)
+	boltdb, err := bdb.New(config, logger, cache.New(&model.Model{}))
 	if err != nil {
 		return nil, err
 	}

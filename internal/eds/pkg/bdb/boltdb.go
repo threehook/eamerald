@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aserto-dev/azm/cache"
-	"github.com/aserto-dev/azm/model"
 	cerr "github.com/aserto-dev/errors"
 	"github.com/threehook/eamerald/internal/fs"
 
@@ -40,12 +39,15 @@ type BoltDB struct {
 	mc     *cache.Cache
 }
 
-func New(config *Config, logger *zerolog.Logger) (*BoltDB, error) {
+// New opens a BoltDB-backed store. mc is the model cache shared with the rest of the directory service (multiple
+// backends must never own independent caches for the same directory instance); pass a fresh cache.New(&model.Model{})
+// for standalone uses (e.g. schema migration tooling) that never read or write it.
+func New(config *Config, logger *zerolog.Logger, mc *cache.Cache) (*BoltDB, error) {
 	newLogger := logger.With().Str("component", "kvs").Logger()
 	db := BoltDB{
 		config: config,
 		logger: &newLogger,
-		mc:     cache.New(&model.Model{}),
+		mc:     mc,
 	}
 
 	return &db, nil

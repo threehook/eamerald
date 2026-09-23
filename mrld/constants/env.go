@@ -7,6 +7,8 @@ const (
 	EnvEameraldCfgDir             string = "EAMERALD_CFG_DIR"
 	EnvEameraldCertsDir           string = "EAMERALD_CERTS_DIR"
 	EnvEameraldDBDir              string = "EAMERALD_DB_DIR"
+	EnvEameraldDirectoryBackend   string = "EAMERALD_DIRECTORY_BACKEND"
+	EnvEameraldPostgresDSN        string = "EAMERALD_DIRECTORY_POSTGRES_DSN"
 	EnvEameraldTmplDir            string = "EAMERALD_TMPL_DIR"
 	EnvEameraldTmplURL            string = "EAMERALD_TMPL_URL"
 	EnvEameraldDecisionsDir       string = "EAMERALD_DECISIONS_DIR"

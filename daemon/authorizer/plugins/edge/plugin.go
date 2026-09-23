@@ -322,7 +322,11 @@ func (p *Plugin) task(mode SyncMode) {
 }
 
 func (p *Plugin) exec(ctx context.Context, ds *directory.Directory, conn *grpc.ClientConn, opts []datasync.Option) {
-	err := ds.DataSyncClient().Sync(ctx, conn, opts...)
+	client, err := ds.DataSyncClient()
+	if err == nil {
+		err = client.Sync(ctx, conn, opts...)
+	}
+
 	if err != nil {
 		p.logger.Error().Err(err).Msg(syncTask)
 	}

@@ -22,9 +22,10 @@ import (
 
 const bufSize int = 1024 * 1024
 
+// NewServer opens a Directory for cfg (through the process-wide singleton, see directory.New) and wraps it with an
+// in-process gRPC server/client pair. Callers that already hold a *directory.Directory (e.g. because they opened it
+// via directory.Open to run more than one in the same process) should use NewServerFromDirectory instead.
 func NewServer(ctx context.Context, logger *zerolog.Logger, cfg *directory.Config) (*grpc.ClientConn, func()) {
-	listener := bufconn.Listen(bufSize)
-
 	dsLogger := logger.With().Str("component", "ds").Logger()
 
 	inProcDirectory, err := eds.New(ctx, cfg, &dsLogger, nil)
@@ -32,17 +33,25 @@ func NewServer(ctx context.Context, logger *zerolog.Logger, cfg *directory.Confi
 		logger.Error().Err(err).Msg("failed to start edge directory server")
 	}
 
+	return NewServerFromDirectory(inProcDirectory)
+}
+
+// NewServerFromDirectory wraps an already-open Directory with an in-process gRPC server/client pair, so it can be
+// driven with the normal mrld/clients/directory.Client rather than calling its Reader3/Writer3/... servers directly.
+func NewServerFromDirectory(dir *directory.Directory) (*grpc.ClientConn, func()) {
+	listener := bufconn.Listen(bufSize)
+
 	errMiddleware := gerr.NewErrorMiddleware()
 	s := grpc.NewServer(
 		grpc.UnaryInterceptor(errMiddleware.Unary()),
 		grpc.StreamInterceptor(errMiddleware.Stream()),
 	)
 
-	dsm.RegisterModelServer(s, inProcDirectory.Model3())
-	dsr.RegisterReaderServer(s, inProcDirectory.Reader3())
-	dsw.RegisterWriterServer(s, inProcDirectory.Writer3())
-	dse.RegisterExporterServer(s, inProcDirectory.Exporter3())
-	dsi.RegisterImporterServer(s, inProcDirectory.Importer3())
+	dsm.RegisterModelServer(s, dir.Model3())
+	dsr.RegisterReaderServer(s, dir.Reader3())
+	dsw.RegisterWriterServer(s, dir.Writer3())
+	dse.RegisterExporterServer(s, dir.Exporter3())
+	dsi.RegisterImporterServer(s, dir.Importer3())
 
 	go func() {
 		if err := s.Serve(listener); err != nil {

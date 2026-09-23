@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS manifest;
+DROP TABLE IF EXISTS relations;
+DROP TABLE IF EXISTS objects;

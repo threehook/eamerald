@@ -49,5 +49,10 @@ func (cmd *SyncCmd) Run(ctx context.Context) error {
 	}
 	defer dir.Close()
 
-	return dir.DataSyncClient().Sync(ctx, conn, opts...)
+	client, err := dir.DataSyncClient()
+	if err != nil {
+		return err
+	}
+
+	return client.Sync(ctx, conn, opts...)
 }

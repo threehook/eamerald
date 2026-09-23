@@ -7,13 +7,11 @@ import (
 	"github.com/aserto-dev/azm/model"
 	"github.com/aserto-dev/azm/stats"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
-	"github.com/threehook/eamerald/internal/eds/pkg/bdb"
-
-	bolt "go.etcd.io/bbolt"
+	"github.com/threehook/eamerald/internal/eds/pkg/store"
 )
 
 // CalculateStats returns a Stats object with the counts of all objects and relations.
-func CalculateStats(ctx context.Context, tx *bolt.Tx) (*stats.Stats, error) {
+func CalculateStats(ctx context.Context, tx store.Tx) (*stats.Stats, error) {
 	s := NewStats()
 
 	if err := s.CountObjects(ctx, tx); err != nil {
@@ -35,11 +33,12 @@ func NewStats() *Stats {
 	return &Stats{stats.NewStats()}
 }
 
-func (s *Stats) CountObjects(ctx context.Context, tx *bolt.Tx) error {
-	iter, err := bdb.NewScanIterator[dsc.Object](ctx, tx, bdb.ObjectsPath)
+func (s *Stats) CountObjects(ctx context.Context, tx store.Tx) error {
+	iter, err := tx.ScanObjects(ctx, "", "")
 	if err != nil {
 		return err
 	}
+	defer iter.Close()
 
 	for iter.Next() {
 		obj := iter.Value()
@@ -49,11 +48,12 @@ func (s *Stats) CountObjects(ctx context.Context, tx *bolt.Tx) error {
 	return nil
 }
 
-func (s *Stats) CountRelations(ctx context.Context, tx *bolt.Tx) error {
-	iter, err := bdb.NewScanIterator[dsc.Relation](ctx, tx, bdb.RelationsObjPath)
+func (s *Stats) CountRelations(ctx context.Context, tx store.Tx) error {
+	iter, err := tx.ScanRelations(ctx, store.ByObject, store.RelationFilter{}, "")
 	if err != nil {
 		return err
 	}
+	defer iter.Close()
 
 	for iter.Next() {
 		rel := iter.Value()

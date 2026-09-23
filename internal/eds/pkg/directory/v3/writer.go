@@ -3,31 +3,33 @@ package v3
 import (
 	"context"
 
+	"github.com/aserto-dev/azm/cache"
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dsw "github.com/aserto-dev/go-directory/aserto/directory/writer/v3"
 	"github.com/aserto-dev/go-directory/pkg/derr"
 	"github.com/aserto-dev/go-directory/pkg/validator"
-	"github.com/threehook/eamerald/internal/eds/pkg/bdb"
 	"github.com/threehook/eamerald/internal/eds/pkg/ds"
+	"github.com/threehook/eamerald/internal/eds/pkg/store"
 
 	"github.com/go-http-utils/headers"
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
 	"github.com/rs/zerolog"
-	bolt "go.etcd.io/bbolt"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Writer struct {
 	logger *zerolog.Logger
-	store  *bdb.BoltDB
+	store  store.Store
+	mc     *cache.Cache
 }
 
 var _ dsw.WriterServer = (*Writer)(nil)
 
-func NewWriter(logger *zerolog.Logger, store *bdb.BoltDB) *Writer {
+func NewWriter(logger *zerolog.Logger, store store.Store, mc *cache.Cache) *Writer {
 	return &Writer{
 		logger: logger,
 		store:  store,
+		mc:     mc,
 	}
 }
 
@@ -40,15 +42,15 @@ func (s *Writer) SetObject(ctx context.Context, req *dsw.SetObjectRequest) (*dsw
 	}
 
 	obj := ds.Object(req.GetObject())
-	if err := obj.Validate(s.store.MC()); err != nil {
+	if err := obj.Validate(s.mc); err != nil {
 		// The object violates the model.
 		return resp, err
 	}
 
 	etag := obj.Hash()
 
-	err := s.store.DB().Update(func(tx *bolt.Tx) error {
-		updObj, err := ds.UpdateMetadataObject(ctx, tx, bdb.ObjectsPath, obj.Key(), req.GetObject())
+	err := s.store.Update(ctx, func(tx store.Tx) error {
+		updObj, err := ds.UpdateMetadataObject(ctx, tx, req.GetObject())
 		if err != nil {
 			return err
 		}
@@ -70,7 +72,7 @@ func (s *Writer) SetObject(ctx context.Context, req *dsw.SetObjectRequest) (*dsw
 
 		updObj.Etag = etag
 
-		objType, err := bdb.Set(ctx, tx, bdb.ObjectsPath, obj.Key(), updObj)
+		objType, err := tx.SetObject(ctx, updObj)
 		if err != nil {
 			return err
 		}
@@ -92,11 +94,11 @@ func (s *Writer) DeleteObject(ctx context.Context, req *dsw.DeleteObjectRequest)
 
 	objIdent := ds.ObjectIdentifier(&dsc.ObjectIdentifier{ObjectType: req.GetObjectType(), ObjectId: req.GetObjectId()})
 
-	if err := objIdent.Validate(s.store.MC()); err != nil {
+	if err := objIdent.Validate(s.mc); err != nil {
 		return resp, err
 	}
 
-	err := s.store.DB().Update(func(tx *bolt.Tx) error {
+	err := s.store.Update(ctx, func(tx store.Tx) error {
 		objIdent := ds.ObjectIdentifier(&dsc.ObjectIdentifier{ObjectType: req.GetObjectType(), ObjectId: req.GetObjectId()})
 
 		// optimistic concurrency check
@@ -104,7 +106,7 @@ func (s *Writer) DeleteObject(ctx context.Context, req *dsw.DeleteObjectRequest)
 		if ifMatchHeader != "" {
 			obj := &dsc.Object{Type: req.GetObjectType(), Id: req.GetObjectId()}
 
-			updObj, err := ds.UpdateMetadataObject(ctx, tx, bdb.ObjectsPath, ds.Object(obj).Key(), obj)
+			updObj, err := ds.UpdateMetadataObject(ctx, tx, obj)
 			if err != nil {
 				return err
 			}
@@ -114,17 +116,17 @@ func (s *Writer) DeleteObject(ctx context.Context, req *dsw.DeleteObjectRequest)
 			}
 		}
 
-		if err := bdb.Delete(ctx, tx, bdb.ObjectsPath, objIdent.Key()); err != nil {
+		if err := tx.DeleteObject(ctx, req.GetObjectType(), req.GetObjectId()); err != nil {
 			return err
 		}
 
 		if req.GetWithRelations() {
 			// incoming object relations of object instance (result.type == incoming.subject.type && result.key == incoming.subject.key)
-			if err := s.deleteRelations(ctx, bdb.RelationsSubPath, tx, objIdent.ObjectIdentifier); err != nil {
+			if err := deleteRelationsWithPrefix(ctx, tx, store.BySubject, objIdent.GetObjectType(), objIdent.GetObjectId()); err != nil {
 				return err
 			}
 			// outgoing object relations of object instance (result.type == outgoing.object.type && result.key == outgoing.object.key)
-			if err := s.deleteRelations(ctx, bdb.RelationsObjPath, tx, objIdent.ObjectIdentifier); err != nil {
+			if err := deleteRelationsWithPrefix(ctx, tx, store.ByObject, objIdent.GetObjectType(), objIdent.GetObjectId()); err != nil {
 				return err
 			}
 		}
@@ -146,14 +148,14 @@ func (s *Writer) SetRelation(ctx context.Context, req *dsw.SetRelationRequest) (
 	}
 
 	relation := ds.Relation(req.GetRelation())
-	if err := relation.Validate(s.store.MC()); err != nil {
+	if err := relation.Validate(s.mc); err != nil {
 		return resp, err
 	}
 
 	etag := relation.Hash()
 
-	err := s.store.DB().Update(func(tx *bolt.Tx) error {
-		updRel, err := ds.UpdateMetadataRelation(ctx, tx, bdb.RelationsObjPath, relation.ObjKey(), req.GetRelation())
+	err := s.store.Update(ctx, func(tx store.Tx) error {
+		updRel, err := ds.UpdateMetadataRelation(ctx, tx, req.GetRelation())
 		if err != nil {
 			return err
 		}
@@ -178,12 +180,8 @@ func (s *Writer) SetRelation(ctx context.Context, req *dsw.SetRelationRequest) (
 
 		updRel.Etag = etag
 
-		objRel, err := bdb.Set(ctx, tx, bdb.RelationsObjPath, relation.ObjKey(), updRel)
+		objRel, err := tx.SetRelation(ctx, updRel)
 		if err != nil {
-			return err
-		}
-
-		if _, err := bdb.Set(ctx, tx, bdb.RelationsSubPath, relation.SubKey(), updRel); err != nil {
 			return err
 		}
 
@@ -212,15 +210,15 @@ func (s *Writer) DeleteRelation(ctx context.Context, req *dsw.DeleteRelationRequ
 	}
 
 	rid := ds.Relation(rel)
-	if err := rid.Validate(s.store.MC()); err != nil {
+	if err := rid.Validate(s.mc); err != nil {
 		return resp, err
 	}
 
-	err := s.store.DB().Update(func(tx *bolt.Tx) error {
+	err := s.store.Update(ctx, func(tx store.Tx) error {
 		// optimistic concurrency check
 		ifMatchHeader := metautils.ExtractIncoming(ctx).Get(headers.IfMatch)
 		if ifMatchHeader != "" {
-			updRel, err := ds.UpdateMetadataRelation(ctx, tx, bdb.RelationsObjPath, rid.ObjKey(), rel)
+			updRel, err := ds.UpdateMetadataRelation(ctx, tx, rel)
 			if err != nil {
 				return err
 			}
@@ -233,11 +231,14 @@ func (s *Writer) DeleteRelation(ctx context.Context, req *dsw.DeleteRelationRequ
 			}
 		}
 
-		if err := bdb.Delete(ctx, tx, bdb.RelationsObjPath, rid.ObjKey()); err != nil {
-			return err
-		}
-
-		if err := bdb.Delete(ctx, tx, bdb.RelationsSubPath, rid.SubKey()); err != nil {
+		if err := tx.DeleteRelation(ctx, &dsc.RelationIdentifier{
+			ObjectType:      req.GetObjectType(),
+			ObjectId:        req.GetObjectId(),
+			Relation:        req.GetRelation(),
+			SubjectType:     req.GetSubjectType(),
+			SubjectId:       req.GetSubjectId(),
+			SubjectRelation: req.GetSubjectRelation(),
+		}); err != nil {
 			return err
 		}
 
@@ -247,29 +248,4 @@ func (s *Writer) DeleteRelation(ctx context.Context, req *dsw.DeleteRelationRequ
 	})
 
 	return resp, err
-}
-
-func (*Writer) deleteRelations(ctx context.Context, path bdb.Path, tx *bolt.Tx, oid *dsc.ObjectIdentifier) error {
-	objIdent := ds.ObjectIdentifier(oid)
-
-	iter, err := bdb.NewScanIterator[dsc.Relation](
-		ctx, tx, path,
-		bdb.WithKeyFilter(append(objIdent.Key(), ds.InstanceSeparator)),
-	)
-	if err != nil {
-		return err
-	}
-
-	for iter.Next() {
-		rel := ds.Relation(iter.Value())
-		if err := bdb.Delete(ctx, tx, bdb.RelationsObjPath, rel.ObjKey()); err != nil {
-			return err
-		}
-
-		if err := bdb.Delete(ctx, tx, bdb.RelationsSubPath, rel.SubKey()); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }

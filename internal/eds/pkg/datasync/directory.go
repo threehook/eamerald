@@ -10,8 +10,7 @@ import (
 
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	dse "github.com/aserto-dev/go-directory/aserto/directory/exporter/v3"
-	"github.com/threehook/eamerald/internal/eds/pkg/bdb"
-	bolt "go.etcd.io/bbolt"
+	"github.com/threehook/eamerald/internal/eds/pkg/store"
 
 	cuckoo "github.com/panmari/cuckoofilter"
 	"github.com/samber/lo"
@@ -166,7 +165,7 @@ func (s *Sync) subscriber(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	batchErr := s.store.DB().Batch(func(tx *bolt.Tx) error {
+	batchErr := s.store.Batch(ctx, func(tx store.Tx) error {
 		for {
 			msg, ok := <-s.exportChan
 			if !ok {
@@ -238,60 +237,12 @@ func (s *Sync) diff(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	batchErr := s.store.DB().Batch(func(tx *bolt.Tx) error {
-		// objects
-		{
-			iter, err := bdb.NewScanIterator[dsc.Object](ctx, tx, bdb.ObjectsPath)
-			if err != nil {
-				return err
-			}
-
-			for iter.Next() {
-				obj := iter.Value()
-
-				if !s.filter.Lookup(getObjectKey(obj)) {
-					s.logger.Trace().Str("key", string(getObjectKey(obj))).Msg("delete")
-
-					if err := s.objectDeleteHandler(ctx, tx, obj); err == nil {
-						objCtr.Add(1)
-					} else {
-						s.logger.Error().Err(err).Msgf("failed to delete object %v", obj)
-
-						errCtr.Add(1)
-
-						s.errChan <- err
-					}
-				}
-			}
+	batchErr := s.store.Batch(ctx, func(tx store.Tx) error {
+		if err := s.diffObjects(ctx, tx, &objCtr, &errCtr); err != nil {
+			return err
 		}
 
-		// relations
-		{
-			iter, err := bdb.NewScanIterator[dsc.Relation](ctx, tx, bdb.RelationsObjPath)
-			if err != nil {
-				return err
-			}
-
-			for iter.Next() {
-				rel := iter.Value()
-
-				if !s.filter.Lookup(getRelationKey(rel)) {
-					s.logger.Trace().Str("key", string(getRelationKey(rel))).Msg("delete")
-
-					if err := s.relationDeleteHandler(ctx, tx, rel); err == nil {
-						relCtr.Add(1)
-					} else {
-						s.logger.Error().Err(err).Msgf("failed to delete relation %v", rel)
-
-						s.errChan <- err
-
-						errCtr.Add(1)
-					}
-				}
-			}
-		}
-
-		return nil
+		return s.diffRelations(ctx, tx, &relCtr, &errCtr)
 	})
 	if batchErr != nil {
 		return batchErr
@@ -302,6 +253,79 @@ func (s *Sync) diff(ctx context.Context) error {
 		Int32("deleted_relations", relCtr.Load()).
 		Int32("errors", errCtr.Load()).
 		Msg(syncDifference)
+
+	return nil
+}
+
+// diffObjects deletes every object the sync's cuckoo filter didn't see. The scan is fully drained and closed before any delete runs: a SQL-backed
+// Tx can't issue a write on the same connection while a query's result set is still being read.
+func (s *Sync) diffObjects(ctx context.Context, tx store.Tx, objCtr, errCtr *atomic.Int32) error {
+	iter, err := tx.ScanObjects(ctx, "", "")
+	if err != nil {
+		return err
+	}
+
+	var stale []*dsc.Object
+
+	for iter.Next() {
+		if obj := iter.Value(); !s.filter.Lookup(getObjectKey(obj)) {
+			stale = append(stale, obj)
+		}
+	}
+
+	if err := iter.Close(); err != nil {
+		return err
+	}
+
+	for _, obj := range stale {
+		s.logger.Trace().Str("key", string(getObjectKey(obj))).Msg("delete")
+
+		if err := s.objectDeleteHandler(ctx, tx, obj); err == nil {
+			objCtr.Add(1)
+		} else {
+			s.logger.Error().Err(err).Msgf("failed to delete object %v", obj)
+
+			errCtr.Add(1)
+
+			s.errChan <- err
+		}
+	}
+
+	return nil
+}
+
+// diffRelations is diffObjects' relation-side counterpart.
+func (s *Sync) diffRelations(ctx context.Context, tx store.Tx, relCtr, errCtr *atomic.Int32) error {
+	iter, err := tx.ScanRelations(ctx, store.ByObject, store.RelationFilter{}, "")
+	if err != nil {
+		return err
+	}
+
+	var stale []*dsc.Relation
+
+	for iter.Next() {
+		if rel := iter.Value(); !s.filter.Lookup(getRelationKey(rel)) {
+			stale = append(stale, rel)
+		}
+	}
+
+	if err := iter.Close(); err != nil {
+		return err
+	}
+
+	for _, rel := range stale {
+		s.logger.Trace().Str("key", string(getRelationKey(rel))).Msg("delete")
+
+		if err := s.relationDeleteHandler(ctx, tx, rel); err == nil {
+			relCtr.Add(1)
+		} else {
+			s.logger.Error().Err(err).Msgf("failed to delete relation %v", rel)
+
+			s.errChan <- err
+
+			errCtr.Add(1)
+		}
+	}
 
 	return nil
 }

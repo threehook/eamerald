@@ -6,13 +6,12 @@ import (
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	"github.com/aserto-dev/go-directory/pkg/derr"
 	"github.com/aserto-dev/go-directory/pkg/validator"
-	"github.com/threehook/eamerald/internal/eds/pkg/bdb"
 	"github.com/threehook/eamerald/internal/eds/pkg/ds"
-
-	bolt "go.etcd.io/bbolt"
+	"github.com/threehook/eamerald/internal/eds/pkg/store"
 )
 
-func (s *Sync) objectSetHandler(ctx context.Context, tx *bolt.Tx, req *dsc.Object) error {
+//nolint:dupl // structurally mirrors relationSetHandler; Object and Relation share no common interface to unify against.
+func (s *Sync) objectSetHandler(ctx context.Context, tx store.Tx, req *dsc.Object) error {
 	s.logger.Debug().Interface("object", req).Msg("ImportObject")
 
 	if req == nil {
@@ -31,7 +30,7 @@ func (s *Sync) objectSetHandler(ctx context.Context, tx *bolt.Tx, req *dsc.Objec
 
 	etag := obj.Hash()
 
-	updReq, err := ds.UpdateMetadataObject(ctx, tx, bdb.ObjectsPath, obj.Key(), req)
+	updReq, err := ds.UpdateMetadataObject(ctx, tx, req)
 	if err != nil {
 		return err
 	}
@@ -43,14 +42,14 @@ func (s *Sync) objectSetHandler(ctx context.Context, tx *bolt.Tx, req *dsc.Objec
 
 	updReq.Etag = etag
 
-	if _, err := bdb.Set[dsc.Object](ctx, tx, bdb.ObjectsPath, ds.Object(updReq).Key(), updReq); err != nil {
+	if _, err := tx.SetObject(ctx, updReq); err != nil {
 		return derr.ErrInvalidObject.Msg("set")
 	}
 
 	return nil
 }
 
-func (s *Sync) objectDeleteHandler(ctx context.Context, tx *bolt.Tx, req *dsc.Object) error {
+func (s *Sync) objectDeleteHandler(ctx context.Context, tx store.Tx, req *dsc.Object) error {
 	s.logger.Debug().Interface("object", req).Msg("ImportObject")
 
 	if req == nil {
@@ -66,14 +65,15 @@ func (s *Sync) objectDeleteHandler(ctx context.Context, tx *bolt.Tx, req *dsc.Ob
 		return err
 	}
 
-	if err := bdb.Delete(ctx, tx, bdb.ObjectsPath, obj.Key()); err != nil {
+	if err := tx.DeleteObject(ctx, req.GetType(), req.GetId()); err != nil {
 		return derr.ErrInvalidObject.Msg("delete")
 	}
 
 	return nil
 }
 
-func (s *Sync) relationSetHandler(ctx context.Context, tx *bolt.Tx, req *dsc.Relation) error {
+//nolint:dupl // structurally mirrors objectSetHandler; Object and Relation share no common interface to unify against.
+func (s *Sync) relationSetHandler(ctx context.Context, tx store.Tx, req *dsc.Relation) error {
 	s.logger.Debug().Interface("relation", req).Msg("ImportRelation")
 
 	if req == nil {
@@ -91,7 +91,7 @@ func (s *Sync) relationSetHandler(ctx context.Context, tx *bolt.Tx, req *dsc.Rel
 
 	etag := rel.Hash()
 
-	updReq, err := ds.UpdateMetadataRelation(ctx, tx, bdb.RelationsObjPath, rel.ObjKey(), req)
+	updReq, err := ds.UpdateMetadataRelation(ctx, tx, req)
 	if err != nil {
 		return err
 	}
@@ -103,18 +103,14 @@ func (s *Sync) relationSetHandler(ctx context.Context, tx *bolt.Tx, req *dsc.Rel
 
 	updReq.Etag = etag
 
-	if _, err := bdb.Set[dsc.Relation](ctx, tx, bdb.RelationsObjPath, rel.ObjKey(), updReq); err != nil {
-		return derr.ErrInvalidRelation.Msg("set")
-	}
-
-	if _, err := bdb.Set[dsc.Relation](ctx, tx, bdb.RelationsSubPath, rel.SubKey(), updReq); err != nil {
+	if _, err := tx.SetRelation(ctx, updReq); err != nil {
 		return derr.ErrInvalidRelation.Msg("set")
 	}
 
 	return nil
 }
 
-func (s *Sync) relationDeleteHandler(ctx context.Context, tx *bolt.Tx, req *dsc.Relation) error {
+func (s *Sync) relationDeleteHandler(ctx context.Context, tx store.Tx, req *dsc.Relation) error {
 	s.logger.Debug().Interface("relation", req).Msg("ImportRelation")
 
 	if req == nil {
@@ -130,11 +126,14 @@ func (s *Sync) relationDeleteHandler(ctx context.Context, tx *bolt.Tx, req *dsc.
 		return err
 	}
 
-	if err := bdb.Delete(ctx, tx, bdb.RelationsObjPath, rel.ObjKey()); err != nil {
-		return derr.ErrInvalidRelation.Msg("delete")
-	}
-
-	if err := bdb.Delete(ctx, tx, bdb.RelationsSubPath, rel.SubKey()); err != nil {
+	if err := tx.DeleteRelation(ctx, &dsc.RelationIdentifier{
+		ObjectType:      req.GetObjectType(),
+		ObjectId:        req.GetObjectId(),
+		Relation:        req.GetRelation(),
+		SubjectType:     req.GetSubjectType(),
+		SubjectId:       req.GetSubjectId(),
+		SubjectRelation: req.GetSubjectRelation(),
+	}); err != nil {
 		return derr.ErrInvalidRelation.Msg("delete")
 	}
 

@@ -8,7 +8,6 @@ import (
 	dsc "github.com/aserto-dev/go-directory/aserto/directory/common/v3"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"github.com/threehook/eamerald/internal/eds/pkg/x"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -36,13 +35,6 @@ type ScanOption func(*ScanArgs)
 type ScanArgs struct {
 	startToken []byte
 	keyFilter  []byte
-	pageSize   int32
-}
-
-func WithPageSize(size int32) ScanOption {
-	return func(a *ScanArgs) {
-		a.pageSize = size
-	}
 }
 
 func WithPageToken(token string) ScanOption {
@@ -58,7 +50,7 @@ func WithKeyFilter(filter []byte) ScanOption {
 }
 
 func NewScanIterator[T any, M Message[T]](ctx context.Context, tx *bolt.Tx, path Path, opts ...ScanOption) (*ScanIterator[T, M], error) {
-	args := &ScanArgs{startToken: nil, keyFilter: nil, pageSize: x.MaxPageSize}
+	args := &ScanArgs{startToken: nil, keyFilter: nil}
 	for _, opt := range opts {
 		opt(args)
 	}
@@ -122,55 +114,6 @@ func (s *ScanIterator[T, M]) Delete() error {
 	}
 
 	return nil
-}
-
-type PagedIterator[T any, M Message[T]] interface {
-	Next() bool
-	Value() []M
-	NextToken() string
-}
-
-type PageIterator[T any, M Message[T]] struct {
-	iter      *ScanIterator[T, M]
-	nextToken []byte
-	values    []M
-}
-
-func NewPageIterator[T any, M Message[T]](ctx context.Context, tx *bolt.Tx, path Path, opts ...ScanOption) (PagedIterator[T, M], error) {
-	iter, err := NewScanIterator[T, M](ctx, tx, path, opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	return &PageIterator[T, M]{iter: iter}, nil
-}
-
-func (p *PageIterator[T, M]) Next() bool {
-	results := []M{}
-	for p.iter.Next() {
-		results = append(results, p.iter.Value())
-
-		if len(results) == int(p.iter.args.pageSize) {
-			break
-		}
-	}
-
-	p.values = results
-	p.nextToken = []byte{}
-
-	if p.iter.Next() {
-		p.nextToken = p.iter.RawKey()
-	}
-
-	return false
-}
-
-func (p *PageIterator[T, M]) Value() []M {
-	return p.values
-}
-
-func (p *PageIterator[T, M]) NextToken() string {
-	return string(p.nextToken)
 }
 
 func Scan[T any, M Message[T]](ctx context.Context, tx *bolt.Tx, path Path, keyFilter []byte) ([]M, error) {

@@ -10,9 +10,8 @@ import (
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	"github.com/aserto-dev/go-directory/pkg/derr"
 	"github.com/aserto-dev/go-directory/pkg/prop"
-	"github.com/threehook/eamerald/internal/eds/pkg/bdb"
+	"github.com/threehook/eamerald/internal/eds/pkg/store"
 
-	bolt "go.etcd.io/bbolt"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -24,7 +23,7 @@ func Check(i *dsr.CheckRequest) *check {
 	return &check{safe.Check(i)}
 }
 
-func (i *check) Exec(ctx context.Context, tx *bolt.Tx, mc *cache.Cache) (*dsr.CheckResponse, error) {
+func (i *check) Exec(ctx context.Context, tx store.Tx, mc *cache.Cache) (*dsr.CheckResponse, error) {
 	if err := i.RelationIdentifiersExist(ctx, tx); err != nil {
 		return &dsr.CheckResponse{
 			Check:   false,
@@ -35,37 +34,28 @@ func (i *check) Exec(ctx context.Context, tx *bolt.Tx, mc *cache.Cache) (*dsr.Ch
 	return mc.Check(i.CheckRequest, getRelations(ctx, tx))
 }
 
-func getRelations(ctx context.Context, tx *bolt.Tx) graph.RelationReader {
+func getRelations(ctx context.Context, tx store.Tx) graph.RelationReader {
 	return func(r *dsc.RelationIdentifier, pool graph.RelationPool, out *[]*dsc.RelationIdentifier) error {
-		keyFilter := RelationIdentifierBuffer()
-		defer ReturnRelationIdentifierBuffer(keyFilter)
+		dir, filter, valueFilter := RelationIdentifier(r).Filter()
 
-		path, valueFilter := RelationIdentifier(r).Filter(keyFilter)
-
-		return bdb.ScanWithFilter(ctx, tx, path, keyFilter.Bytes(), valueFilter, pool, out)
+		return tx.ScanRelationsFiltered(ctx, dir, filter, valueFilter, pool, out)
 	}
 }
 
-func (i *check) RelationIdentifiersExist(ctx context.Context, tx *bolt.Tx) error {
-	if !i.relationIdentifierExist(
-		ctx, tx, bdb.RelationsSubPath,
-		ObjectIdentifier(&dsc.ObjectIdentifier{ObjectType: i.SubjectType, ObjectId: i.SubjectId}).Key(),
-	) {
+func (i *check) RelationIdentifiersExist(ctx context.Context, tx store.Tx) error {
+	if !i.relationIdentifierExist(ctx, tx, store.BySubject, i.SubjectType, i.SubjectId) {
 		return derr.ErrObjectNotFound.Msgf("subject %s:%s", i.SubjectType, i.SubjectId)
 	}
 
-	if !i.relationIdentifierExist(
-		ctx, tx, bdb.RelationsObjPath,
-		ObjectIdentifier(&dsc.ObjectIdentifier{ObjectType: i.ObjectType, ObjectId: i.ObjectId}).Key(),
-	) {
+	if !i.relationIdentifierExist(ctx, tx, store.ByObject, i.ObjectType, i.ObjectId) {
 		return derr.ErrObjectNotFound.Msgf("object %s:%s", i.ObjectType, i.ObjectId)
 	}
 
 	return nil
 }
 
-func (i *check) relationIdentifierExist(ctx context.Context, tx *bolt.Tx, path bdb.Path, keyFilter []byte) bool {
-	exists, err := bdb.KeyPrefixExists[dsc.Relation](ctx, tx, path, keyFilter)
+func (*check) relationIdentifierExist(ctx context.Context, tx store.Tx, dir store.Direction, objectType, objectID string) bool {
+	exists, err := tx.RelationsExistForObject(ctx, dir, objectType, objectID)
 	if err != nil {
 		return false
 	}

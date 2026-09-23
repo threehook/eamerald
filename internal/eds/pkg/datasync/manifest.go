@@ -14,9 +14,9 @@ import (
 	"github.com/aserto-dev/go-directory/pkg/derr"
 	"github.com/aserto-dev/go-directory/pkg/validator"
 	"github.com/threehook/eamerald/internal/eds/pkg/ds"
+	"github.com/threehook/eamerald/internal/eds/pkg/store"
 
 	"github.com/pkg/errors"
-	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -43,7 +43,7 @@ func (s *Sync) syncManifest(ctx context.Context, conn *grpc.ClientConn) error {
 			localReader io.Reader
 		)
 
-		err := s.store.DB().View(func(tx *bolt.Tx) error {
+		err := s.store.View(ctx, func(tx store.Tx) error {
 			md := &dsm.Metadata{UpdatedAt: timestamppb.Now(), Etag: ""}
 			manifest, err := ds.Manifest(md).Get(ctx, tx)
 
@@ -110,7 +110,7 @@ func (s *Sync) setManifest(ctx context.Context, remoteBuf []byte) (*model.Model,
 		return nil, derr.ErrInvalidArgument.Msg(err.Error())
 	}
 
-	if err := s.store.DB().Update(func(tx *bolt.Tx) error {
+	if err := s.store.Update(ctx, func(tx store.Tx) error {
 		stats, err := ds.CalculateStats(ctx, tx)
 		if err != nil {
 			return derr.ErrUnknown.Msgf("failed to calculate stats: %s", err.Error())

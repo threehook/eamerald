@@ -114,13 +114,37 @@
             "properties": {
                 "db_path": {
                     "type": "string",
-                    "description": "file path of edge directory database file",
+                    "description": "file path of edge directory database file, used when backend is boltdb",
                     "default": "${EAMERALD_DB_DIR}/directory.db"
                 },
                 "request_timeout": {
                     "type": "string",
                     "description": "edge directory request timeout in seconds",
                     "default": "5s"
+                },
+                "backend": {
+                    "type": "string",
+                    "description": "edge directory storage backend",
+                    "enum": [
+                        "boltdb",
+                        "postgres"
+                    ],
+                    "default": "boltdb"
+                },
+                "postgres": {
+                    "$ref": "#definitions/DirectoryPostgres"
+                }
+            }
+        },
+        "DirectoryPostgres": {
+            "description": "edge directory postgres backend config, used when directory.backend is postgres",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "dsn": {
+                    "type": "string",
+                    "description": "postgres connection string, e.g. postgres://user:password@host:5432/dbname",
+                    "default": ""
                 }
             }
         },
