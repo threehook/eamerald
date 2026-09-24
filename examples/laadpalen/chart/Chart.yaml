@@ -1,0 +1,6 @@
+apiVersion: v2
+name: laadpalen-api
+description: The laadpalen example's own backend (the PEP) - the only thing that calls the eamerald authorizer directly
+type: application
+version: 0.1.0
+appVersion: "0.0.0-dev"

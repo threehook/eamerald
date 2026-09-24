@@ -1,0 +1,22 @@
+# Default values for the laadpalen-api chart: the laadpalen example's own backend (the PEP). It's a real backend
+# server, deployed the same way as eamerald-edge/hub/standalone - not a script run by hand on a laptop.
+
+image:
+  repository: laadpalen-api
+  tag: dev
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  # Docker Desktop's Kubernetes maps LoadBalancer services to localhost automatically, matching eamerald-edge - so
+  # the GUI's dev-server proxy (examples/laadpalen/gui/vite.config.js) keeps pointing at http://localhost:8787
+  # unchanged, whether the backend runs locally or in-cluster.
+  type: LoadBalancer
+  port: 8787
+
+# In-cluster address of the authorizer this backend calls, from the standard k8s-deploy topology (eamerald-edge
+# chart's release name/namespace/authorizerGateway port) - see docs/deployments/k8s-hub-edge.md.
+authorizerURL: "https://eamerald-edge.eamerald.svc.cluster.local:8383"
+
+resources: {}

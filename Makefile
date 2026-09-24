@@ -41,6 +41,9 @@ K8S_EDGE_CHART         := k8s/eamerald-edge
 K8S_STANDALONE_CHART   := k8s/eamerald-standalone
 K8S_DEV_IMAGE          := eamerald:dev
 
+K8S_LAADPALEN_API_RELEASE := laadpalen-api
+K8S_LAADPALEN_API_CHART   := examples/laadpalen/chart
+
 # MANIFEST=<path>: the directory model to deploy.
 # DATA="<path> <path>": directory data files to import once deployed.
 MANIFEST           ?=
@@ -250,7 +253,14 @@ k8s-logs-standalone:
 .PHONY: laadpalen-api
 laadpalen-api:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
-	@go run ./examples/laadpalen/api
+	@docker build -f examples/laadpalen/api/Dockerfile -t laadpalen-api:dev .
+	@helm upgrade --install ${K8S_LAADPALEN_API_RELEASE} ${K8S_LAADPALEN_API_CHART} -n ${K8S_NAMESPACE} --create-namespace
+	@kubectl -n ${K8S_NAMESPACE} rollout status deployment/${K8S_LAADPALEN_API_RELEASE}
+
+.PHONY: laadpalen-api-uninstall
+laadpalen-api-uninstall:
+	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
+	@helm uninstall ${K8S_LAADPALEN_API_RELEASE} -n ${K8S_NAMESPACE} --ignore-not-found
 
 .PHONY: laadpalen-gui
 laadpalen-gui:
