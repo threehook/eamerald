@@ -1,6 +1,7 @@
 # Default values for the eamerald-edge chart: authorizer + a local, disposable directory cache, kept in sync from a
-# hub via the aserto_edge plugin (edge.hub.* below). No writes accepted locally, no PVC: the cache is fully rebuilt
-# by a sync on every restart. Pairs with the eamerald-hub chart; see docs/deployments/k8s-hub-edge.md.
+# hub via the aserto_edge plugin (edge.hub.* below). No writes accepted locally, and the cache itself is never
+# persisted - it's fully rebuilt by a sync on every restart. Pairs with the eamerald-hub chart; see
+# docs/deployments/k8s-hub-edge.md.
 
 image:
   repository: eamerald
@@ -34,6 +35,13 @@ service:
     directoryGateway: 9393
     authorizerGRPC: 8282
     authorizerGateway: 8383
+
+# Persistent storage for the generated TLS certs only - without it, a trusted self-signed CA stops being valid on the next Pod restart.
+persistence:
+  enabled: true
+  storageClassName: ""
+  certs:
+    size: 64Mi
 
 logging:
   level: info

@@ -1,1 +1,3 @@
-{{- include "eamerald.dbAndCertsPvc" . }}
+{{- include "eamerald.certsPvc" . }}
+---
+{{- include "eamerald.dbPvc" . }}
