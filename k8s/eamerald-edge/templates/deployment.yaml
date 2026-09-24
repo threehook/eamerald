@@ -45,7 +45,9 @@ spec:
             name: {{ .Release.Name }}-config
         - name: decisions
           emptyDir: {}
-        {{- include "eamerald.certsVolume" . | nindent 8 }}
-        # The directory cache is disposable by design - always emptyDir, rebuilt fresh from the hub on every restart.
+        # No PVC for either: the cache is disposable by design, and TLS certs aren't worth persisting for a Pod
+        # that's expected to be recycled and resynced freely.
+        - name: certs
+          emptyDir: {}
         - name: db
           emptyDir: {}

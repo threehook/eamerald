@@ -246,6 +246,7 @@ k8s-logs-standalone:
 # laadpalen deploys via k8s-deploy like every other manifest - see examples/laadpalen/README.md:
 #   make k8s-deploy MANIFEST=examples/laadpalen/manifest.yaml \
 #     DATA="examples/laadpalen/laadpalen_objects.jsonl examples/laadpalen/laadpalen_relations.jsonl"
+
 .PHONY: laadpalen-gui
 laadpalen-gui:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"

@@ -78,11 +78,13 @@ data:
 {{- end -}}
 
 {{/*
-The certs PVC, for any chart with persistence.enabled - independent of directory.backend (TLS certs have nothing
-to do with the directory store). Used by all three charts (hub, standalone, and edge - whose certs volume is
-otherwise the only thing on it worth persisting, since its directory cache stays disposable by design).
+The db and certs PVCs, for a boltdb-backed install with persistence enabled - i.e. only when replicaCount is expected
+to stay 1. The certs PVC is independent of directory.backend (TLS certs have nothing to do with the directory store);
+the db PVC additionally requires a non-postgres backend, since postgres has nothing local to persist. Only used by
+charts that support persistence (hub, standalone) - the edge chart never gets a PVC (see eamerald.certsVolume /
+eamerald.dbVolume, which fall back to emptyDir for it unconditionally).
 */}}
-{{- define "eamerald.certsPvc" -}}
+{{- define "eamerald.dbAndCertsPvc" -}}
 {{- if .Values.persistence.enabled }}
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -99,15 +101,8 @@ spec:
   resources:
     requests:
       storage: {{ .Values.persistence.certs.size }}
-{{- end }}
-{{- end -}}
-
-{{/*
-The db PVC, for a boltdb-backed install with persistence enabled - i.e. only when replicaCount is expected to stay
-1. Only used by hub and standalone; edge never has one, its directory cache stays disposable by design.
-*/}}
-{{- define "eamerald.dbPvc" -}}
-{{- if and .Values.persistence.enabled (ne .Values.directory.backend "postgres") }}
+{{- if ne .Values.directory.backend "postgres" }}
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -123,5 +118,6 @@ spec:
   resources:
     requests:
       storage: {{ .Values.persistence.db.size }}
+{{- end }}
 {{- end }}
 {{- end -}}
