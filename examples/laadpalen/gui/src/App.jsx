@@ -2,63 +2,43 @@ import { useState } from "react";
 import { GEBRUIKERS, ADRESSEN } from "./data.js";
 
 export default function App() {
-  const [baseUrl, setBaseUrl] = useState("https://localhost:8383");
   const [user, setUser] = useState(GEBRUIKERS[0].id);
   const [postcode, setPostcode] = useState("1111AA");
   const [huisnummer, setHuisnummer] = useState("1");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
-  const [showCertHint, setShowCertHint] = useState(false);
+  const [error, setError] = useState(null);
   const [rawRequest, setRawRequest] = useState("-");
   const [rawResponse, setRawResponse] = useState("-");
 
   const selectedUser = GEBRUIKERS.find((g) => g.id === user);
 
   async function vraagAan() {
-    setShowCertHint(false);
+    setError(null);
     setResult(null);
     setLoading(true);
 
-    const url = baseUrl.replace(/\/$/, "");
-    const body = {
-      subject: { type: "user", id: user },
-      action: { name: "request_laadpaal" },
-      resource: {
-        type: "adres",
-        properties: { postcode: postcode.trim(), huisnummer: Number(huisnummer) },
-      },
-      context: { doelbinding: "laadpalen" },
-    };
-
-    setRawRequest(`POST ${url}/access/v1/evaluation\n${JSON.stringify(body, null, 2)}`);
-
     try {
-      const res = await fetch(`${url}/access/v1/evaluation`, {
+      const res = await fetch("/api/request-laadpaal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ user, postcode: postcode.trim(), huisnummer }),
       });
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
-      }
 
       const data = await res.json();
-      // show the real, complete Eamerald response here - unmodified. This panel's
-      // whole purpose is showing what the API actually returned.
-      setRawResponse(JSON.stringify(data, null, 2));
+      setRawRequest(JSON.stringify(data.debug?.request, null, 2));
+      // show the real, complete PDP response here - unmodified. This panel's whole
+      // purpose is showing what the API actually got back from the authorizer.
+      setRawResponse(JSON.stringify(data.debug?.response, null, 2));
 
-      if (typeof data.decision !== "boolean") {
-        throw new Error("Onverwachte response-vorm (geen 'decision' veld gevonden)");
+      if (data.error) {
+        throw new Error(data.error);
       }
 
-      setResult({
-        allowed: data.decision === true,
-        reason: data.context?.reason ?? "",
-      });
+      setResult({ allowed: data.allowed, reason: data.reason });
     } catch (err) {
       setRawResponse(`Fout: ${err.message}`);
-      setShowCertHint(true);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -69,34 +49,17 @@ export default function App() {
       <header>
         <h1>Laadpaal aanvraag</h1>
         <p>
-          Test-GUI voor het laadpalen-voorbeeld — roept de echte PDP (Eamerald authorizer) rechtstreeks
-          aan via <code>/access/v1/evaluation</code>.
+          Test-GUI voor het laadpalen-voorbeeld — roept de laadpalen-API aan, die op zijn beurt de echte
+          PDP (Eamerald authorizer) aanroept via <code>/access/v1/evaluation</code>.
         </p>
       </header>
 
-      {showCertHint && (
+      {error && (
         <div className="error show">
-          Kon de authorizer niet bereiken. Meestal komt dit door het zelfondertekende certificaat: open{" "}
-          <a href={baseUrl} target="_blank" rel="noopener noreferrer">
-            de authorizer-URL
-          </a>{" "}
-          eenmaal rechtstreeks in een nieuwe tab en accepteer de waarschuwing, probeer het dan hier
-          opnieuw. Controleer ook of de deployment draait (<code>kubectl -n eamerald get pods</code>).
+          Kon de laadpalen-API niet bereiken ({error}). Controleer of <code>make laadpalen-api</code> en de
+          deployment draaien (<code>kubectl -n eamerald get pods</code>).
         </div>
       )}
-
-      <div className="card">
-        <h2>Instellingen</h2>
-        <div className="field">
-          <label htmlFor="base-url">Authorizer-URL</label>
-          <input
-            type="text"
-            id="base-url"
-            value={baseUrl}
-            onChange={(e) => setBaseUrl(e.target.value)}
-          />
-        </div>
-      </div>
 
       <div className="card">
         <h2>Wie vraagt aan?</h2>

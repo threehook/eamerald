@@ -247,6 +247,11 @@ k8s-logs-standalone:
 #   make k8s-deploy MANIFEST=examples/laadpalen/manifest.yaml \
 #     DATA="examples/laadpalen/laadpalen_objects.jsonl examples/laadpalen/laadpalen_relations.jsonl"
 
+.PHONY: laadpalen-api
+laadpalen-api:
+	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
+	@go run ./examples/laadpalen/api
+
 .PHONY: laadpalen-gui
 laadpalen-gui:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"

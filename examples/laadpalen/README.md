@@ -12,8 +12,11 @@ AuthZEN-shaped decision (`{"decision": bool, "context": {"reason": string}}`).
 - `laadpalen_objects.json(l)` / `laadpalen_relations.json(l)` - the example data:
   5 users, 3 departments, 1 course, 3 diplomas, 4 fixed addresses
 - `ds-load/laadpalen.json` - the same data in Eamerald's combined import format
-- `gui/` - a small Vite/React app that calls the live authorizer directly and
-  shows the decision + raw response
+- `gui/` - a small Vite/React frontend
+- `api/` - the frontend's own backend (the PEP): the browser calls this, which
+  calls the live authorizer and shows the decision + raw response. The
+  frontend never calls the authorizer directly - see
+  [How the decision is requested](#how-the-decision-is-requested)
 - `test_cases.json` / `test.sh` - a checklist of expected decisions and a
   script that checks them against a running deployment (see below)
 
@@ -24,8 +27,10 @@ the example data that policy runs against.
 
 ## How the decision is requested
 
-Over the AuthZEN Access Evaluation API, which the authorizer serves from the
-policy engine:
+The GUI's frontend never talks to the authorizer - it calls its own backend
+(`api/`, the PEP), which is the one thing that actually holds a network
+connection to the PDP. That backend makes this exact call over the AuthZEN
+Access Evaluation API, which the authorizer serves from the policy engine:
 
 ```
 POST https://localhost:8383/access/v1/evaluation
@@ -67,12 +72,14 @@ authorizer synced from it - see
 The command doesn't return until the edge has completed its first sync from
 the hub, so the deployment is ready to serve decisions by the time it exits.
 
-From there, `laadpalen-gui` and `laadpalen-test` are two independent ways of
-using that same deployment - neither depends on the other, and you can run
-either, both, or neither:
+From there, the GUI (`laadpalen-api` + `laadpalen-gui`) and `laadpalen-test`
+are independent ways of using that same deployment - you can run either, both,
+or neither. The GUI needs both its backend and its frontend running, each in
+its own terminal:
 
 ```
-make laadpalen-gui      # opens a browser frontend at http://localhost:5173
+make laadpalen-api      # starts the GUI's backend (the PEP) on http://localhost:8787
+make laadpalen-gui      # opens the frontend at http://localhost:5173
 make laadpalen-test     # checks the decision matrix from the command line
 ```
 
