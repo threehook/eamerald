@@ -1,0 +1,1 @@
+{{- include "eamerald.configMap" (merge (dict "hasDirectory" true "hasAuthorizer" true "isEdge" false) .) }}

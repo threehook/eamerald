@@ -1,22 +1,24 @@
 # Kubernetes hub + edge deployment
 
-This document describes the current Eamerald Helm chart roles and the two edge packaging options we support.
+This document describes the current Eamerald Helm charts and the two edge packaging options we support.
 
-## Chart roles (`k8s/eamerald`)
+## Charts (`k8s/eamerald-hub`, `k8s/eamerald-edge`, `k8s/eamerald-standalone`)
 
-One Helm chart; `role` selects what the install runs:
+Three Helm charts, sharing common templates via the `k8s/eamerald-common` library chart:
 
-| Role | Runs | Store | Replicas |
+| Chart | Runs | Store | Replicas |
 |------|------|--------|----------|
-| **standalone** | Directory + authorizer + console | Bolt PVC (default) or Postgres | Usually 1 (Bolt); Postgres can scale |
-| **hub** | Directory only (source of truth) | Bolt or Postgres | `replicaCount > 1` only with Postgres |
-| **edge** | Authorizer + local directory cache | Per-pod disposable store | Many OK; sync from hub |
+| **eamerald-hub** | Directory only (source of truth) | Bolt (default) or Postgres | `replicaCount > 1` only with Postgres |
+| **eamerald-edge** | Authorizer + local directory cache | Per-pod disposable store | Many OK; sync from hub |
+| **eamerald-standalone** | Directory + authorizer + console, all in one | Bolt only | 1 (no HA story) |
 
-**Hub** owns the directory data (Postgres) and exports it on directory gRPC (port `9292`). Edge installs set `edge.hub.address` to that Service.
+**eamerald-hub + eamerald-edge is the default local topology** (`make k8s-deploy`). **eamerald-standalone** is a legacy, last-resort option for a quick single-instance check that doesn't need the hub/edge split (`make k8s-deploy-standalone`) - it has no HA story and can't scale the authorizer independently of the directory.
 
-**Edge** runs an **authorizer** with a local directory cache. It does not seed a manifest and does not keep a durable DB PVC for that cache. The `aserto_edge` plugin pulls from the hub on an interval. Rolling updates are allowed (no shared Bolt file lock).
+**Hub** owns the directory data (Bolt or Postgres) and exports it on directory gRPC (port `9292`). Edge installs set `edge.hub.address` to that Service.
 
-**Also in the chart:** an init container seeds the manifest for standalone/hub; PVCs apply only to Bolt-backed standalone/hub.
+**Edge** runs an **authorizer** with a local directory cache. It does not seed a manifest and does not keep a durable DB PVC for that cache. The `aserto_edge` plugin pulls from the hub on an interval (`edge.syncIntervalMinutes`, default 1) - its readinessProbe is pinned to that sync, so it's excluded from its Service until the first sync lands. Rolling updates are always safe (no shared Bolt file lock).
+
+**Also worth knowing:** an init container seeds the manifest for hub/standalone; PVCs apply only to Bolt-backed hub/standalone. None of the three charts ever use `strategy.type: Recreate` - a Bolt-backed hub or standalone instead uses `RollingUpdate` with `maxSurge: 0, maxUnavailable: 1`, which forces the old Pod to fully terminate before the new one starts (avoiding two writers on the same Bolt file) without ever changing `strategy.type` between releases.
 
 Sidecar packaging for edge lives under [`sidecar-deployment/`](sidecar-deployment/) (copy the edge container into an app Deployment).
 
@@ -54,7 +56,7 @@ flowchart LR
   E2 -. sync .-> H
 ```
 
-**Chart usage:** install `role: hub`, then one or more `role: edge` releases pointing at the hub address.
+**Chart usage:** install `eamerald-hub`, then one or more `eamerald-edge` releases pointing at the hub address (`make k8s-deploy` does exactly this for local dev).
 
 ## Architecture B — Sidecar edge (in each app pod)
 

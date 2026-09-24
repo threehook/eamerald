@@ -1,0 +1,27 @@
+Eamerald standalone is deploying into namespace {{ .Release.Namespace }}.
+
+Check rollout status:
+  kubectl -n {{ .Release.Namespace }} rollout status deployment/{{ .Release.Name }}
+
+{{- if eq .Values.service.type "LoadBalancer" }}
+
+Docker Desktop maps LoadBalancer services to localhost, so once EXTERNAL-IP
+shows "localhost" (may take a few seconds):
+  kubectl -n {{ .Release.Namespace }} get svc {{ .Release.Name }}
+
+Open the console (self-signed cert — your browser will warn, accept it):
+  https://localhost:{{ .Values.service.ports.consoleGateway }}/ui/directory
+{{- else }}
+
+Port-forward to reach it locally:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ .Release.Name }} {{ .Values.service.ports.consoleGateway }}:{{ .Values.service.ports.consoleGateway }}
+
+Then open (self-signed cert — your browser will warn, accept it):
+  https://localhost:{{ .Values.service.ports.consoleGateway }}/ui/directory
+{{- end }}
+
+Directory gRPC:    {{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.ports.directoryGRPC }}
+Directory REST:    https://{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.ports.directoryGateway }}
+
+Authorizer gRPC:   {{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.ports.authorizerGRPC }}
+Authorizer REST:   https://{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.ports.authorizerGateway }}

@@ -1,0 +1,10 @@
+Eamerald edge is deploying into namespace {{ .Release.Namespace }}, syncing from {{ .Values.edge.hub.address }}.
+
+Check rollout status:
+  kubectl -n {{ .Release.Namespace }} rollout status deployment/{{ .Release.Name }}
+
+Note: readiness is pinned to this Pod's first successful sync from the hub - rollout status won't report Ready
+until that lands (see edge.syncIntervalMinutes).
+
+Authorizer gRPC:   {{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.ports.authorizerGRPC }}
+Authorizer REST:   https://{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.ports.authorizerGateway }}

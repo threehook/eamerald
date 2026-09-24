@@ -32,10 +32,14 @@ SYFT_VER           := 1.13.0
 
 RELEASE_TAG        := $$(${EXT_BIN_DIR}/svu current)
 
-K8S_NAMESPACE      := eamerald
-K8S_RELEASE        := eamerald
-K8S_CHART          := k8s/eamerald
-K8S_DEV_IMAGE      := eamerald:dev
+K8S_NAMESPACE          := eamerald
+K8S_HUB_RELEASE        := eamerald-hub
+K8S_EDGE_RELEASE       := eamerald-edge
+K8S_STANDALONE_RELEASE := eamerald-standalone
+K8S_HUB_CHART          := k8s/eamerald-hub
+K8S_EDGE_CHART         := k8s/eamerald-edge
+K8S_STANDALONE_CHART   := k8s/eamerald-standalone
+K8S_DEV_IMAGE          := eamerald:dev
 
 # MANIFEST=<path>: the directory model to deploy.
 # DATA="<path> <path>": directory data files to import once deployed.
@@ -102,63 +106,85 @@ k8s-build:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
 	@docker build -f k8s/Dockerfile.dev -t ${K8S_DEV_IMAGE} .
 
-.PHONY: k8s-install
-k8s-install: require-manifest
+# vendors eamerald-common into every chart that depends on it. Without this, an install/upgrade uses whatever was
+# last vendored under charts/*.tgz, which silently drifts from k8s/eamerald-common's current templates.
+.PHONY: k8s-chart-deps
+k8s-chart-deps:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
-	@helm upgrade --install ${K8S_RELEASE} ${K8S_CHART} -n ${K8S_NAMESPACE} --create-namespace \
+	@helm dependency update ${K8S_HUB_CHART}
+	@helm dependency update ${K8S_EDGE_CHART}
+	@helm dependency update ${K8S_STANDALONE_CHART}
+
+.PHONY: k8s-install
+k8s-install: require-manifest k8s-chart-deps
+	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
+	@helm upgrade --install ${K8S_HUB_RELEASE} ${K8S_HUB_CHART} -n ${K8S_NAMESPACE} --create-namespace \
+		--set-file directory.manifest.content=$(MANIFEST)
+	@kubectl -n ${K8S_NAMESPACE} rollout status deployment/${K8S_HUB_RELEASE}
+	@helm upgrade --install ${K8S_EDGE_RELEASE} ${K8S_EDGE_CHART} -n ${K8S_NAMESPACE} --create-namespace \
+		--set edge.hub.address=${K8S_HUB_RELEASE}.${K8S_NAMESPACE}.svc.cluster.local:9292
+
+.PHONY: k8s-install-standalone
+k8s-install-standalone: require-manifest k8s-chart-deps
+	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
+	@helm upgrade --install ${K8S_STANDALONE_RELEASE} ${K8S_STANDALONE_CHART} -n ${K8S_NAMESPACE} --create-namespace \
 		--set-file directory.manifest.content=$(MANIFEST)
 
-# the chart cannot render without a directory model: an init container applies
-# it before eameraldd starts, and a directory without one rejects every write.
+# the chart cannot render without a directory model: an init container applies it before eameraldd starts, and a directory without one rejects
+# every write.
 .PHONY: require-manifest
 require-manifest:
 	@if [ -z "$(MANIFEST)" ]; then \
-		echo -e "$(ERR_COLOR)MANIFEST is required, e.g. MANIFEST=examples/laadpalen/manifest.yaml or MANIFEST=templates/todo/manifest.yaml$(NO_COLOR)"; \
+		echo -e "$(ERR_COLOR)MANIFEST is required, e.g. MANIFEST=examples/laadpalen/manifest.yaml$(NO_COLOR)"; \
 		exit 1; \
 	fi
 
-# k8s-deploy is the recommended way to iterate: it builds under a fresh,
-# unique tag every run and passes it explicitly to Helm, rather than reusing
-# ${K8S_DEV_IMAGE}'s static "dev" tag (what k8s-build/k8s-install use standalone).
-# Docker Desktop's Kubernetes caches images by tag separately from the Docker
-# CLI's daemon-visible store; with imagePullPolicy: IfNotPresent (required
-# for a registry-less local image), a static tag means a rebuild can silently
-# never reach the running Pod. A unique tag sidesteps that by construction.
-#
-# --reset-then-reuse-values (not --reuse-values): --reuse-values reuses the
-# last release's stored value blob as-is and never falls back to the chart's
-# own values.yaml for a key that blob doesn't have - so a chart upgrade that
-# adds a new values.yaml key (e.g. `role`) silently renders it empty forever
-# on an existing release, not defaulted. --reset-then-reuse-values resets to
-# the chart's built-in defaults first, then reapplies the release's own past
-# overrides on top - new keys get their chart default, existing overrides
-# (like adlDecisionLogger.otlp.endpoint below) still stick.
-#
-# --server-side=false: this Helm version defaults to server-side apply, which
-# fails to clear spec.strategy.rollingUpdate when a release's Deployment
-# switches back to strategy.type: Recreate (e.g. role: hub/postgres back to
-# role: standalone/boltdb) - Kubernetes rejects the two together, and SSA
-# leaves the prior RollingUpdate defaults in place instead of removing them
-# even though the chart's template now nulls the field out. Client-side apply
-# handles the same switch correctly. Confirmed working for fresh installs and
-# same-role redeploys too, not just the role-switch case that surfaced this.
+# k8s-deploy builds under a fresh, unique tag every run - Docker Desktop caches images by tag, so a static tag can silently never reach the Pod.
+# Deploys the hub (seeded with MANIFEST/DATA), then an edge synced from it - the default two-chart local topology (see
+# docs/deployments/k8s-hub-edge.md). DATA is imported into the hub before the edge is (re)deployed, so the edge's first sync already
+# picks it up; waiting on its rollout afterwards also waits out that sync, since its readinessProbe is pinned to the "sync" health check.
+# --reset-then-reuse-values (not --reuse-values): keeps new values.yaml keys defaulted instead of empty on an existing release.
 .PHONY: k8s-deploy
-k8s-deploy: require-manifest
+k8s-deploy: require-manifest k8s-chart-deps
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
-	@echo "deploying with MANIFEST=$(MANIFEST) - wiping the existing directory data" \
-	     "first, since it may not be valid under the new model (see internal/eds's" \
-	     "'object/relation type in use' checks)"
-	@kubectl -n ${K8S_NAMESPACE} scale deployment/${K8S_RELEASE} --replicas=0 2>/dev/null || true
-	@kubectl -n ${K8S_NAMESPACE} wait --for=delete pod -l app.kubernetes.io/name=eamerald --timeout=60s 2>/dev/null || true
-	@kubectl -n ${K8S_NAMESPACE} delete pvc ${K8S_RELEASE}-db --ignore-not-found
+	@echo "deploying with MANIFEST=$(MANIFEST) - wiping the hub's existing directory data"
+	@kubectl -n ${K8S_NAMESPACE} scale deployment/${K8S_HUB_RELEASE} --replicas=0 2>/dev/null || true
+	@kubectl -n ${K8S_NAMESPACE} wait --for=delete pod -l app.kubernetes.io/instance=${K8S_HUB_RELEASE} --timeout=60s 2>/dev/null || true
+	@kubectl -n ${K8S_NAMESPACE} delete pvc ${K8S_HUB_RELEASE}-db --ignore-not-found
 	@TAG=dev-$$(git rev-parse --short HEAD)-$$(date +%s); \
 	echo "building eamerald:$$TAG"; \
 	docker build -f k8s/Dockerfile.dev -t eamerald:$$TAG . && \
-	helm upgrade --install ${K8S_RELEASE} ${K8S_CHART} -n ${K8S_NAMESPACE} --create-namespace --reset-then-reuse-values --server-side=false \
+	helm upgrade --install ${K8S_HUB_RELEASE} ${K8S_HUB_CHART} -n ${K8S_NAMESPACE} --create-namespace --reset-then-reuse-values \
 		--set image.tag=$$TAG \
 		--set-file directory.manifest.content=$(MANIFEST) && \
-	kubectl -n ${K8S_NAMESPACE} rollout restart deployment/${K8S_RELEASE}
-	@kubectl -n ${K8S_NAMESPACE} rollout status deployment/${K8S_RELEASE}
+	kubectl -n ${K8S_NAMESPACE} rollout restart deployment/${K8S_HUB_RELEASE} && \
+	kubectl -n ${K8S_NAMESPACE} rollout status deployment/${K8S_HUB_RELEASE} && \
+	if [ -n "$(DATA)" ]; then \
+		echo "importing data: $(DATA)"; \
+		cat $(DATA) | go run ./mrld directory import --stdin -H localhost:9292 --insecure; \
+	fi; \
+	helm upgrade --install ${K8S_EDGE_RELEASE} ${K8S_EDGE_CHART} -n ${K8S_NAMESPACE} --create-namespace --reset-then-reuse-values \
+		--set image.tag=$$TAG \
+		--set edge.hub.address=${K8S_HUB_RELEASE}.${K8S_NAMESPACE}.svc.cluster.local:9292 && \
+	kubectl -n ${K8S_NAMESPACE} rollout restart deployment/${K8S_EDGE_RELEASE}
+	@kubectl -n ${K8S_NAMESPACE} rollout status deployment/${K8S_EDGE_RELEASE}
+
+# the one-pod all-in-one flow, for a quick local check that doesn't need the hub/edge split.
+.PHONY: k8s-deploy-standalone
+k8s-deploy-standalone: require-manifest k8s-chart-deps
+	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
+	@echo "deploying with MANIFEST=$(MANIFEST) - wiping the existing directory data"
+	@kubectl -n ${K8S_NAMESPACE} scale deployment/${K8S_STANDALONE_RELEASE} --replicas=0 2>/dev/null || true
+	@kubectl -n ${K8S_NAMESPACE} wait --for=delete pod -l app.kubernetes.io/instance=${K8S_STANDALONE_RELEASE} --timeout=60s 2>/dev/null || true
+	@kubectl -n ${K8S_NAMESPACE} delete pvc ${K8S_STANDALONE_RELEASE}-db --ignore-not-found
+	@TAG=dev-$$(git rev-parse --short HEAD)-$$(date +%s); \
+	echo "building eamerald:$$TAG"; \
+	docker build -f k8s/Dockerfile.dev -t eamerald:$$TAG . && \
+	helm upgrade --install ${K8S_STANDALONE_RELEASE} ${K8S_STANDALONE_CHART} -n ${K8S_NAMESPACE} --create-namespace --reset-then-reuse-values \
+		--set image.tag=$$TAG \
+		--set-file directory.manifest.content=$(MANIFEST) && \
+	kubectl -n ${K8S_NAMESPACE} rollout restart deployment/${K8S_STANDALONE_RELEASE}
+	@kubectl -n ${K8S_NAMESPACE} rollout status deployment/${K8S_STANDALONE_RELEASE}
 	@if [ -n "$(DATA)" ]; then \
 		echo "importing data: $(DATA)"; \
 		cat $(DATA) | go run ./mrld directory import --stdin -H localhost:9292 --insecure; \
@@ -167,17 +193,23 @@ k8s-deploy: require-manifest
 .PHONY: k8s-uninstall
 k8s-uninstall:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
-	@helm uninstall ${K8S_RELEASE} -n ${K8S_NAMESPACE}
+	@helm uninstall ${K8S_EDGE_RELEASE} -n ${K8S_NAMESPACE} --ignore-not-found
+	@helm uninstall ${K8S_HUB_RELEASE} -n ${K8S_NAMESPACE} --ignore-not-found
 
-# installs Loki, Alloy and Grafana, and points the running eamerald's ADL
-# logger at Alloy so decision records start being exported over OTLP.
+.PHONY: k8s-uninstall-standalone
+k8s-uninstall-standalone:
+	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
+	@helm uninstall ${K8S_STANDALONE_RELEASE} -n ${K8S_NAMESPACE}
+
+# installs Loki, Alloy and Grafana, and points the running edge's ADL logger at Alloy so decision records start being exported over OTLP.
+# The hub has no authorizer and never logs decisions, so it's untouched here.
 .PHONY: k8s-observability-install
 k8s-observability-install:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
 	@helm upgrade --install ${OBS_RELEASE} ${OBS_CHART} -n ${OBS_NAMESPACE} --create-namespace --wait
-	@helm upgrade --install ${K8S_RELEASE} ${K8S_CHART} -n ${K8S_NAMESPACE} --create-namespace --reset-then-reuse-values --server-side=false \
+	@helm upgrade --install ${K8S_EDGE_RELEASE} ${K8S_EDGE_CHART} -n ${K8S_NAMESPACE} --create-namespace --reset-then-reuse-values \
 		--set adlDecisionLogger.otlp.endpoint=alloy.${OBS_NAMESPACE}.svc.cluster.local:4317
-	@kubectl -n ${K8S_NAMESPACE} rollout status deployment/${K8S_RELEASE}
+	@kubectl -n ${K8S_NAMESPACE} rollout status deployment/${K8S_EDGE_RELEASE}
 
 .PHONY: k8s-observability-uninstall
 k8s-observability-uninstall:
@@ -196,13 +228,22 @@ k8s-status:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
 	@kubectl -n ${K8S_NAMESPACE} get pods,svc
 
-.PHONY: k8s-logs
-k8s-logs:
+.PHONY: k8s-logs-hub
+k8s-logs-hub:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
-	@kubectl -n ${K8S_NAMESPACE} logs -f deployment/${K8S_RELEASE}
+	@kubectl -n ${K8S_NAMESPACE} logs -f deployment/${K8S_HUB_RELEASE}
 
-# laadpalen deploys via k8s-deploy like every other manifest - see
-# examples/laadpalen/README.md:
+.PHONY: k8s-logs-edge
+k8s-logs-edge:
+	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
+	@kubectl -n ${K8S_NAMESPACE} logs -f deployment/${K8S_EDGE_RELEASE}
+
+.PHONY: k8s-logs-standalone
+k8s-logs-standalone:
+	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
+	@kubectl -n ${K8S_NAMESPACE} logs -f deployment/${K8S_STANDALONE_RELEASE}
+
+# laadpalen deploys via k8s-deploy like every other manifest - see examples/laadpalen/README.md:
 #   make k8s-deploy MANIFEST=examples/laadpalen/manifest.yaml \
 #     DATA="examples/laadpalen/laadpalen_objects.jsonl examples/laadpalen/laadpalen_relations.jsonl"
 
@@ -211,9 +252,8 @@ laadpalen-gui:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
 	@cd examples/laadpalen/gui && npm install && npm run dev
 
-# checks every case in examples/laadpalen/test_cases.json against a running
-# authorizer's request_laadpaal decision (see examples/laadpalen/README.md for
-# how to deploy with that model first).
+# checks every case in examples/laadpalen/test_cases.json against a running authorizer's request_laadpaal decision
+# (see examples/laadpalen/README.md for how to deploy with that model first).
 .PHONY: laadpalen-test
 laadpalen-test:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"

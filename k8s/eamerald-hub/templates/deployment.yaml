@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    {{- include "eamerald.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  # BoltDB is a single-writer file. On a shared PVC, plain RollingUpdate would start the new Pod before the old one
+  # releases the lock, so the new Pod crash-loops on open. maxSurge: 0 / maxUnavailable: 1 forces the old Pod to fully
+  # terminate before the new one starts - same effect as Recreate, but without ever changing strategy.type, which
+  # Kubernetes/Helm can't reliably reconcile across releases (server-side apply won't clear a stale rollingUpdate
+  # when type flips back to Recreate).
+  # Not needed for Postgres: no shared file lock, so the default rolling behavior is safe.
+  strategy:
+    type: RollingUpdate
+    {{- if ne .Values.directory.backend "postgres" }}
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+    {{- end }}
+  selector:
+    matchLabels:
+      {{- include "eamerald.labels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        # Roll the Pod when directory.manifest.content changes, so the init container re-applies it. Without this, a manifest change would
+        # update the ConfigMap but leave the running directory untouched.
+        checksum/manifest: {{ .Values.directory.manifest.content | sha256sum }}
+      labels:
+        {{- include "eamerald.labels" . | nindent 8 }}
+    spec:
+      initContainers:
+        {{- include "eamerald.manifestInitContainer" . | nindent 8 }}
+      containers:
+        - name: eameraldd
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["./mrldd"]
+          args: ["run", "-c", "/config/config.yaml"]
+          env:
+            {{- include "eamerald.commonEnv" . | nindent 12 }}
+            {{- include "eamerald.postgresDsnEnv" . | nindent 12 }}
+            {{- include "eamerald.entraEnv" . | nindent 12 }}
+          ports:
+            {{- include "eamerald.corePorts" . | nindent 12 }}
+            {{- include "eamerald.consolePorts" . | nindent 12 }}
+          readinessProbe:
+            {{- include "eamerald.readinessProbe" (merge (dict "isEdge" false "hasAuthorizer" false) .) | nindent 12 }}
+          livenessProbe:
+            {{- include "eamerald.livenessProbe" . | nindent 12 }}
+          volumeMounts:
+            {{- include "eamerald.volumeMounts" . | nindent 12 }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ .Release.Name }}-config
+        - name: manifest
+          configMap:
+            name: {{ .Release.Name }}-manifest
+        - name: decisions
+          emptyDir: {}
+        {{- include "eamerald.certsVolume" . | nindent 8 }}
+        {{- include "eamerald.dbVolume" . | nindent 8 }}

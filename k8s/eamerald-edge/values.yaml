@@ -1,0 +1,94 @@
+# Default values for the eamerald-edge chart: authorizer + a local, disposable directory cache, kept in sync from a
+# hub via the aserto_edge plugin (edge.hub.* below). No writes accepted locally, no PVC: the cache is fully rebuilt
+# by a sync on every restart. Pairs with the eamerald-hub chart; see docs/deployments/k8s-hub-edge.md.
+
+image:
+  repository: eamerald
+  tag: dev
+  pullPolicy: IfNotPresent
+
+# The local cache is per-pod and disposable, so - unlike eamerald-hub - this chart is safe to scale out freely.
+replicaCount: 1
+
+# Always boltdb: the cache is local and disposable, rebuilt from the hub on every restart, so there's nothing to
+# gain from a shared/postgres-backed store here. Not user-configurable.
+directory:
+  backend: boltdb
+
+# Where this install syncs from. edge.hub.address is required.
+edge:
+  hub:
+    # The hub's in-cluster directory address, e.g. eamerald-hub.default.svc.cluster.local:9292
+    address: ""
+    insecure: true
+  syncIntervalMinutes: 1
+
+service:
+  # Docker Desktop's Kubernetes maps LoadBalancer services to localhost automatically, so this "just works" without port-forwarding.
+  # Set to ClusterIP on clusters without that (use `kubectl port-forward` instead).
+  type: LoadBalancer
+  ports:
+    health: 9495
+    metrics: 9697
+    directoryGRPC: 9292
+    directoryGateway: 9393
+    authorizerGRPC: 8282
+    authorizerGateway: 8383
+
+logging:
+  level: info
+
+# This chart runs no directory of its own, so the fields below are never used - eameraldd's config.yaml always has
+# an `opa:` block and eamerald-common's shared templates read these paths regardless of role, but the entra plugin
+# is gated on running a directory, which this chart never does.
+entra:
+  enabled: false
+  tenantId: ""
+  clientId: ""
+  existingSecretName: ""
+  pollIntervalSeconds: 300
+  userObjectType: "user"
+  groupObjectType: "group"
+  memberRelation: "member"
+
+# Package root the AuthZEN Access API (POST /access/v1/evaluation) falls back to, e.g. "authz" for decisions in
+# `package authz`. Only used for requests that select no policy themselves. Leave empty when the bundle has a single
+# package root - it is then unambiguous. Set it when the bundle also carries library packages.
+policyRoot: ""
+
+# git policy source plugin: tracks a policy bundle directly from a git repo. This is the only policy source this
+# chart configures; there is no OCI/ghcr bundle fallback.
+git:
+  enabled: true
+  repo: "https://github.com/threehook/opa-policies"
+  ref: "refs/heads/main"
+  path: ""
+  pollIntervalSeconds: 60
+
+# logius adl level 1 decision logger plugin: emits one record per authorization decision, to stdout as a JSON line
+# and/or over OTLP.
+adlDecisionLogger:
+  enabled: true
+
+  # Where records go: "stdout", "otlp", or both comma-separated. Empty means both. Keep stdout on even when
+  # exporting over OTLP: the OTLP exporter batches, so a collector outage loses records, and the pod log is the
+  # durable trail the spec asks for.
+  output: "stdout,otlp"
+
+  # OTLP log export, e.g. into the Grafana Alloy of the k8s/observability chart, which forwards to Loki. Records
+  # carry their producer identity as OTLP resource attributes, so each PDP lands in its own Loki stream.
+  #
+  # Leave endpoint empty to skip OTLP export entirely; startup then logs that it was skipped rather than failing.
+  otlp:
+    endpoint: ""   # e.g. "alloy.observability.svc.cluster.local:4317"
+    insecure: true # in-cluster collector, no TLS
+
+  # Producer identity, emitted as the `resource` field of every record. The ADL spec requires this to be set
+  # whenever records are aggregated outside the producing organisation, so that each record can be attributed
+  # unambiguously to the PDP that wrote it. E.g.:
+  #   resource:
+  #     service.name: eamerald
+  #     deployment.environment: production
+  resource: {}
+
+resources: {}

@@ -66,3 +66,13 @@ __debug_bin*
 
 # JetBrains IDE project files
 .idea/
+
+# vendored eamerald-common library chart - `make k8s-chart-deps` (a prerequisite of every k8s-deploy/k8s-install
+# target) regenerates these from k8s/eamerald-common on every deploy, so committing them risks a stale copy drifting
+# from the source templates unnoticed.
+k8s/eamerald-hub/Chart.lock
+k8s/eamerald-hub/charts/
+k8s/eamerald-edge/Chart.lock
+k8s/eamerald-edge/charts/
+k8s/eamerald-standalone/Chart.lock
+k8s/eamerald-standalone/charts/

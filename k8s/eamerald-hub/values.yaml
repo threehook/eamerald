@@ -1,0 +1,98 @@
+# Default values for the eamerald-hub chart: directory only (no authorizer, no console UI beyond directory
+# browsing), the central source of truth for one or more eamerald-edge installs syncing from it via the
+# aserto_edge plugin. Pairs with the eamerald-edge chart; see docs/deployments/k8s-hub-edge.md.
+
+image:
+  # For local iteration on Docker Desktop's Kubernetes, prefer `make k8s-deploy` over building this "dev" tag by hand: Docker Desktop's
+  # Kubernetes caches images by tag *separately* from the Docker CLI's daemon-visible store, so with pullPolicy: IfNotPresent (needed here
+  # since this image is never pushed to a registry), rebuilding under this same static tag can silently never reach the running Pod - it just
+  # keeps the old image indefinitely, with no error.
+  # `make k8s-deploy` avoids this by building under a fresh, unique tag every run and passing it to Helm explicitly.
+  #
+  # To use a published image instead (e.g. ghcr.io/threehook/eamerald once you publish one), override repository/tag.
+  # If that tag is ever reused/overwritten in the registry (e.g. `:latest`), set pullPolicy: Always, or you'll hit the exact same staleness problem
+  # against a real registry.
+  repository: eamerald
+  tag: dev
+  pullPolicy: IfNotPresent
+
+# eameraldd's directory service uses an embedded, single-writer BoltDB file by default, so this chart is not meant to
+# be scaled beyond one replica unless directory.backend is postgres.
+replicaCount: 1
+
+directory:
+  # boltdb   - embedded, single-writer file. replicaCount must stay 1.
+  # postgres - shared, concurrent-safe. Required for replicaCount > 1.
+  backend: boltdb
+  postgres:
+    # Name of a Secret you create yourself (not managed by this chart) with a `dsn` key, e.g.:
+    #   kubectl create secret generic eamerald-postgres --from-literal=dsn=postgres://user:pass@host:5432/eamerald
+    # Required when directory.backend is postgres. This chart never handles credential material directly.
+    existingSecretName: ""
+  manifest:
+    # The directory model: object types, relations and permissions.
+    # Required. Set it with `make k8s-deploy MANIFEST=<path>`.
+    #
+    # It is re-applied on every pod start. A changed model can clash with existing data, so k8s-deploy wipes the data volume first.
+    content: ""
+
+service:
+  # Docker Desktop's Kubernetes maps LoadBalancer services to localhost automatically, so this "just works" without port-forwarding.
+  # Set to ClusterIP on clusters without that (use `kubectl port-forward` instead).
+  type: LoadBalancer
+  ports:
+    health: 9494
+    metrics: 9696
+    directoryGRPC: 9292
+    directoryGateway: 9393
+    consoleGRPC: 8081
+    consoleGateway: 8080
+
+# Persistent storage for the directory database and generated TLS certs, so they survive Pod restarts. Uses the
+# cluster's default StorageClass (Docker Desktop provides "hostpath" out of the box) unless storageClassName is set.
+# The db PVC only applies when directory.backend is boltdb - postgres has nothing local to persist.
+persistence:
+  enabled: true
+  storageClassName: ""
+  db:
+    size: 1Gi
+  certs:
+    size: 64Mi
+
+logging:
+  level: info
+
+# microsoft entra id (azure ad) directory sync plugin. The client secret is never set here: create it yourself as a
+# Kubernetes Secret first, e.g.
+#   kubectl create secret generic entra-credentials \
+#     --from-literal=client_secret=<your-client-secret>
+# then set existingSecretName below to that Secret's name.
+entra:
+  enabled: false
+  tenantId: ""
+  clientId: ""
+  existingSecretName: ""
+  pollIntervalSeconds: 300
+  userObjectType: "user"
+  groupObjectType: "group"
+  memberRelation: "member"
+
+# This chart runs no authorizer, so the fields below are never used - no policy is ever evaluated here, and none of
+# git/adlDecisionLogger/policyRoot ever take effect. Kept only because eameraldd's config.yaml always has an `opa:`
+# block and eamerald-common's shared templates read these paths regardless of role.
+policyRoot: ""
+git:
+  enabled: false
+  repo: ""
+  ref: "refs/heads/main"
+  path: ""
+  pollIntervalSeconds: 60
+adlDecisionLogger:
+  enabled: false
+  output: "stdout,otlp"
+  otlp:
+    endpoint: ""
+    insecure: true
+  resource: {}
+
+resources: {}

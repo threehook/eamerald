@@ -1,0 +1,1 @@
+{{- include "eamerald.service" (merge (dict "hasDirectory" true "hasAuthorizer" true) .) }}

@@ -1,9 +1,7 @@
-Eamerald ({{ .Values.role }} role) is deploying into namespace {{ .Release.Namespace }}.
+Eamerald hub is deploying into namespace {{ .Release.Namespace }}.
 
 Check rollout status:
   kubectl -n {{ .Release.Namespace }} rollout status deployment/{{ .Release.Name }}
-
-{{- if eq (include "eamerald.hasDirectory" .) "true" }}
 
 {{- if eq .Values.service.type "LoadBalancer" }}
 
@@ -24,15 +22,6 @@ Then open (self-signed cert — your browser will warn, accept it):
 
 Directory gRPC:    {{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.ports.directoryGRPC }}
 Directory REST:    https://{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.ports.directoryGateway }}
-{{- if eq .Values.role "hub" }}
 
-Point role: edge installs at this address (edge.hub.address):
+Point eamerald-edge installs at this address (edge.hub.address):
   {{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.ports.directoryGRPC }}
-{{- end }}
-{{- end }}
-
-{{- if eq (include "eamerald.hasAuthorizer" .) "true" }}
-
-Authorizer gRPC:   {{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.ports.authorizerGRPC }}
-Authorizer REST:   https://{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.ports.authorizerGateway }}
-{{- end }}

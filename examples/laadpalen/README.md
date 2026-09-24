@@ -61,6 +61,12 @@ Every `make k8s-deploy` states its own `MANIFEST`, and applying one wipes the
 deployment's existing directory data first, since old data may not be valid
 under a different model.
 
+`make k8s-deploy` deploys a hub (seeded with `MANIFEST`/`DATA`) and an edge
+authorizer synced from it - see
+[`docs/deployments/k8s-hub-edge.md`](../../docs/deployments/k8s-hub-edge.md).
+The command doesn't return until the edge has completed its first sync from
+the hub, so the deployment is ready to serve decisions by the time it exits.
+
 From there, `laadpalen-gui` and `laadpalen-test` are two independent ways of
 using that same deployment - neither depends on the other, and you can run
 either, both, or neither:

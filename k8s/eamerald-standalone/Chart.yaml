@@ -1,0 +1,10 @@
+apiVersion: v2
+name: eamerald-standalone
+description: Eamerald directory + authorizer + console in one instance - fine for local dev or a deployment with no HA requirement
+type: application
+version: 0.1.0
+appVersion: "0.0.0-dev"
+dependencies:
+  - name: eamerald-common
+    version: 0.1.0
+    repository: "file://../eamerald-common"

@@ -1,0 +1,10 @@
+apiVersion: v2
+name: eamerald-hub
+description: Eamerald directory hub - the central source of truth one or more eamerald-edge installs sync from
+type: application
+version: 0.1.0
+appVersion: "0.0.0-dev"
+dependencies:
+  - name: eamerald-common
+    version: 0.1.0
+    repository: "file://../eamerald-common"

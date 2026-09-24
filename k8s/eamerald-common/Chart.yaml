@@ -1,0 +1,5 @@
+apiVersion: v2
+name: eamerald-common
+description: Shared templates for the eamerald-hub, eamerald-edge and eamerald-standalone charts
+type: library
+version: 0.1.0

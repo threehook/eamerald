@@ -1,4 +1,4 @@
-# Example eamerald sidecar container, configured as an edge instance synced from a central hub (see k8s/eamerald's `role: hub` chart install)
+# Example eamerald sidecar container, configured as an edge instance synced from a central hub (see the k8s/eamerald-hub chart install)
 # via the aserto_edge plugin, rather than the pre-baked citadel.db demo used by eamerald-configmap.yaml/deployment.yaml alongside it.
 #
 # Unlike that demo, this is not a full worked example - it's a container spec and matching ConfigMap meant to be copied into your own app's

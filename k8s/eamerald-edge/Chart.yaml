@@ -1,0 +1,10 @@
+apiVersion: v2
+name: eamerald-edge
+description: Eamerald authorizer with a local, disposable directory cache kept in sync from an eamerald-hub install
+type: application
+version: 0.1.0
+appVersion: "0.0.0-dev"
+dependencies:
+  - name: eamerald-common
+    version: 0.1.0
+    repository: "file://../eamerald-common"
