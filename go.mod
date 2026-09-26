@@ -13,7 +13,6 @@ require (
 	github.com/aserto-dev/go-aserto v0.34.1
 	github.com/aserto-dev/go-authorizer v0.24.1
 	github.com/aserto-dev/go-directory v0.34.2
-	github.com/aserto-dev/go-topaz-ui v0.1.26
 	github.com/aserto-dev/logger v0.0.9
 	github.com/aserto-dev/openapi-directory v0.33.5
 	github.com/authzen/access.go v1.0.1

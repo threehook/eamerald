@@ -2,11 +2,9 @@ package app
 
 import (
 	"context"
-	"net/http"
 	"time"
 
 	cerr "github.com/aserto-dev/errors"
-	console "github.com/aserto-dev/go-topaz-ui"
 	"github.com/threehook/eamerald/daemon/app/handlers"
 	"github.com/threehook/eamerald/daemon/app/middlewares"
 	"github.com/threehook/eamerald/daemon/authentication"
@@ -200,9 +198,6 @@ func (e *Eamerald) ConfigServices() error {
 					// config service.
 					server.Gateway.Mux.Handle("/api/v2/config", apiKeyAuthMiddleware.ConfigAuth(handlers.ConfigHandlerV2(consoleConfig), e.Configuration.Auth))
 					server.Gateway.Mux.HandleFunc("/api/v1/authorizers", handlers.AuthorizersHandler(consoleConfig))
-					// console service. depends on config service.
-					server.Gateway.Mux.Handle("/ui/", handlers.UIHandler(http.FS(console.FS)))
-					server.Gateway.Mux.Handle("/assets/", handlers.UIHandler(http.FS(console.FS)))
 				}
 			}
 		}
