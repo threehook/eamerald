@@ -1,3 +1,5 @@
+//go:build integration
+
 package template_no_tls_test
 
 import (

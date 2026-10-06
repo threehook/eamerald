@@ -4,6 +4,11 @@
 
 version: "2"
 
+run:
+  # lint the integration-tagged tests too
+  build-tags:
+    - integration
+
 linters:
   # https://golangci-lint.run/usage/configuration/#linters-configuration
   default: all

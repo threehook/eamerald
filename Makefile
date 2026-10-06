@@ -306,15 +306,32 @@ lint-clean: gover
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
 	@${EXT_BIN_DIR}/golangci-lint cache clean
 
+# runs the self-contained unit tests of the default build. Tests tagged `integration` run through test-integration.
 .PHONY: test
-test: gover test-snapshot
+test: gover
+	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
+	@${EXT_BIN_DIR}/gotestsum --format short-verbose -- ./... -count=1 -timeout 120s --race -parallel=1 -v -coverprofile=cover.out -coverpkg=./...
+
+# runs the tests tagged `integration`: they need Docker (testcontainers, the test-snapshot image) and/or reach real external services.
+# The packages and test names are derived from the files that carry the tag, so only those tests run.
+INTEGRATION_FILES := $(shell grep -rlE '^//go:build integration' --include='*_test.go' .)
+INTEGRATION_PKGS  := $(sort $(patsubst %/,%,$(dir $(INTEGRATION_FILES))))
+INTEGRATION_RUN   := ^($(shell grep -hoE '^func Test[A-Za-z0-9_]+' $(INTEGRATION_FILES) | awk '{print $$2}' | paste -sd'|' -))$$
+INTEGRATION_TEST   = ${EXT_BIN_DIR}/gotestsum --format short-verbose -- -tags integration -run '$(INTEGRATION_RUN)' -count=1 -timeout 120s --race -parallel=1 -v -coverprofile=cover.out -coverpkg=./...
+
+.PHONY: test-integration
+test-integration: gover test-snapshot
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
 	@echo -e "$(WARN_COLOR)!!! TESTCONTAINERS_RYUK_DISABLED=${TESTCONTAINERS_RYUK_DISABLED} !!!$(NO_COLOR)"
-	@${EXT_BIN_DIR}/gotestsum --format short-verbose -- $$(go list ./... | grep -v daemon/tests)                     -count=1 -timeout 120s --race -parallel=1 -v -coverprofile=cover.out -coverpkg=./...
-	@${EXT_BIN_DIR}/gotestsum --format short-verbose -- $$(go list ./daemon/tests/... | grep -v tests/template)      -count=1 -timeout 120s --race -parallel=1 -v -coverprofile=cover.out -coverpkg=./...
-	@${EXT_BIN_DIR}/gotestsum --format short-verbose -- github.com/${ORG}/${REPO}/daemon/tests/template-no-tls/...   -count=1 -timeout 120s --race -parallel=1 -v -coverprofile=cover.out -coverpkg=./...
-	@${EXT_BIN_DIR}/gotestsum --format short-verbose -- github.com/${ORG}/${REPO}/daemon/tests/template-with-tls/... -count=1 -timeout 120s --race -parallel=1 -v -coverprofile=cover.out -coverpkg=./...
-	
+	@$(INTEGRATION_TEST) $(filter-out ./daemon/tests/%,$(INTEGRATION_PKGS))
+	@$(INTEGRATION_TEST) $(filter-out ./daemon/tests/template%,$(filter ./daemon/tests/%,$(INTEGRATION_PKGS)))
+	@$(INTEGRATION_TEST) $(filter ./daemon/tests/template-no-tls,$(INTEGRATION_PKGS))
+	@$(INTEGRATION_TEST) $(filter ./daemon/tests/template-with-tls,$(INTEGRATION_PKGS))
+
+# runs the unit tests followed by the integration tests.
+.PHONY: test-all
+test-all: test test-integration
+
 .PHONY: test-snapshot
 test-snapshot:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"

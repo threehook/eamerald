@@ -1,3 +1,5 @@
+//go:build integration
+
 //nolint:testpackage
 package impl
 
@@ -8,14 +10,14 @@ import (
 )
 
 const (
-	oktaIssuer  = "https://trial-3441947.okta.com/oauth2/default"
-	auth0Issuer = "https://aserto.us.auth0.com/"
+	googleIssuer = "https://accounts.google.com"
+	auth0Issuer  = "https://aserto.us.auth0.com/"
 )
 
 func TestOidcClient(t *testing.T) {
 	ctx := t.Context()
 
-	issuers := []string{auth0Issuer, oktaIssuer}
+	issuers := []string{auth0Issuer, googleIssuer}
 
 	client := NewOidcClient()
 
