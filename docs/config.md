@@ -33,12 +33,12 @@ eamerald config info environment
 - `EAMERALD_DB_DIR` - default $XDG_DATA_HOME/eamerald/db - the directory where the eameraldd will store the directory DB files.
 - `EAMERALD_DECISIONS_DIR` - default $XDG_DATA_HOME/eamerald/decisions - the directory where decision files files will be stored.
 
-### Discover locations used using `eamerald config info`
+### Discover locations used using `mrld config info`
 
 The eamerald CLI can be used to discover the environmental settings, for example:
 
 ```
-eamerald config info
+mrld config info
 {
   "environment": {
     "home": "/Users/gertd",
