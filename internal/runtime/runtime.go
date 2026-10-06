@@ -65,7 +65,7 @@ func New(ctx context.Context, cfg *Config, opts ...Option) (*Runtime, error) {
 	rt := &Runtime{
 		Logger:           &newLogger,
 		Config:           cfg,
-		regoVersion:      DefaultRegoVersion.ToAstRegoVersion(),
+		regoVersion:      ast.RegoV1,
 		plugins:          map[string]plugins.Factory{},
 		builtins1:        map[*rego.Function]rego.Builtin1{},
 		builtins2:        map[*rego.Function]rego.Builtin2{},

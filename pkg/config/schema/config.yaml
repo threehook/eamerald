@@ -319,7 +319,7 @@ opa:
     bundles:
       test:
         service: ghcr
-        resource: "ghcr.io/aserto-policies/policy-rebac:latest"
+        resource: "ghcr.io/threehook/policy-rebac:latest"
         persist: false
         config:
           polling:

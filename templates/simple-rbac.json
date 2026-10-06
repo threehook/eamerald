@@ -5,7 +5,7 @@
         "manifest": "simple-rbac/manifest.yaml",
         "policy": {
             "name": "simple-rbac",
-            "resource": "ghcr.io/aserto-policies/policy-rebac:latest"
+            "resource": "ghcr.io/threehook/policy-rebac:latest"
         },
         "idp_data": [
             "citadel/citadel_objects.json",

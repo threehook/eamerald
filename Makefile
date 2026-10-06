@@ -332,6 +332,18 @@ test-integration: gover test-snapshot
 .PHONY: test-all
 test-all: test test-integration
 
+# builds the Rego policies in assets/policies into OPA bundles under dist/policies.
+.PHONY: policies-build
+policies-build:
+	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
+	@scripts/policies.sh build
+
+# publishes those bundles to ${POLICY_REGISTRY:-ghcr.io/threehook} as policy-<name>:${POLICY_TAG:-latest}.
+.PHONY: policies-publish
+policies-publish:
+	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
+	@scripts/policies.sh publish
+
 .PHONY: test-snapshot
 test-snapshot:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"

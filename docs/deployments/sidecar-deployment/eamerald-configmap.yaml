@@ -215,7 +215,7 @@ data:
         bundles:
           todo:
             service: ghcr
-            resource: "ghcr.io/aserto-policies/policy-todo:latest"
+            resource: "ghcr.io/threehook/policy-todo:latest"
             persist: false
             config:
               polling:

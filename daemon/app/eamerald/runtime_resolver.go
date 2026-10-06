@@ -6,7 +6,6 @@ import (
 	"github.com/aserto-dev/go-authorizer/pkg/aerr"
 	dsr "github.com/aserto-dev/go-directory/aserto/directory/reader/v3"
 	dsa "github.com/authzen/access.go/api/access/v1"
-	"github.com/open-policy-agent/opa/v1/ast"
 	"github.com/rs/zerolog"
 	"github.com/threehook/eamerald/daemon/authorizer/builtins"
 	"github.com/threehook/eamerald/daemon/authorizer/builtins/az"
@@ -66,8 +65,6 @@ func NewRuntimeResolver(
 		runtime.WithPlugin(edge.PluginName, edge.NewPluginFactory(ctx, cfg, logger)),
 		runtime.WithPlugin(git.PluginName, git.NewPluginFactory(ctx, logger)),
 		runtime.WithPlugin(entra.PluginName, entra.NewPluginFactory(ctx, logger, dsConn)),
-
-		runtime.WithRegoVersion(ast.RegoV0),
 	)
 	if err != nil {
 		return nil, func() {}, err

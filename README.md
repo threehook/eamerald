@@ -29,6 +29,8 @@ Following the Principle of Least Privilege, assign the smallest set of fine-grai
 
 Convert authorization "spaghetti code" into a policy expressed in its own domain-specific language, managed as code, and built into an immutable, signed artifact.
 
+Policies are written in Rego v1, the syntax of OPA 1.0: rule heads use `if` and `contains`, and `import rego.v1` is not needed.
+
 ### Real-time
 
 Gate each protected resource with an authorization call that ensures the user has the right permission.

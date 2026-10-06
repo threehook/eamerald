@@ -87,7 +87,7 @@ mrld config info
 
 You can create a new configuration using the `eamerald` CLI and use it as a template.
 
-`eamerald config new --name my-eamerald --resource ghcr.io/aserto-policies/policy-rebac:latest --policy rebac --stdout` 
+`eamerald config new --name my-eamerald --resource ghcr.io/threehook/policy-rebac:latest --policy rebac --stdout` 
 
 The resulting config file looks like this:
 
@@ -417,7 +417,7 @@ opa:
     bundles:
       rebac:
         service: policy-registry
-        resource: "ghcr.io/aserto-policies/policy-rebac:latest"
+        resource: "ghcr.io/threehook/policy-rebac:latest"
         persist: false
         config:
           polling:

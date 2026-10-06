@@ -395,7 +395,7 @@ opa:
     bundles:
       peoplefinder:
         service: ghcr
-        resource: "ghcr.io/aserto-policies/policy-peoplefinder-rbac:latest"
+        resource: "ghcr.io/threehook/policy-peoplefinder-rbac:latest"
         persist: false
         config:
           polling:
