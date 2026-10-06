@@ -62,211 +62,102 @@ Application developers can own the app logic, and security engineers can own the
 
 ## Table of Contents
 - [Getting Eamerald](#getting-eamerald)
-    - [Installation](#installation)
     - [Building from source](#building-from-source)
-    - [Running with Docker](#running-with-docker)
+    - [Deploying](#deploying)
 - [Quickstart](#quickstart)
-    - [Install container image](#install-eamerald-authorizer-container-image)
-    - [Install Todo template](#install-the-todo-template)
-    - [Issue an API call](#issue-an-api-call)
-    - [Issue authorization request](#issue-an-authorization-request)
-    - [Run the sample application](#run-the-sample-application)
-- [Command Line](#command-line-options)
+    - [Deploy Eamerald](#deploy-eamerald)
+    - [Issue an authorization request](#issue-an-authorization-request)
+- [Command line client](#command-line-client)
 - [gRPC Endpoints](#grpc-endpoints)
 - [Credits](#credits)
 - [Contribution Guidelines](#contribution-guidelines)
 
 ## Getting Eamerald
 
-### Installation
-
-`eamerald` is available for Linux and macOS platforms.
-
-* Binaries for Linux and macOS are available as tarballs in the [release](https://github.com/threehook/eamerald/releases) page.
-
-* Via a GO install
-
-```console
-$ go install github.com/threehook/eamerald/mrld@latest
-```
-
 ### Building from source
 
 `eamerald` requires Go 1.27.x to build (see `Makefile`'s `GO_VER`); `go.mod` is pinned to 1.26.3. In order to build `eamerald` from source you must:
 
  1. Clone the repo
- 2. Build and run the executable
+ 2. Build the executables
 
 ```console
 $ make build
-$ ./dist/mrld_<os>_<arch>/mrld
 ```
-
-`mrld` is the compiled binary name of the Eamerald CLI (built from `mrld/` in this repo).
 
 `make build` compiles for your host platform by default. To target a different platform, set `GOOS`/`GOARCH`, e.g. `GOOS=linux GOARCH=amd64 make build`. The exact output path is listed in the `building binary=...` build log line, or in `dist/artifacts.json`.
 
-### Running with Docker
+`mrld` is the compiled binary name of the Eamerald CLI (built from `mrld/` in this repo). It is a client for a deployed Eamerald; see [Command line client](#command-line-client). To install just the client:
 
-  You can run as a Docker container:
-
-```console 
-$ docker run -it --rm ghcr.io/threehook/eamerald:latest --help
+```console
+$ go install github.com/threehook/eamerald/mrld@latest
 ```
+
+### Deploying
+
+Eamerald runs in Kubernetes, through the Helm charts in `k8s/`:
+
+* `k8s/eamerald-hub` - the directory (system of record).
+* `k8s/eamerald-edge` - the authorizer, synced from a hub. This is the default topology.
+* `k8s/eamerald-standalone` - hub and authorizer in one pod, for a quick local check.
+
+See [`docs/deployments/k8s-hub-edge.md`](docs/deployments/k8s-hub-edge.md) for the hub/edge topology, and `docs/deployments/docker-compose` for a docker compose setup.
 
 ## Quickstart
 
-These instructions help you get Eamerald up and running as the authorizer for a sample Todo app.
+These instructions get Eamerald running as an authorizer, using the Laadpalen example as the domain model and data.
 
-### Install Eamerald authorizer container image
+### Deploy Eamerald
 
-The Eamerald authorizer is packaged as a Docker container. You can get the latest image using the following command:
-
-```console
-$ mrld install
-```
-
-**NOTE:** If you get the following errors/warnings from Eamerald commands:
-
-`Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?`
-
-Be sure to allow the default Docker socket to be used in your Docker Desktop Advanced settings.
-
-### Install the todo template
-
-Eamerald has a set of pre-built templates that contain three types of artifacts:
-* an authorization policy
-* a domain model (in the form of a manifest file)
-* sample data (users, groups, objects, relationships)
-
-You can use the CLI to install the todo template:
+Every deployment needs a directory model (`MANIFEST`), and can import data (`DATA`) once deployed:
 
 ```console
-$ mrld templates install todo
+$ make k8s-deploy MANIFEST=examples/laadpalen/manifest.yaml \
+  DATA="examples/laadpalen/laadpalen_objects.jsonl examples/laadpalen/laadpalen_relations.jsonl"
 ```
 
-#### Artifacts
+This deploys a hub seeded with the manifest and data, then an edge authorizer synced from it. The command returns once the edge has completed its first sync. Applying a manifest wipes the deployment's existing directory data first, since old data may not be valid under a different model.
 
-This command will install the following artifacts in `$HOME/.config/eamerald/`:
+For a single-pod deployment instead, use `make k8s-deploy-standalone` with the same `MANIFEST` and `DATA`.
 
-```console
-$ tree $HOME/.config/eamerald
-/Users/ogazitt/.config/eamerald
-├── cfg
-│   └── todo.yaml
-├── todo
-│   ├── data
-│   │   ├── citadel_objects.json
-│   │   ├── citadel_relations.json
-│   │   ├── todo_objects.json
-│   │   └── todo_relations.json
-│   └── model
-│       └── manifest.yaml
-└── topaz.json
-```
-* `cfg/todo.yaml` contains an Eamerald configuration file which references the sample Todo **policy image**. A policy image is an OCI image that contains an OPA policy. For the Todo template, this is the public GHCR image `ghcr.io/aserto-policies/policy-todo:latest`. The source code for the policy image can be found [here](https://github.com/aserto-templates/policy-todo/tree/main/content/src/policies).
-* `todo/data/` contains the objects and relations for the Todo template - in this case, a set of 5 users and 4 groups that are based on the "Rick & Morty" cartoon.
-* `todo/model/manifest.yaml` contains the manifest file which describes the domain model.
+On Docker Desktop's Kubernetes the services are available on `localhost`. On other clusters, use `kubectl port-forward`.
 
-```console
-$ tree ~/.local/share/eamerald
-/Users/ogazitt/.local/share/eamerald
-├── certs
-│   ├── gateway-ca.crt
-│   ├── gateway.crt
-│   ├── gateway.key
-│   ├── grpc-ca.crt
-│   ├── grpc.crt
-│   └── grpc.key
-├── db
-│   └── todo.db
-└── tmpl
-    └── todo
-        ├── data
-        │   ├── citadel_objects.json
-        │   ├── citadel_relations.json
-        │   ├── todo_objects.json
-        │   └── todo_relations.json
-        └── model
-            └── manifest.yaml
-```
-
-* `certs/` contains a set of generated self-signed certificates for Eamerald.
-* `db/todo.db` contains the embedded database which houses the model and data.
-* `tmpl/todo` contains the template artifacts.
-
-For a deeper overview of the `cfg/config.yaml` file, see [Eamerald configuration](docs/config.md).
-
-#### What just happened?
-
-Besides laying down the artifacts mentioned, installing the Todo template did the following things:
-
-* started Eamerald in daemon (background) mode (see `mrld start --help`).
-* set the manifest found in `model/manifest.yaml` (see `mrld directory set manifest --help`).
-* imported the objects and relations found in `data/` (see `mrld directory import --help`).
-* opened a browser window to the Eamerald [console](https://localhost:8080/ui/directory) (see `mrld console --help`).
-
-Feel free to play around with the Eamerald console! Or follow the next few steps to interact with the Eamerald policy and authorization endpoints.
-
-### Issue an API call
-
-To verify that Eamerald is running with the right policy image, you can issue a `curl` call to interact with the REST API.
+For a deeper overview of the Eamerald configuration, see [Eamerald configuration](docs/config.md).
 
 ### Issue an authorization request
 
-Issue an authorization request using the AuthZEN Access Evaluation API to verify that the user Rick is allowed to GET the list of todos (with `opa.policy_root: todoApp.GET.todos` configured, since that bundle has more than one policy root):
+Issue an authorization request using the AuthZEN Access Evaluation API against the deployed authorizer:
 
 ```console
 $ curl -k -X POST 'https://localhost:8383/access/v1/evaluation' \
 -H 'Content-Type: application/json' \
 -d '{
-     "subject": {"type": "user", "id": "rick@the-citadel.com"},
-     "action": {"name": "allowed"},
-     "resource": {"type": "todos"}
+     "subject": {"type": "user", "id": "jerry@example.com"},
+     "action": {"name": "request_laadpaal"},
+     "resource": {"type": "adres", "properties": {"postcode": "1111BB", "huisnummer": 2}},
+     "context": {"doelbinding": "laadpalen"}
 }'
 ```
 
-### Run the sample application
-
-To run the sample Todo backend in the language of your choice, and see how Eamerald is used to authorize requests, check out the [Todo template's source](https://github.com/aserto-templates/policy-todo).
+See [`examples/laadpalen`](examples/laadpalen/README.md) for how this request maps to a policy rule, and for a sample application that makes it.
 
 To start an interactive session with the Eamerald endpoints over gRPC, see the [gRPC endpoints](#grpc-endpoints) section.
 
-## Command line options
+## Command line client
+
+`mrld` talks to a deployed Eamerald:
 
 ```console
 $ mrld --help
-
-Usage: mrld <command> [flags]
-
-Eamerald CLI
-
-Commands:
-  start              start eamerald instance (daemon mode)
-  stop               stop eamerald instance
-  restart            restart eamerald instance
-  status             status of eamerald daemon process
-  config             configure eamerald instance
-  run                start eamerald instance (console mode)
-  templates          template commands
-  console            open eamerald console in the browser
-  directory (ds)     directory service commands
-  authorizer (az)    authorizer service commands
-  access (ac)        access service commands
-  certs              certificate management
-  install            install eamerald container
-  uninstall          uninstall eamerald container
-  update             update eamerald container version
-  version            version information
-
-Flags:
-  -h, --help         Show context-sensitive help.
-  -N, --no-check     disable local container status check ($EAMERALD_NO_CHECK)
-      --no-color     disable colored terminal output ($EAMERALD_NO_COLOR)
-  -v, --verbosity    log level
-
-Run "mrld <command> --help" for more information on a command.
 ```
+
+* `directory` (`ds`) - directory service commands, e.g. `mrld directory import`
+* `authorizer` (`az`) - authorizer service commands
+* `access` (`ac`) - access service commands
+* `certs` - certificate management
+* `version` - version information
+
+Run `mrld <command> --help` for more information on a command.
 
 ## gRPC Endpoints
 
