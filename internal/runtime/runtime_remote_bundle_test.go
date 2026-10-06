@@ -66,7 +66,7 @@ func TestRemoteBundleV0(t *testing.T) {
 				Bundles: map[string]*bundle.Source{
 					"testbundle": {
 						Service:  "ghcr",
-						Resource: "ghcr.io/aserto-policies/policy-peoplefinder-rbac:2",
+						Resource: "ghcr.io/threehook/eamerald-test-bundle:v0",
 						Persist:  false,
 						Config: download.Config{
 							Polling: testPollingConfig(),
@@ -152,7 +152,7 @@ func TestRemoteBundleV1(t *testing.T) {
 				Bundles: map[string]*bundle.Source{
 					"testbundle": {
 						Service:  "ghcr",
-						Resource: "ghcr.io/aserto-policies/policy-rebac:latest",
+						Resource: "ghcr.io/threehook/eamerald-test-bundle:v1",
 						Persist:  false,
 						Config: download.Config{
 							Polling: testPollingConfig(),
